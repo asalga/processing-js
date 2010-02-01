@@ -1743,13 +1743,7 @@
         // get the 3D rendering context
         try{
           if( !curContext ){
-            curContext = curElement.getContext( "moz-webgl" );
-          }
-        }catch( e ){}
-
-        try{
-          if( !curContext ){
-            curContext = curElement.getContext("webkit-3d");
+            curContext = curElement.getContext("experimental-webgl");
           }
         }catch( e ){}
         
