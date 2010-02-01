@@ -1923,6 +1923,18 @@
 
     p.PVector = PVector;
 
+    function uniformi(programObj, varName, varValue)
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (varValue.length == 4){curContext.uniform4iv(varLocation, varValue);}
+        else if (varValue.length == 3){curContext.uniform3iv(varLocation, varValue);}
+        else if (varValue.length == 2){curContext.uniform2iv(varLocation, varValue);}
+        else                          {curContext.uniform1i (varLocation, varValue);}
+      }
+    }
     
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
