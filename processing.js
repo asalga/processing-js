@@ -87,8 +87,7 @@
     return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
   }
 
-
-  var boxVerts = [1,1,-1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,-1, 1, 1,-1, 1, 1, 1,-1, 1, 1,-1,-1, 1,-1,-1, 1, 1,-1, 1, 1, 1, 1, 1, 1,-1,1,1,1,1,-1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,-1,1,-1,1,-1,-1,1,-1,-1,1,-1,-1,-1,1,-1,-1,-1,-1,-1,-1,-1,1,-1,1,1,-1,1,1,-1,1,-1,-1,-1,-1,1,1, 1, 1, 1,-1,-1, 1,-1,-1, 1,-1,-1, 1, 1, 1, 1, 1];
+  var boxVerts = [0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5, 0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
   var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5,0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,0.5, 0.5,-0.5,0.5];
   
   var programObject;
@@ -97,13 +96,15 @@
   
   var vertexShaderSource = 
     "attribute vec3 Vertex;" +
+    
+    "uniform vec4 color;" +
 
     "uniform mat4 trans;" +
     "uniform mat4 cam;" +
     "uniform mat4 proj;" +
 
     "void main(void){" +
-    "  gl_FrontColor = vec4(0.0,0.0,0.0,1.0);" +
+    "  gl_FrontColor = color;" +
     "  gl_Position = proj * cam * trans * vec4(Vertex, 1.0);" +
     "}";
 
@@ -480,6 +481,7 @@
       cameraAspect = curElement.width / curElement.height;
       
       var testing;
+      var counter1 = 0;
 
     var firstX, firstY, secondX, secondY, prevX, prevY;
 
@@ -2221,6 +2223,19 @@
       }
     }
 
+    function vertexAttribPointer(programObj, varName, size, VBO)
+    {
+      var varLocation = curContext.getAttribLocation(programObj, varName);
+
+      if(varLocation !== -1)
+      {
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
+        curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
+        curContext.enableVertexAttribArray(varLocation);
+      }
+    }
+
+
     var PMatrix3D = function(){
       this.reset();
     };
@@ -2652,35 +2667,28 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
 
         var trans = new PMatrix3D();
 
-        trans.set(w,0,0,0,
+        trans.apply(w,0,0,0,
                   0,h,0,0,
                   0,0,d,0,
                   0,0,0,1);
         trans.apply(testing);
 
         uniformMatrix(programObject, "trans", false, trans.array());
- 
-       /* var varLoc = curContext.getAttribLocation(programObject, "Vertex");
-        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-        curContext.vertexAttribPointer(varLoc, 3, curContext.FLOAT, false, 0, 0);
-        curContext.enableVertexAttribArray(varLoc);*/
-         
-        //curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
+        uniformMatrix(programObject, "proj",  false, p.projection);
 
-        var varLoc = curContext.getAttribLocation(programObject, "Vertex");
-        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-        curContext.vertexAttribPointer(varLoc, 3, curContext.FLOAT, false, 0, 0);
-        curContext.enableVertexAttribArray(varLoc);
-        
-        varLoc = curContext.getUniformLocation(programObject, "proj");
-        curContext.uniformMatrix4fv(varLoc, false, p.projection);
+        uniformf(programObject, "color", [0,0,0,1]);
+        vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
+
+        curContext.enable(curContext.POLYGON_OFFSET_FILL);
+        curContext.polygonOffset(2,2);
+
+        uniformf(programObject, "color", [0.5,1,1,1]);
+        vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
+        curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
+        curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
     };
-
-
-
-
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
