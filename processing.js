@@ -2059,7 +2059,6 @@
 
     p.PVector = PVector;
 
-
     function vertexAttribPointer(programObj, varName, size, VBO)
     {
       var varLocation = curContext.getAttribLocation(programObj, varName);
