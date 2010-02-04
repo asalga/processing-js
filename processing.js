@@ -68,6 +68,49 @@
     init();
   },
   false);
+  
+  /*
+    Andor Salga
+    asalga.wordpress.com
+    Compatibility wrapper for older browsers
+  */
+  var newWebGLArray = function(data)
+  {
+    var WebGLFloatArrayExists = false;
+
+    try{
+      WebGLFloatArray;
+      WebGLFloatArrayExists = true;
+    }
+    catch(e){}     
+
+    return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
+  }
+
+
+  var boxVerts = [1,1,-1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,-1, 1, 1,-1, 1, 1, 1,-1, 1, 1,-1,-1, 1,-1,-1, 1, 1,-1, 1, 1, 1, 1, 1, 1,-1,1,1,1,1,-1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,-1,1,-1,1,-1,-1,1,-1,-1,1,-1,-1,-1,1,-1,-1,-1,-1,-1,-1,-1,1,-1,1,1,-1,1,1,-1,1,-1,-1,-1,-1,1,1, 1, 1, 1,-1,-1, 1,-1,-1, 1,-1,-1, 1, 1, 1, 1, 1];
+  var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5,0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,0.5, 0.5,-0.5,0.5];
+  
+  var programObject;
+  var boxBuffer;
+  var boxOutlineBuffer;
+  
+  var vertexShaderSource = 
+    "attribute vec3 Vertex;" +
+
+    "uniform mat4 trans;" +
+    "uniform mat4 cam;" +
+    "uniform mat4 proj;" +
+
+    "void main(void){" +
+    "  gl_FrontColor = vec4(0.0,0.0,0.0,1.0);" +
+    "  gl_Position = proj * cam * trans * vec4(Vertex, 1.0);" +
+    "}";
+
+  var fragmentShaderSource = 
+    "void main(void){" +
+    "  gl_FragColor = gl_Color;" +
+    "}";
 
   // Place-holder for debugging function
   Processing.debug = function (e) {
@@ -418,7 +461,25 @@
       getLoaded = false,
       start = new Date().getTime(),
       timeSinceLastFPS = start,
-      framesSinceLastFPS = 0;
+      framesSinceLastFPS = 0;      
+
+      // Camera defaults and settings
+      var _camera = new Array(16),
+      mat_camera,
+      cameraInv = new Array(16),
+      modelView = new Array(16),
+      modelViewInv = new Array(16),
+      projection = new Array(16),
+      frustumMode = false,
+      cameraFOV = 60 * (Math.PI / 180),
+      cameraX = curElement.width / 2,
+      cameraY = curElement.height / 2,
+      cameraZ = cameraY / Math.tan(cameraFOV / 2),
+      cameraNear = 0.00001;//cameraZ / 1000,
+      cameraFar = cameraZ * 10,
+      cameraAspect = curElement.width / curElement.height;
+      
+      var testing;
 
     var firstX, firstY, secondX, secondY, prevX, prevY;
 
@@ -1063,7 +1124,14 @@
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
     p.translate = function translate(x, y) {
-      curContext.translate(x, y);
+      if(p.use3DContext)
+      {
+        testing.translate(arguments[0], arguments[1], arguments[2]);
+      }
+      else
+      {
+        curContext.translate(x, y);
+      }
     };
     p.scale = function scale(x, y) {
       curContext.scale(x, y || x);
@@ -1881,6 +1949,54 @@
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
         }
+        else
+        {
+          curContext.viewport(0,0,curElement.width, curElement.height);
+          curContext.clearColor(204/255, 204/255, 204/255, 1.0);
+          curContext.enable(curContext.DEPTH_TEST);
+          
+          var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
+          curContext.shaderSource(vertexShaderObject, vertexShaderSource);
+          curContext.compileShader(vertexShaderObject);
+          if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS))
+          {
+              alert(curContext.getShaderInfoLog(vertexShaderObject));
+          }
+
+          var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
+          curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
+          curContext.compileShader(fragmentShaderObject);
+          if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS))
+          {
+            alert(curContext.getShaderInfoLog(fragmentShaderObject));
+          }
+
+          programObject = curContext.createProgram();
+          curContext.attachShader(programObject, vertexShaderObject);
+          curContext.attachShader(programObject, fragmentShaderObject);
+          curContext.linkProgram(programObject);
+
+          if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS))
+          {
+            alert("Error linking shaders.");
+          }
+          else
+          {
+            curContext.useProgram(programObject);
+          }
+
+          boxBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts),curContext.DYNAMIC_DRAW);
+
+          boxOutlineBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
+
+          testing = new PMatrix3D();
+          p.camera();
+          p.perspective();
+        }
 
         p.stroke(0);
         p.fill(255);
@@ -2391,6 +2507,180 @@
         this.elements = kInv.slice();
       }
     };
+
+     
+  p.camera = function camera( eyeX, eyeY, eyeZ,
+                              centerX, centerY, centerZ,
+                              upX, upY, upZ) {
+    if( arguments.length === 0 )
+    {
+      p.camera(cameraX, cameraY, cameraZ,
+               cameraX, cameraY, 0,
+               0, 1, 0);
+    }
+    else
+    {
+      var z0 = eyeX - centerX;
+      var z1 = eyeY - centerY;
+      var z2 = eyeZ - centerZ;
+      var mag = Math.sqrt(z0*z0 + z1*z1 + z2*z2);
+
+      if (mag != 0) {
+        z0 /= mag;
+        z1 /= mag;
+        z2 /= mag;
+      }
+
+      var y0 = upX;
+      var y1 = upY;
+      var y2 = upZ;
+
+      var x0 =  y1*z2 - y2*z1;
+      var x1 = -y0*z2 + y2*z0;
+      var x2 =  y0*z1 - y1*z0;
+
+      y0 =  z1*x2 - z2*x1;
+      y1 = -z0*x2 + z2*x0;
+      y2 =  z0*x1 - z1*x0;
+
+      mag = Math.sqrt(x0*x0 + x1*x1 + x2*x2);
+      if (mag != 0) {
+        x0 /= mag;
+        x1 /= mag;
+        x2 /= mag;
+      }
+
+      mag = Math.sqrt(y0*y0 + y1*y1 + y2*y2);
+      if (mag != 0) {
+        y0 /= mag;
+        y1 /= mag;
+        y2 /= mag;
+      }
+
+      mat_camera = new PMatrix3D();
+      mat_camera.set( x0, x1, x2, 0,
+                      y0, y1, y2, 0,
+                      z0, z1, z2, 0,
+                      0,  0,  0,  1);
+      mat_camera.translate(-eyeX, -eyeY, -eyeZ);
+
+      modelView = mat_camera.array();
+      modelViewInv = cameraInv;
+    }
+  };
+     
+    p.ortho = function ortho(){
+        if( arguments.length = 0 )
+            p.ortho(0, p.width, 0, p.height, -10, 10);
+        else{
+            var a = arguments;
+            var x = 2 / (a[1] - a[0]);
+            var y = 2 / (a[3] - a[2]);
+            var z = 2 / (a[5] - a[4]);
+            var tx = -( a[1] + a[0] ) / ( a[1] - a[0] );
+            var ty = -( a[3] + a[2] ) / ( a[3] - a[2] );
+            var tz = -( a[5] + a[4] ) / ( a[5] - a[4] );
+            projection = [x, 0, 0, 0,
+                          0, y, 0, 0,
+                          0, 0, z, 0,
+                          tx, ty, tz, 1];
+            frustumMode = false;
+        }
+    };
+ 
+    p.perspective = function perspective(){
+        if( arguments.length === 0 )
+        {
+            p.perspective(cameraFOV, cameraAspect, cameraNear, cameraFar);
+        }
+        else{
+            var a = arguments;
+            var yMax, yMin, xMax, xMin;
+            yMax = a[2] * Math.tan( a[0] / 2 );
+            yMin = -yMax;
+            xMax = yMax * a[1];
+            xMin = yMin * a[1];
+            p.frustum( xMin, xMax, yMin, yMax, a[2], a[3] );
+        }
+    };
+ 
+    p.frustum = function frustum( left, right, bottom, top, near, far ){
+      p.projection = [ 
+                (2*near)/(right-left),      0,                          0,                          0,
+                0,                          (2*near)/(top-bottom),      0,                          0,
+                (right+left)/(right-left),  (top+bottom)/(top-bottom), -(far+near)/(far-near),      -1,
+                0,                          0,                          -(2*far*near)/(far-near),   0];
+                    
+    };
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Matrix Stack
+    ////////////////////////////////////////////////////////////////////////////
+    
+    function P3DMatrixStack(){ this.matrixStack = new Array(); };
+    P3DMatrixStack.prototype.peek = function peek(){ return this.matrixStack[this.matrixStack.length-1]; };
+    P3DMatrixStack.prototype.push = function push(){ this.matrixStack.push(arguments[0]); };
+    P3DMatrixStack.prototype.pop = function pop(){ return this.matrixStack.pop(); };
+
+P3DMatrixStack.prototype.mult = function mult( matrix ){
+    var tmp = [0, 0, 0, 0,
+               0, 0, 0, 0,
+               0, 0, 0, 0,
+               0, 0, 0, 0];
+    var e=0;
+    for(var row = 0; row < 4; row++)
+    {
+      for(var col = 0; col < 4; col++, e++)
+      {
+        tmp[e] += this.matrixStack[this.matrixStack.length-1][row *4 + 0] * matrix[col + 0] +
+                  this.matrixStack[this.matrixStack.length-1][row *4 + 1] * matrix[col + 4] +
+                  this.matrixStack[this.matrixStack.length-1][row *4 + 2] * matrix[col + 8] +
+                  this.matrixStack[this.matrixStack.length-1][row *4 + 3] * matrix[col + 12];
+      }
+    }
+    this.matrixStack.push( tmp );
+    };
+
+    p.box = function(w,h,d)
+    {
+      if(curContext)
+      {
+        var mat = new PMatrix3D();
+        mat.apply(modelView);
+        mat.scale(1,-1,1);
+        uniformMatrix(programObject, "cam", false, mat.array());
+
+        var trans = new PMatrix3D();
+
+        trans.set(w,0,0,0,
+                  0,h,0,0,
+                  0,0,d,0,
+                  0,0,0,1);
+        trans.apply(testing);
+
+        uniformMatrix(programObject, "trans", false, trans.array());
+ 
+       /* var varLoc = curContext.getAttribLocation(programObject, "Vertex");
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
+        curContext.vertexAttribPointer(varLoc, 3, curContext.FLOAT, false, 0, 0);
+        curContext.enableVertexAttribArray(varLoc);*/
+         
+        //curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
+
+        var varLoc = curContext.getAttribLocation(programObject, "Vertex");
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
+        curContext.vertexAttribPointer(varLoc, 3, curContext.FLOAT, false, 0, 0);
+        curContext.enableVertexAttribArray(varLoc);
+        
+        varLoc = curContext.getUniformLocation(programObject, "proj");
+        curContext.uniformMatrix4fv(varLoc, false, p.projection);
+        curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
+      }
+    };
+
+
+
+
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
