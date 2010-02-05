@@ -99,13 +99,12 @@
     
     "uniform vec4 color;" +
 
-    "uniform mat4 trans;" +
-    "uniform mat4 cam;" +
-    "uniform mat4 proj;" +
+    "uniform mat4 modelView;" +
+    "uniform mat4 projection;" +
 
     "void main(void){" +
     "  gl_FrontColor = color;" +
-    "  gl_Position = proj * cam * trans * vec4(Vertex, 1.0);" +
+    "  gl_Position = projection * modelView * vec4(Vertex, 1.0);" +
     "}";
 
   var fragmentShaderSource = 
@@ -465,12 +464,11 @@
       framesSinceLastFPS = 0;      
 
       // Camera defaults and settings
-      var _camera = new Array(16),
-      mat_camera,
-      cameraInv = new Array(16),
-      modelView = new Array(16),
-      modelViewInv = new Array(16),
-      projection = new Array(16),
+      var cam,
+      cameraInv,
+      modelView,
+      modelViewInv,
+      projection,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
       cameraX = curElement.width / 2,
@@ -2523,7 +2521,8 @@
       }
     };
 
-     
+  /*
+  */
   p.camera = function camera( eyeX, eyeY, eyeZ,
                               centerX, centerY, centerZ,
                               upX, upY, upZ) {
@@ -2572,15 +2571,28 @@
         y2 /= mag;
       }
 
-      mat_camera = new PMatrix3D();
-      mat_camera.set( x0, x1, x2, 0,
-                      y0, y1, y2, 0,
-                      z0, z1, z2, 0,
-                      0,  0,  0,  1);
-      mat_camera.translate(-eyeX, -eyeY, -eyeZ);
+      cam = new PMatrix3D();
+      cam.set( x0, x1, x2, 0,
+                   y0, y1, y2, 0,
+                   z0, z1, z2, 0,
+                   0,  0,  0,  1);
+      cam.translate(-eyeX, -eyeY, -eyeZ);
 
-      modelView = mat_camera.array();
-      modelViewInv = cameraInv;
+      /*
+      Don't yet have invApply in PMatrix3D()
+      cameraInv = new PMatrix3D();
+      cameraInv.invApply( x0, x1, x2, 0,
+                   y0, y1, y2, 0,
+                   z0, z1, z2, 0,
+                   0,  0,  0,  1);
+      camerInv.translate(eyeX,eyeY, eyeZ);
+      */
+
+      modelView = new PMatrix3D();
+      modelView.set(cam);
+
+      //modelViewInv = new PMatrix3D();
+      //modelViewInv.set(cameraInv);
     }
   };
      
@@ -2595,10 +2607,11 @@
             var tx = -( a[1] + a[0] ) / ( a[1] - a[0] );
             var ty = -( a[3] + a[2] ) / ( a[3] - a[2] );
             var tz = -( a[5] + a[4] ) / ( a[5] - a[4] );
-            projection = [x, 0, 0, 0,
+            projection = new PMatrix3D();
+            projection.set(x, 0, 0, 0,
                           0, y, 0, 0,
                           0, 0, z, 0,
-                          tx, ty, tz, 1];
+                          tx, ty, tz, 1);
             frustumMode = false;
         }
     };
@@ -2620,12 +2633,12 @@
     };
  
     p.frustum = function frustum( left, right, bottom, top, near, far ){
-      p.projection = [ 
+      projection = new PMatrix3D();
+      projection.set(
                 (2*near)/(right-left),      0,                          0,                          0,
                 0,                          (2*near)/(top-bottom),      0,                          0,
                 (right+left)/(right-left),  (top+bottom)/(top-bottom), -(far+near)/(far-near),      -1,
-                0,                          0,                          -(2*far*near)/(far-near),   0];
-                    
+                0,                          0,                          -(2*far*near)/(far-near),   0);
     };
     
     ////////////////////////////////////////////////////////////////////////////
@@ -2656,32 +2669,50 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
     this.matrixStack.push( tmp );
     };
 
-    p.box = function(w,h,d)
+    /*
+      asalga.wordpress.com
+    */
+    p.box = function( w, h, d )
     {
       if(curContext)
       {
-        var mat = new PMatrix3D();
-        mat.apply(modelView);
-        mat.scale(1,-1,1);
-        uniformMatrix(programObject, "cam", false, mat.array());
+        // user can uniformly scale the box by  
+        // passing in only one argument.
+        if(!h || !d)
+        {
+          h = d = w;
+        }
+        
+        // Modeling transformation
+        var model = new PMatrix3D();
+        model.scale(w,h,d);
+        model.apply(testing);
 
-        var trans = new PMatrix3D();
+        // viewing transformation needs to have Y flipped
+        // becuase that's what Processing does.
+        var view = new PMatrix3D();
+        view.set(modelView.array());
+        view.scale(1,-1,1);
 
-        trans.apply(w,0,0,0,
-                  0,h,0,0,
-                  0,0,d,0,
-                  0,0,0,1);
-        trans.apply(testing);
+        // Create the modelView (model * view) not the other way around.
+        model.apply(view);
 
-        uniformMatrix(programObject, "trans", false, trans.array());
-        uniformMatrix(programObject, "proj",  false, p.projection);
+        uniformMatrix(programObject, "modelView", false, model.array());
+        uniformMatrix(programObject, "projection",  false, projection.array());
 
         uniformf(programObject, "color", [0,0,0,1]);
         vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
+        
+        // If you're working with styles, you'll need to change this literal.
+        curContext.lineWidth(1);
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
 
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles. 
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
-        curContext.polygonOffset(2,2);
+        curContext.polygonOffset(1,1);
 
         uniformf(programObject, "color", [0.5,1,1,1]);
         vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
