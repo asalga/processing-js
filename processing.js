@@ -1145,7 +1145,14 @@
     p.popMatrix = function popMatrix() {
       curContext.restore();
     };
-    p.ortho = function ortho() {};
+    
+    p.rotateX = function(angleInRadians)
+    {
+      testing.rotateX(angleInRadians);
+    }
+
+    // what's this doing here?
+    ///p.ortho = function ortho() {};
 
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
