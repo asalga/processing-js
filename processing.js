@@ -2002,6 +2002,7 @@
 
           testing = new PMatrix3D();
           p.camera();
+          //p.camera(70.0, 35.0, 120.0, 50.0, 50.0, 0.0, 0.0, 1.0, 0.0);
           p.perspective();
         }
 
@@ -2583,6 +2584,7 @@
                    y0, y1, y2, 0,
                    z0, z1, z2, 0,
                    0,  0,  0,  1);
+                   //cam.transpose();
       cam.translate(-eyeX, -eyeY, -eyeZ);
 
       /*
