@@ -69,6 +69,18 @@
   },
   false);
   
+  
+    var ArraysEqual = function(a,b)
+  {
+    for(var i = 0; i < 16; i++ )
+    {
+      if(Math.abs(a[i] -= b[i]) > 0.001){
+       return false;
+       }
+    }
+    return true;
+  }
+
   /*
     Andor Salga
     asalga.wordpress.com
@@ -99,12 +111,13 @@
     
     "uniform vec4 color;" +
 
-    "uniform mat4 modelView;" +
+    "uniform mat4 model;" +
+    "uniform mat4 view;" +
     "uniform mat4 projection;" +
 
     "void main(void){" +
     "  gl_FrontColor = color;" +
-    "  gl_Position = projection * modelView * vec4(Vertex, 1.0);" +
+    "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
     "}";
 
   var fragmentShaderSource = 
@@ -463,9 +476,11 @@
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0;      
 
+var test = 0;
       // Camera defaults and settings
       var cam,
       cameraInv,
+      forwardTransform,
       modelView,
       modelViewInv,
       projection,
@@ -474,11 +489,15 @@
       cameraX = curElement.width / 2,
       cameraY = curElement.height / 2,
       cameraZ = cameraY / Math.tan(cameraFOV / 2),
-      cameraNear = 0.00001;//cameraZ / 1000,
+//      cameraNear = 0.00001;//cameraZ / 1000,
+      cameraNear = cameraZ / 10000,
       cameraFar = cameraZ * 10,
       cameraAspect = curElement.width / curElement.height;
       
-      var testing;
+//      var rotTest;
+  //    var transTest;
+  var testing = null;
+
       var counter1 = 0;
 
     var firstX, firstY, secondX, secondY, prevX, prevY;
@@ -1123,10 +1142,22 @@
     ////////////////////////////////////////////////////////////////////////////
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
-    p.translate = function translate(x, y) {
+    p.translate = function translate(x, y,z) {
       if(p.use3DContext)
       {
-        testing.translate(arguments[0], arguments[1], arguments[2]);
+        if(!testing)
+        {
+          testing = new PMatrix3D();
+        }
+        // trans...
+        //forwardTransform.translate(x,y,z);
+        modelView.translate(x,y,z);
+//        alert(forwardTransform.array());
+
+/*        testing.apply([1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        x,y,z,1]);*/
       }
       else
       {
@@ -1148,7 +1179,16 @@
     
     p.rotateX = function(angleInRadians)
     {
-      testing.rotateX(angleInRadians);
+      modelView.rotateX(angleInRadians);
+    }
+    
+    p.rotateZ = function(angleInRadians)
+    {
+      modelView.rotateZ(angleInRadians);
+    }
+    p.rotateY = function(angleInRadians)
+    {
+      modelView.rotateY(angleInRadians);
     }
 
     // what's this doing here?
@@ -1252,7 +1292,7 @@
       inDraw = true;
 
       if (p.use3DContext) {
-        curContext.clear(curContext.COLOR_BUFFER_BIT);
+        //curContext.clear(curContext.COLOR_BUFFER_BIT);
         p.draw();
       } else {
         p.pushMatrix();
@@ -1802,6 +1842,253 @@
       return ret;
     };
 
+    p.testPMatrix3D = function()
+    {
+      //Test written by Andor Salga
+      // starts off as identity matrix
+      var mat = new PMatrix3D();
+      if(!ArraysEqual(mat.array(), [1,0,0,0, 0,1,0,0, 0,0,1,0,  0,0,0,1])) return false;
+
+      // set to identity 
+      mat.reset();
+      if(!ArraysEqual(mat.array(), [1,0,0,0, 0,1,0,0, 0,0,1,0,  0,0,0,1])) return false;
+
+      // set to some matrix using array
+      mat.set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
+      if(!ArraysEqual(mat.array(), [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])) return false;
+
+      // set using 16 values
+      mat.set(2,4,6,8,1,3,5,7,9,11,12,34,65,12,87,101);
+      if(!ArraysEqual(mat.array(), [2,4,6,8,1,3,5,7,9,11,12,34,65,12,87,101])) return false;
+
+      // set using pmatrix
+      var matrix2 = new PMatrix3D();
+      matrix2.set(4,5,6,7,8,9,2,3,4,5,1,1,1,2,3,4);
+      mat.set(matrix2);
+      if(!ArraysEqual(mat.array(), [4,5,6,7,8,9,2,3,4,5,1,1,1,2,3,4])) return false;
+
+      // multiply with identity using matrix
+      mat.set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);       
+      mat.apply(new PMatrix3D());
+      if(!ArraysEqual(mat.array(), [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])) return false;
+
+      // multiply with identity using array
+      mat.reset();
+      mat.apply(matrix2.array());
+      if(!ArraysEqual(mat.array(), matrix2.array())) return false;
+      
+      // INVERT
+      var invTest = new PMatrix3D();
+      invTest.set(1,4,3,2,0,2,0,3,2,1,0,4,5,0,3,4);
+     var res =  invTest.invert();
+      var invExpected =	[0.4167, -1.5000,  1.3333, -0.4167,
+       0.5000, -1.0000,  1.0000, -0.5000,
+      -0.2500,  1.1667, -1.3333,  0.5833,
+      -0.3333,  1.0000, -0.6667,  0.3333];
+      if(!ArraysEqual(invTest.array(), invExpected)) return false;
+      if(res == false) return false;
+
+      // Failed Invert
+      var invTest = new PMatrix3D();
+      invTest.set(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+      var res = invTest.invert();
+      if(!ArraysEqual(invTest,[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])) return false;
+      if(res == true) return false;
+
+      // multiply 2 matrices using 2nd matrix array()
+      var mat1 = new PMatrix3D();
+      var mat2 = new PMatrix3D();
+      var res =  new PMatrix3D();
+      res.set(39,61,37,52,63,92,49,59,53,51,71,45,41,72,47,60);
+      mat1.set([1,2,4,4,1,7,3,4,8,2,3,0,2,1,6,4]);
+      mat2.set([5,1,7,4,5,8,3,2,1,9,3,3,5,2,3,8]);
+      mat1.apply(mat2.array());
+      if(!ArraysEqual(mat1.array(), res.array())) return false;
+
+      ///////////
+      /// SCALE
+      ///////////
+
+      // scale by uniform 5
+      res.set([5,10,20,4,5,35,15,4,40,10,15,0,10,5,30,4]);
+      mat1.set([1,2,4,4,1,7,3,4,8,2,3,0,2,1,6,4]);
+      mat1.scale(5);
+      if(!ArraysEqual(mat1.array(), res.array())) return false;  
+
+      // same thing, but specify x,y,z
+      res.set([5,10,20,4,5,35,15,4,40,10,15,0,10,5,30,4]);
+      mat1.set([1,2,4,4,1,7,3,4,8,2,3,0,2,1,6,4]);
+      mat1.scale(5,5,5);
+      if(!ArraysEqual(mat1.array(), res.array())) return false;
+
+      // non uniform scale
+      res.set(1,6,15,4,5,18,35,8,9,30,55,12,13,42,75,16);
+      mat1.set(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+      mat1.scale(1,3,5);
+      if(!ArraysEqual(mat1.array(), res.array())) return false;
+
+      // scale by 1
+      mat1.scale(1);
+      if(!ArraysEqual(mat1.array(), res.array())) return false;
+
+      //////////////
+      ///  TRANSPOSE
+      //////////////
+
+      var tmat1 = new PMatrix3D();
+      tmat1.transpose();
+      if(!ArraysEqual(tmat1.array(),  [1,0,0,0, 0,1,0,0, 0,0,1,0,  0,0,0,1] )) return false;
+
+      tmat1.set([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]);
+      tmat1.transpose();
+      if(!ArraysEqual(tmat1.array(),  [0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15] )) return false;
+
+      tmat1.set(6,2,5,9,13,22,0,0,3,4,1,7,8,9,3,4);
+      tmat1.transpose();
+      if(!ArraysEqual(tmat1.array(),  [6,13,3,8,2,22,4,9,5,0,1,3,9,0,7,4] )) return false;
+
+      ///////////////
+      /// TRANSLATE
+      //////////////
+
+      var res = [1,0,0,5,   0,1,0,0,  0,0,1,0,  0,0,0,1];
+      var trMat = new PMatrix3D();
+      trMat.translate(5,0,0);
+      if(!ArraysEqual(trMat.array(), res)) return false;
+
+      /*
+       01.0000  02.0000  03.0000  22.0000
+       05.0000  06.0000  07.0000  38.0000
+       09.0000  10.0000  11.0000  54.0000
+       13.0000  14.0000  15.0000  70.0000*/
+ 
+      trMat.set([
+        1,2,3,4,
+        5,6,7,8,
+        9,10,11,12,
+        13,14,15,16]);
+      res = [
+        1,2,3,22,
+        5,6,7,38,
+        9,10,11,54,
+        13,14,15,70];
+      trMat.translate(-5,1,7);
+
+      if(!ArraysEqual(trMat.array(), res)) return false;
+
+
+
+      ///////////      
+      // PREAPPLY
+      ///////////
+
+      // preapply with array
+      var preMat1 = new PMatrix3D();
+
+      res = [
+      6,3,5,9,
+      7,2,6,0,
+      4,3,7,1,
+      5,4,8,9];
+
+      preMat1.preApply(res);
+  
+      if(!ArraysEqual(preMat1.array(), res)) return false;
+
+      // preapply with numbers
+      var preMat2 = new PMatrix3D();
+      preMat2.set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+      preMat2.preApply(6,7,4,5,3,2,3,4,5,6,7,8,9,0,1,9);
+      var res =  [142,164,186,208,
+                  92,104,116,128,
+                  202,228,254,280,
+                  135,154,173,192];
+      if(!ArraysEqual(preMat2.array(), res)) return false;
+
+      // preAppy with matrix
+      preMat2.set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+      var tempMat = new PMatrix3D();
+      tempMat.set(6,7,4,5,3,2,3,4,5,6,7,8,9,0,1,9);
+      preMat2.preApply(tempMat);
+      var res =  [142,164,186,208,
+                  92,104,116,128,
+                  202,228,254,280,
+                  135,154,173,192];
+      if(!ArraysEqual(preMat2.array(), res)) return false;
+
+      ///////////
+      // MULT
+      ///////////
+      var mMat = new PMatrix3D();
+      var exp = [36,29,32];
+      var res = mMat.mult(exp);
+      if( exp[0] !== res[0] || exp[1] !== res[1] || 
+          exp[2] !== res[2])
+      {
+        return false;
+      }
+
+      mMat = new PMatrix3D();
+      mMat.set(6,7,4,5,
+               3,2,3,4,
+               5,6,7,8,
+               9,0,1,9);
+
+      exp = [82,41,95,42];
+      var res = [0,0,0,0];
+      mMat.mult([3,5,6,1],res);
+
+      if( exp[0] !== res[0] || exp[1] !== res[1] || 
+          exp[2] !== res[2] || exp[3] !== res[3])
+      {
+        return false;
+      }
+
+      
+      exp = [82,41,95];
+      var res = [0,0,0];
+      mMat.mult([3,5,6,1],res);
+      if( exp[0] !== res[0] || exp[1] !== res[1] || 
+          exp[2] !== res[2])
+      {
+        return false;
+      }
+      
+      var mMat = new PMatrix3D();
+      mMat.set(6,7,4,5,
+               3,2,3,4,
+               5,6,7,8,
+               9,0,1,9);
+
+      var s = new PVector(3,5,6,1);
+      var res = [82,41,95]
+      var d = new PVector(0,0,0);
+      
+      mMat.mult(s,d);
+
+      if( d.x !== res[0] || d.y !== res[1] || 
+          d.z !== res[2])
+      {
+        return false;
+      }
+
+      ////////
+      // GET
+      ///////
+
+      var gMat1 = new PMatrix3D();
+      var gMat2 = gMat1.get();
+      if(!ArraysEqual(gMat1.array(), gMat2.array())) return false;
+
+      gMat1.set([1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4]);
+
+      // they shouldn't be still equal
+      if(ArraysEqual(gMat1.array(), gMat2.array())) return false;
+
+      // if we got to this point, all tests passed
+      return true;
+    }
+
     p.dist = function dist(x1, y1, x2, y2) {
       return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     };
@@ -2242,6 +2529,9 @@
     }
 
 
+    /*
+      When a matrix is created, it is set to an identity matrix.
+    */
     var PMatrix3D = function(){
       this.reset();
     };
@@ -2266,11 +2556,11 @@
         return outgoing;
       },
       reset: function(){
-        this.set([1,0,0,0,
-                  0,1,0,0,
-                  0,0,1,0,
-                  0,0,0,1]);
+        this.set([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
       },
+      /*
+        Returns a copy of the element values.
+      */
       array: function array(){
         return this.elements.slice();
       },
@@ -2280,22 +2570,11 @@
           this.translate( tx, ty, 0 );
         }
         else
-        {
-          this.elements[12] +=  tx * this.elements[0] +  
-                                ty * this.elements[4] + 
-                                tz * this.elements[8];
-
-          this.elements[13] +=  tx * this.elements[1] +  
-                                ty * this.elements[5] + 
-                                tz * this.elements[9];
-
-          this.elements[14] +=  tx * this.elements[2] + 
-                                ty * this.elements[6] + 
-                                tz * this.elements[10];
-                                
-          this.elements[15] +=  tx * this.elements[3] + 
-                                ty * this.elements[7] + 
-                                tz * this.elements[11];  
+        {                      
+          this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
+          this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
+          this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
+          this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
         }
       },
       transpose: function(){
@@ -2317,39 +2596,57 @@
         this.elements[14] = temp[11];
         this.elements[15] = temp[15];
       },
-      mult: function(source, target){
-        if( source != target && (source instanceof PVector || source instanceof Array )){
-          var x, y, z, w;
-          if (source instanceof PVector){
-            x = source.x;
-            y = source.y;
-            z = source.z;
-            w = 1;
-            if( !target ){
-              target = new PVector();
-            }
-          }else if( source instanceof Array ){
-            x = source[0];
-            y = source[1];
-            z = source[2];
-            w = source[3] || 1;
-            if (!target || target.length !== 3 && target.length !== 4){
-              target = [0,0,0];
-            }
+      /*
+        You must either pass in two PVectors or two arrays,
+        don't mix between types. You may also omit a second
+        argument and simply read the result from the return.
+      */
+      mult: function( source, target ){
+        var x, y, z, w;
+        if( source instanceof PVector )
+        {
+          x = source.x;
+          y = source.y;
+          z = source.z;
+          w = 1;
+          if(!target)
+          {
+            target = new PVector();
           }
+        }
+        else if( source instanceof Array )
+        {
+          x = source[0];
+          y = source[1];
+          z = source[2];
+          w = source[3] || 1;
+
+         if (!target || target.length !== 3 && target.length !== 4){
+            target = [0,0,0];
+          }
+        }
+        
+        if(target instanceof Array)
+        {
           if(target.length === 3)
           {
-            target[0] = this.elements[0] * x + this.elements[4] * y + this.elements[8] * z;
-            target[1] = this.elements[1] * x + this.elements[5] * y + this.elements[9] * z;
-            target[2] = this.elements[2] * x + this.elements[6] * y + this.elements[10] * z;
+            target[0] = this.elements[0] * x + this.elements[1] * y + this.elements[ 2] * z + this.elements[ 3];
+            target[1] = this.elements[4] * x + this.elements[5] * y + this.elements[ 6] * z + this.elements[ 7];
+            target[2] = this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
           }
-          else if (target.length === 4)
+          else if(target.length === 4)
           {
-            target[0] = this.elements[0] * x + this.elements[4] * y + this.elements[8] * z + this.elements[12] * w;
-            target[1] = this.elements[1] * x + this.elements[5] * y + this.elements[9] * z + this.elements[13] * w;
-            target[2] = this.elements[2] * x + this.elements[6] * y + this.elements[10] * z + this.elements[14] * w;
-            target[3] = this.elements[3] * x + this.elements[7] * y + this.elements[11] * z + this.elements[15] * w;
+            target[0] = this.elements[ 0] * x + this.elements[ 1] * y + this.elements[ 2] * z + this.elements[ 3] * w;
+            target[1] = this.elements[ 4] * x + this.elements[ 5] * y + this.elements[ 6] * z + this.elements[ 7] * w;
+            target[2] = this.elements[ 8] * x + this.elements[ 9] * y + this.elements[10] * z + this.elements[11] * w;
+            target[3] = this.elements[12] * x + this.elements[13] * y + this.elements[14] * z + this.elements[15] * w;
           }
+        }
+        if(target instanceof PVector)
+        {
+          target.x = this.elements[0] * x + this.elements[1] * y + this.elements[ 2] * z + this.elements[ 3];
+          target.y = this.elements[4] * x + this.elements[5] * y + this.elements[ 6] * z + this.elements[ 7];
+          target.z = this.elements[8] * x + this.elements[9] * y + this.elements[10] * z + this.elements[11];
         }
         return target;
       },
@@ -2397,7 +2694,7 @@
         }
         else if( arguments.length === 1 && arguments[0] instanceof Array ){
           var source = arguments[0];
-        
+
           var result = [0, 0, 0, 0,
                         0, 0, 0, 0,
                         0, 0, 0, 0,
@@ -2415,33 +2712,25 @@
           this.elements = result.slice();
         }
       },
-      rotateX: function(angle){
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-        this.apply([1, 0, 0, 0,  
-                    0, c, s, 0,  
-                    0, -s, c, 0,  
-                    0, 0, 0, 1]);
+      rotateX: function( angle ){
+        var c = p.cos( angle );
+        var s = p.sin( angle );
+        this.apply([1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1]);
       },
-      rotateY: function(angle){
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-        this.apply([c, 0, -s, 0, 
-                    0, 1, 0, 0,  
-                    s, 0, c, 0,
-                    0, 0, 0, 1]);
+      rotateY: function( angle ){
+        var c = p.cos( angle );
+        var s = p.sin( angle );
+        this.apply([c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1]);
       },
-      rotateZ: function(angle){
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-        this.apply([c, s, 0, 0,  
-                    -s, c, 0, 0,  
-                    0, 0, 1, 0,
-                    0, 0, 0, 1]);
+      rotateZ: function( angle ){
+        var c = Math.cos( angle );
+        var s = Math.sin( angle );
+        //this.apply([c, s, 0, 0,  -s, c, 0, 0,  0, 0, 1, 0,0, 0, 0, 1]);
+        this.apply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
       },
-      scale: function(sx, sy, sz){
+      scale: function( sx, sy, sz ){
         // uniform scaling if only 1 value passed in
-        if(sx && !sy && !sz)
+        if( sx && !sy && !sz )
         {
           sy = sz = sx;
         }
@@ -2450,7 +2739,7 @@
           sz = 1;
         }
 
-        if (sx && sy && sz){
+        if ( sx && sy && sz ){
           this.elements[0] *= sx;
           this.elements[1] *= sy;
           this.elements[2] *= sz;
@@ -2484,9 +2773,10 @@
         var fDet = fA0 * fB5 - fA1 * fB4 + fA2 * fB3 + fA3 * fB2 - fA4 * fB1 + fA5 * fB0;
         
         // Account for a very small value
+        // return false if not successful.
         if (Math.abs(fDet) <= 1e-9)
         {
-          return null;
+          return false;
         }
 
         kInv[ 0] = + this.elements[ 5] * fB5 - this.elements[ 6] * fB4 + this.elements[ 7] * fB3;
@@ -2526,6 +2816,17 @@
         kInv[15] *= fInvDet;
 
         this.elements = kInv.slice();
+        return true;
+      },
+      toString: function()
+      {
+        var str = "";
+        for(var i = 0; i < 15; i++)
+        {
+          str += this.elements[i] + ", ";
+        }
+        str += this.elements[15];
+        return str;
       }
     };
 
@@ -2580,13 +2881,11 @@
       }
 
       cam = new PMatrix3D();
-      cam.set( x0, x1, x2, 0,
-                   y0, y1, y2, 0,
-                   z0, z1, z2, 0,
-                   0,  0,  0,  1);
-                   //cam.transpose();
+      cam.set(x0, x1, x2, 0,
+              y0, y1, y2, 0,
+              z0, z1, z2, 0,
+              0,  0,  0,  1);
       cam.translate(-eyeX, -eyeY, -eyeZ);
-
       /*
       Don't yet have invApply in PMatrix3D()
       cameraInv = new PMatrix3D();
@@ -2599,6 +2898,7 @@
 
       modelView = new PMatrix3D();
       modelView.set(cam);
+      //forwardTransform = new PMatrix3D();
 
       //modelViewInv = new PMatrix3D();
       //modelViewInv.set(cameraInv);
@@ -2617,10 +2917,10 @@
             var ty = -( a[3] + a[2] ) / ( a[3] - a[2] );
             var tz = -( a[5] + a[4] ) / ( a[5] - a[4] );
             projection = new PMatrix3D();
-            projection.set(x, 0, 0, 0,
-                          0, y, 0, 0,
-                          0, 0, z, 0,
-                          tx, ty, tz, 1);
+            projection.set(x, 0, 0, tx,
+                           0, y, 0, ty,
+                           0, 0, z, tz,
+                           0, 0, 0, 1);
             frustumMode = false;
         }
     };
@@ -2641,13 +2941,12 @@
         }
     };
  
-    p.frustum = function frustum( left, right, bottom, top, near, far ){
+    p.frustum = function frustum( left, right, bottom, top, znear, zfar ){
       projection = new PMatrix3D();
-      projection.set(
-                (2*near)/(right-left),      0,                          0,                          0,
-                0,                          (2*near)/(top-bottom),      0,                          0,
-                (right+left)/(right-left),  (top+bottom)/(top-bottom), -(far+near)/(far-near),      -1,
-                0,                          0,                          -(2*far*near)/(far-near),   0);
+      projection.set((2*znear)/(right-left), 0, (right+left)/(right-left), 0,
+                      0, (2*znear)/(top-bottom), (top+bottom)/(top-bottom), 0,
+                      0, 0, -(zfar+znear)/(zfar-znear),-(2*zfar*znear)/(zfar-znear),
+                      0, 0, -1, 0);
     };
     
     ////////////////////////////////////////////////////////////////////////////
@@ -2691,23 +2990,63 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         {
           h = d = w;
         }
-        
+        test += 0.9;
         // Modeling transformation
         var model = new PMatrix3D();
-        model.scale(w,h,d);
-        model.apply(testing);
+       // modelView.scale(1,-1,1);
+      //  model.set(testing);
+      var mv = new PMatrix3D();
+      modelView.rotateX(test);
+     // mv.set(modelView);
+      //alert(mv.toString());
+      
+      var test_ = new PMatrix3D();
+      test_.set(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+      
+      var test2 = new PMatrix3D();
+      test2.set(4,3,2,5,6,7,8,3,4,2,1,3,4,5,6,7);
+      
+      test_.apply(test2);
+      44, 43, 45, 48, 116, 111, 113, 120, 188, 179, 181, 192, 260, 247, 249, 264
+     // alert(test_.toString());
+      
+       // mv.translate(250,250,400);
+     
+     //   alert(modelView.toString());
+/*forwardTransform.translate(250,250,370);
+alert(forwardTransform.array());
+
+forwardTransform.rotateX(3.14/4);
+alert(forwardTransform.array());*/
+/*       model.apply(
+       1,0,0,250,
+       0,1,0,250,
+       0,0,1,400,
+       0,0,0,1);
+              model.rotateX(1);*/
+       
+//        model.apply(rotTest);
+  ///      model.apply(transTest);
+        /*
+                model.rotateX(0.51);
+                model.apply(
+                [1,0,0,0,
+                0,1,0,0,
+                0,0,1,0,
+                250,250,425,1]);*/
+        //model.apply(testing);
+        
+       // model.scale(w,h,d);
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
         var view = new PMatrix3D();
-        view.set(modelView.array());
+        view.apply(modelView.array());
         view.scale(1,-1,1);
 
-        // Create the modelView (model * view) not the other way around.
-        model.apply(view);
-
-        uniformMatrix(programObject, "modelView", false, model.array());
-        uniformMatrix(programObject, "projection",  false, projection.array());
+        uniformMatrix(programObject, "model", true, model.array());
+        uniformMatrix(programObject, "view", true, view.array());
+        uniformMatrix(programObject, "projection", true, projection.array());
 
         uniformf(programObject, "color", [0,0,0,1]);
         vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
@@ -2727,6 +3066,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
         curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
+           //alert('f');
       }
     };
 
