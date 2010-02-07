@@ -2725,11 +2725,9 @@ var test = 0;
       rotateZ: function( angle ){
         var c = Math.cos( angle );
         var s = Math.sin( angle );
-        //this.apply([c, s, 0, 0,  -s, c, 0, 0,  0, 0, 1, 0,0, 0, 0, 1]);
         this.apply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
       },
       scale: function( sx, sy, sz ){
-        // uniform scaling if only 1 value passed in
         if( sx && !sy && !sz )
         {
           sy = sz = sx;
