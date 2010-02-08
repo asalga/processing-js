@@ -3085,29 +3085,33 @@
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
     
-    function P3DMatrixStack(){ this.matrixStack = new Array(); };
+    /*
+    function P3DMatrixStack(){
+      this.matrixStack = 
+    };
     P3DMatrixStack.prototype.peek = function peek(){ return this.matrixStack[this.matrixStack.length-1]; };
     P3DMatrixStack.prototype.push = function push(){ this.matrixStack.push(arguments[0]); };
     P3DMatrixStack.prototype.pop = function pop(){ return this.matrixStack.pop(); };
 
-P3DMatrixStack.prototype.mult = function mult( matrix ){
-    var tmp = [0, 0, 0, 0,
-               0, 0, 0, 0,
-               0, 0, 0, 0,
-               0, 0, 0, 0];
-    var e=0;
-    for(var row = 0; row < 4; row++)
-    {
-      for(var col = 0; col < 4; col++, e++)
+    P3DMatrixStack.prototype.mult = function mult( matrix ){
+      var tmp = [0, 0, 0, 0,
+                 0, 0, 0, 0,
+                 0, 0, 0, 0,
+                 0, 0, 0, 0];
+      var e=0;
+      for(var row = 0; row < 4; row++)
       {
-        tmp[e] += this.matrixStack[this.matrixStack.length-1][row *4 + 0] * matrix[col + 0] +
-                  this.matrixStack[this.matrixStack.length-1][row *4 + 1] * matrix[col + 4] +
-                  this.matrixStack[this.matrixStack.length-1][row *4 + 2] * matrix[col + 8] +
-                  this.matrixStack[this.matrixStack.length-1][row *4 + 3] * matrix[col + 12];
+        for(var col = 0; col < 4; col++, e++)
+        {
+          tmp[e] += this.matrixStack[this.matrixStack.length-1][row *4 + 0] * matrix[col + 0] +
+                    this.matrixStack[this.matrixStack.length-1][row *4 + 1] * matrix[col + 4] +
+                    this.matrixStack[this.matrixStack.length-1][row *4 + 2] * matrix[col + 8] +
+                    this.matrixStack[this.matrixStack.length-1][row *4 + 3] * matrix[col + 12];
+        }
       }
-    }
-    this.matrixStack.push( tmp );
+      this.matrixStack.push( tmp );
     };
+    */
 
     /*
       asalga.wordpress.com
