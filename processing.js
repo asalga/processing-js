@@ -358,7 +358,7 @@
     
     for (var i in Processing.lib) {
       if (1) {
-        p[i] = window.Processing.lib[i];
+        p[i] = Processing.lib[i];
       }
     }
 
@@ -581,7 +581,37 @@
     p.concat = function concat(array1, array2) {
       return array1.concat(array2);
     };
+		
+		p.sort = function(array, numElem){
+			var ret = [];
 
+			// depending on the type used (int, float) or string
+			// we'll need to use a different compare function
+			if(array.length > 0){
+				// copy since we need to return another array
+				var elemsToCopy = numElem > 0 ? numElem : array.length;
+				for(var i=0; i < elemsToCopy; i++){
+					ret.push(array[i]);
+				}
+				if(typeof array[0] == "string"){  
+					ret.sort();
+				}
+				// int or float
+				else{
+					ret.sort(function(a,b){return a-b;});
+				}
+						
+				// copy on the rest of the elements that were not sorted in case the user
+				// only wanted a subset of an array to be sorted.
+				if(numElem > 0){
+					for(var i = ret.length; i < array.length; i++){
+						ret.push(array[i]);
+					}
+				}
+			}
+			return ret;
+		};
+		
     p.splice = function (array, value, index) {
       if (array.length === 0 && value.length === 0) {
         return array;
@@ -1369,6 +1399,68 @@
     ////////////////////////////////////////////////////////////////////////////
     // Binary Functions
     ////////////////////////////////////////////////////////////////////////////
+    function decToBin(value, numBitsInValue) {
+			var mask = 1;
+			mask = mask << (numBitsInValue-1);
+
+			var str = "";
+			for(var i=0; i < numBitsInValue ;i++) {
+				str += (mask & value) ? "1" : "0";
+				mask = mask >>> 1; 
+			}
+			return str;
+		}
+
+		p.binary = function(num, numBits) {
+			var numBitsInValue = 32;
+				
+			// color
+			if(typeof num == "string" && num.length > 1) {
+				var c = num.slice(5,-1).split(",");
+						
+				// if all components are zero, a single "0" is returned
+				// for some reason
+				var sbin = [
+				decToBin(c[3]*255,8), // alpha is normalized
+				decToBin(c[0],8), // r
+				decToBin(c[1],8), // g
+				decToBin(c[2],8), // b
+				];
+						
+				var s = sbin[0]+sbin[1]+sbin[2]+sbin[3];
+						
+				if(numBits) { 
+					s = s.substr(-numBits);
+				}
+				// if the user didn't specify number of bits,
+				// trim leading zeros.
+				else {
+					s = s.replace(/^0+$/g,"0");
+					s = s.replace(/^0{1,}1/g,"1");
+				}
+				return s;
+			}
+				
+			// char
+			if(typeof num == "string") {
+				num = num.charCodeAt(0);
+						
+				if(numBits) {
+					numBitsInValue = 32;
+				}
+				else {
+					numBitsInValue = 16;
+				}
+			}
+				
+			var str = decToBin(num, numBitsInValue);
+				
+			// trim string if user wanted less chars
+			if(numBits) {
+				str = str.substr(-numBits);
+			}    
+			return str;
+		};  
     p.unbinary = function unbinary(binaryString) {
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
@@ -1731,7 +1823,21 @@
       return key;
     };
 
-
+    p.trim = function( str ) {
+      var newstr;
+      if (typeof str === "object") {
+        // if str is an array recursivly loop through each element
+        // and drill down into multiple arrays trimming whitespace
+        newstr = new Array(0);
+        for (var i = 0; i < str.length; i++) {
+          newstr[i] = p.trim(str[i]);
+        }
+      } else {
+        // if str is not an array then remove all whitespace, tabs, and returns
+        newstr = str.replace(/^\s*/,'').replace(/\s*$/,'').replace(/\r*$/,''); 
+      }
+      return newstr; 
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Math functions
@@ -2552,7 +2658,7 @@
         return this.elements.slice();
       },
       translate: function( tx, ty, tz ){
-        if(tx && ty && !tz)
+        if( tx && ty && !tz )
         {
           this.translate( tx, ty, 0 );
         }
@@ -2656,13 +2762,12 @@
                         0, 0, 0, 0,
                         0, 0, 0, 0];
           var e = 0;
-          for(var row = 0; row < 4; row++){
-            for(var col = 0; col < 4; col++, e++){
-              result[e] += this.elements[col + 0] *   source[row *4 + 0] +
-                           this.elements[col + 4] *   source[row *4 + 1] +
-                           this.elements[col + 8] *   source[row *4 + 2] +
-                           this.elements[col +  12] * source[row *4 + 3];
-
+          for( var row = 0; row < 4; row++ ){
+            for( var col = 0; col < 4; col++, e++ ){
+              result[e] += this.elements[col +  0] * source[row *4 + 0] +
+                           this.elements[col +  4] * source[row *4 + 1] +
+                           this.elements[col +  8] * source[row *4 + 2] +
+                           this.elements[col + 12] * source[row *4 + 3];
             }
           }
           this.elements = result.slice();
@@ -2714,12 +2819,15 @@
         var s = Math.sin( angle );
         this.apply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
       },
+      /*
+        Uniform scaling if only one value passed in
+      */
       scale: function( sx, sy, sz ){
         if( sx && !sy && !sz )
         {
           sy = sz = sx;
         }
-        else if(sx && sy && !sz)
+        else if( sx && sy && !sz )
         {
           sz = 1;
         }
@@ -2759,7 +2867,7 @@
         
         // Account for a very small value
         // return false if not successful.
-        if (Math.abs(fDet) <= 1e-9)
+        if ( Math.abs( fDet ) <= 1e-9 )
         {
           return false;
         }
@@ -2806,7 +2914,7 @@
       toString: function()
       {
         var str = "";
-        for(var i = 0; i < 15; i++)
+        for( var i = 0; i < 15; i++ )
         {
           str += this.elements[i] + ", ";
         }
@@ -3010,6 +3118,31 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
     };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 3D Functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    /*
+      Sets the uniform variable 'varName' to the value specified by 'value'.
+      Before calling this function, make sure the correct program object 
+      has been installed as part of the current rendering state.
+
+      On some systems, if the variable exists in the shader but isn't used,
+      the compiler will optimize it out and this function will fail.
+    */
+    function uniformf(programObj, varName, varValue)
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (varValue.length == 4){curContext.uniform4fv(varLocation, varValue);}
+        else if (varValue.length == 3){curContext.uniform3fv(varLocation, varValue);}
+        else if (varValue.length == 2){curContext.uniform2fv(varLocation, varValue);}
+        else                          {curContext.uniform1f (varLocation, varValue);}
+      }
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
@@ -3325,6 +3458,10 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
 
+	p.bezierTangent = function bezierTangent(a, b, c, d, t) {
+      return ( 3 * t * t * ( -a + 3 * b -3 * c + d ) +6 *t * ( a - 2 * b + c ) + 3 * ( -a + b ) );
+    };
+	
     p.curvePoint = function curvePoint(a, b, c, d, t) {
       return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
     };
