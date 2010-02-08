@@ -1204,9 +1204,6 @@
       modelView.rotateY(angleInRadians);
     }
 
-    // what's this doing here?
-    ///p.ortho = function ortho() {};
-
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
       curContext.save();
