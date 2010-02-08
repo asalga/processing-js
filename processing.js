@@ -476,7 +476,6 @@
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0;      
 
-var test = 0;
       // Camera defaults and settings
       var cam,
       cameraInv,
@@ -489,16 +488,11 @@ var test = 0;
       cameraX = curElement.width / 2,
       cameraY = curElement.height / 2,
       cameraZ = cameraY / Math.tan(cameraFOV / 2),
-//      cameraNear = 0.00001;//cameraZ / 1000,
-      cameraNear = cameraZ / 10000,
+      cameraNear = cameraZ / 10,
       cameraFar = cameraZ * 10,
       cameraAspect = curElement.width / curElement.height;
-      
-//      var rotTest;
-  //    var transTest;
-  var testing = null;
 
-      var counter1 = 0;
+    var lineWidth3D = 1;
 
     var firstX, firstY, secondX, secondY, prevX, prevY;
 
@@ -1139,25 +1133,19 @@ var test = 0;
       return color;
     };
 
+    p.test = function()
+    {
+      p.camera();
+      //p.perspective();
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
     p.translate = function translate(x, y,z) {
       if(p.use3DContext)
       {
-        if(!testing)
-        {
-          testing = new PMatrix3D();
-        }
-        // trans...
-        //forwardTransform.translate(x,y,z);
         modelView.translate(x,y,z);
-//        alert(forwardTransform.array());
-
-/*        testing.apply([1,0,0,0,
-        0,1,0,0,
-        0,0,1,0,
-        x,y,z,1]);*/
       }
       else
       {
@@ -1292,7 +1280,7 @@ var test = 0;
       inDraw = true;
 
       if (p.use3DContext) {
-        //curContext.clear(curContext.COLOR_BUFFER_BIT);
+        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.draw();
       } else {
         p.pushMatrix();
@@ -2287,9 +2275,8 @@ var test = 0;
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
 
-          testing = new PMatrix3D();
+//          testing = new PMatrix3D();
           p.camera();
-          //p.camera(70.0, 35.0, 120.0, 50.0, 50.0, 0.0, 0.0, 1.0, 0.0);
           p.perspective();
         }
 
@@ -2988,59 +2975,16 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         {
           h = d = w;
         }
-        test += 0.9;
+        
         // Modeling transformation
         var model = new PMatrix3D();
-       // modelView.scale(1,-1,1);
-      //  model.set(testing);
-      var mv = new PMatrix3D();
-      modelView.rotateX(test);
-     // mv.set(modelView);
-      //alert(mv.toString());
-      
-      var test_ = new PMatrix3D();
-      test_.set(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
-      
-      var test2 = new PMatrix3D();
-      test2.set(4,3,2,5,6,7,8,3,4,2,1,3,4,5,6,7);
-      
-      test_.apply(test2);
-      44, 43, 45, 48, 116, 111, 113, 120, 188, 179, 181, 192, 260, 247, 249, 264
-     // alert(test_.toString());
-      
-       // mv.translate(250,250,400);
-     
-     //   alert(modelView.toString());
-/*forwardTransform.translate(250,250,370);
-alert(forwardTransform.array());
-
-forwardTransform.rotateX(3.14/4);
-alert(forwardTransform.array());*/
-/*       model.apply(
-       1,0,0,250,
-       0,1,0,250,
-       0,0,1,400,
-       0,0,0,1);
-              model.rotateX(1);*/
-       
-//        model.apply(rotTest);
-  ///      model.apply(transTest);
-        /*
-                model.rotateX(0.51);
-                model.apply(
-                [1,0,0,0,
-                0,1,0,0,
-                0,0,1,0,
-                250,250,425,1]);*/
-        //model.apply(testing);
-        
-       // model.scale(w,h,d);
+        model.scale(w,h,d);
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
         var view = new PMatrix3D();
-        view.apply(modelView.array());
         view.scale(1,-1,1);
+        view.apply(modelView.array());
 
         uniformMatrix(programObject, "model", true, model.array());
         uniformMatrix(programObject, "view", true, view.array());
@@ -3050,7 +2994,7 @@ alert(forwardTransform.array());*/
         vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
         
         // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth(1);
+        curContext.lineWidth(lineWidth3D);
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
 
         // fix stitching problems. (lines get occluded by triangles
@@ -3064,7 +3008,6 @@ alert(forwardTransform.array());*/
         vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
         curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
-           //alert('f');
       }
     };
 
@@ -3091,7 +3034,14 @@ alert(forwardTransform.array());*/
     };
 
     p.strokeWeight = function strokeWeight(w) {
-      curContext.lineWidth = w;
+      if(p.use3DContext)
+      {
+        lineWidth3D = w;
+      }
+      else
+      {
+        curContext.lineWidth = w;
+      }
     };
 
     p.strokeCap = function strokeCap(set) {

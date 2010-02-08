@@ -1,26 +1,21 @@
-// I commented the differences
-
-//import processing.opengl.*;
-
+float v=1;
 void setup()
 {
-
   size(500,500,OPENGL);
-  //stroke(0);noFill();
-  if(testPMatrix3D())
-  {
-    alert('tests passed');
-  }
-  else
-  {
-    alert('failed');
-  }
 }
 
 void draw()
 {
- // background(33,66,99);
-  translate(250,250,430);
+  background(33,66,99);
 
-  box(1,1,1);
+  v+=0.01;
+
+  camera();
+  translate(245,245,380);
+  rotateY(v);
+  
+  // play with this
+  strokeWeight(0);
+
+  box(1,2,4.5);
 }
