@@ -12,7 +12,8 @@
 
     <p>
       This page demontrates the 3D functionality which is being added to <a href="http://processingjs.org/">Processing.js</a><br />
-      using WebGL. You'll therefore need a WebGL compatible browser to see the demo.<br >
+      using <a href="http://www.khronos.org/webgl/">WebGL</a>. You'll therefore need a WebGL compatible browser to see the demo.<br />
+      It seems to work with <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Minefield</a> and <a href="http://build.chromium.org/buildbot/snapshots/">Chrome</a>, but not <a href="http://nightly.webkit.org/">Webkit</a>...I'll look into this.<br />
       <br />
       Make changes to the source on the left and click the button on the bottom<br />
       to update the canvas. Keep in mind not all 3D functionality has been implemented and<br />
@@ -24,13 +25,15 @@
         <td>
           <textarea id="source" rows="30" cols="30%">
 //     
-//EDIT ME!
+// EDIT ME! But don't get too ambitious.
 //    
 float rot = 0;
 float rot2 = 0;
 
 void setup()
 {
+  // Don't change, canvas needs have
+  // same dimensions here.
   size(500,500,OPENGL);
 }
 
@@ -47,9 +50,10 @@ void draw()
   rotateY(rot);
   rotateZ(rot*1.1);
 
-  // play with this
+  // play with this!
   strokeWeight(1);
 
+  // values scale the box
   box(2,4,6);
   
   translate(0, 5 + sin(frameCount/10),0);
