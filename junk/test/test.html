@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../processing.js"></script>
+    <link rel="stylesheet" href="../style.css"/>
+  </head>
+
+  <body>
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Some test</h2>
+
+    <p>If all goes well for this test, a 3D context should be acquired<br />
+    without any exceptions and a blue background should appear.
+    </p>
+
+    <p>
+      <canvas datasrc="pjs.js" width="500" height="500"></canvas>
+      <span id="debug"></span>
+    </p>
+    
+    <pre>
+<b>//Test written by <a href="http://asalga.wordpress.com/">Andor Salga</a></b>
+void setup()
+{
+  size(500,500,OPENGL);
+}
+
+void draw()
+{
+  background(33,66,99);
+}</pre>
+
+</body>
+</html>
