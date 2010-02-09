@@ -480,6 +480,7 @@
       var cam,
       cameraInv,
       forwardTransform,
+      inverseCopy,
       modelView,
       modelViewInv,
       projection,
@@ -2911,6 +2912,17 @@
         }
         str += this.elements[15];
         return str;
+      },
+      invApply: function(){
+        if (inverseCopy == null) {
+          inverseCopy = new PMatrix3D();
+        }
+        inverseCopy.set(arguments);
+        if (!inverseCopy.invert()) {
+          return false;
+        }
+        this.preApply(inverseCopy);
+        return true;
       }
     };
 
@@ -3066,19 +3078,23 @@
         x.normalize();
         y.normalize();
         cam = new PMatrix3D();
-        cam.set( x.x, x.y, x.z, 0,
-        y.x, y.y, y.z, 0,
-        z.x, z.y, z.z, 0,
-        0, 0, 0, 1 );
+        cam.set(x.x, x.y, x.z, 0,
+                y.x, y.y, y.z, 0,
+                z.x, z.y, z.z, 0,
+                0, 0, 0, 1 );
         cam.translate( -a[ 0 ], -a[ 1 ], -a[ 2 ] );
+
         cameraInv = new PMatrix3D();
-        cameraInv.set( x.x, x.y, x.z, 0,
-        y.x, y.y, y.z, 0,
-        z.x, z.y, z.z, 0,
-        0, 0, 0, 1 );
+        cameraInv.invApply( x.x, x.y, x.z, 0,
+                            y.x, y.y, y.z, 0,
+                            z.x, z.y, z.z, 0,
+                            0, 0, 0, 1 );
         cameraInv.translate( a[ 0 ], a[ 1 ], a[ 2 ] );
+
+        // allocation needs to be moved out of here!
         modelView = new PMatrix3D();
         modelView.set( cam );
+
         modelViewInv = new PMatrix3D();
         modelViewInv.set( cameraInv );
       }
