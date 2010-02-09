@@ -16,7 +16,8 @@ td{
 
 textarea{
 width:500px;
-height:500px
+height:500px;
+font-family: monospace;
 }
 
 #source{
