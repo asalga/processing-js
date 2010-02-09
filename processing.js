@@ -3172,7 +3172,7 @@
       var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
       if (ow != 0) ox /= ow;
-      return p.width * (1 + ox) / 2.0f;
+      return p.width * (1 + ox) / 2.0;
     }
 
 	  p.screenY = function screenY(x, y, z) {
@@ -3188,7 +3188,7 @@
 	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
 	    if (ow != 0) oy /= ow;
-	    return p.height * (1 + oy) / 2.0f;
+	    return p.height * (1 + oy) / 2.0;
 	  }
 
 	  p.screenZ = function screenZ(x, y,z) {
@@ -3204,7 +3204,7 @@
 	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
 	    if (ow != 0) oz /= ow;
-	    return (oz + 1) / 2.0f;
+	    return (oz + 1) / 2.0;
 	  }
 
     ////////////////////////////////////////////////////////////////////////////
