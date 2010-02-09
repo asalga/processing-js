@@ -491,7 +491,8 @@
       cameraZ = cameraY / Math.tan(cameraFOV / 2),
       cameraNear = cameraZ / 10,
       cameraFar = cameraZ * 10,
-      cameraAspect = curElement.width / curElement.height;
+      cameraAspect = curElement.width / curElement.height,
+      userMatrixStack;
 
     var lineWidth3D = 1;
 
@@ -1171,7 +1172,7 @@
     p.translate = function translate(x, y,z) {
       if(p.use3DContext)
       {
-        modelView.translate(x,y,z);
+        forwardTransform.translate(x,y,z);
       }
       else
       {
@@ -1185,24 +1186,39 @@
       curContext.rotate(aAngle);
     };
     p.pushMatrix = function pushMatrix() {
-      curContext.save();
+      if(p.use3DContext){
+        userMatrixStack.load(modelView);
+      }
+      else{
+        curContext.save();
+      }
     };
     p.popMatrix = function popMatrix() {
-      curContext.restore();
+      if(p.use3DContext){
+        modelView.set(userMatrixStack.pop());
+      }
+      else
+      {
+        curContext.restore();
+      }
     };
+    p.resetMatrix = function resetMatrix()
+    {
+      forwardTransform.reset();
+    }
     
     p.rotateX = function(angleInRadians)
     {
-      modelView.rotateX(angleInRadians);
+      forwardTransform.rotateX(angleInRadians);
     }
     
     p.rotateZ = function(angleInRadians)
     {
-      modelView.rotateZ(angleInRadians);
+      forwardTransform.rotateZ(angleInRadians);
     }
     p.rotateY = function(angleInRadians)
     {
-      modelView.rotateY(angleInRadians);
+      forwardTransform.rotateY(angleInRadians);
     }
 
     p.pushStyle = function pushStyle() {
@@ -2376,6 +2392,7 @@
 
           p.camera();
           p.perspective();
+          userMatrixStack = new PMatrix3DStack();
         }
 
         p.stroke(0);
@@ -2650,17 +2667,13 @@
         return this.elements.slice();
       },
       translate: function( tx, ty, tz ){
-        if( tx && ty && !tz )
-        {
-          this.translate( tx, ty, 0 );
-        }
-        else
-        {                      
-          this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
-          this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
-          this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
-          this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
-        }
+        if(tz == null){
+          tz = 0;
+        }                
+        this.elements[ 3] += tx*this.elements[ 0] + ty*this.elements[ 1] + tz*this.elements[ 2];
+        this.elements[ 7] += tx*this.elements[ 4] + ty*this.elements[ 5] + tz*this.elements[ 6];
+        this.elements[11] += tx*this.elements[ 8] + ty*this.elements[ 9] + tz*this.elements[10];
+        this.elements[15] += tx*this.elements[12] + ty*this.elements[13] + tz*this.elements[14];
       },
       transpose: function(){
         var temp = this.elements.slice();
@@ -3094,6 +3107,8 @@
         // allocation needs to be moved out of here!
         modelView = new PMatrix3D();
         modelView.set( cam );
+        
+        forwardTransform = modelView;
 
         modelViewInv = new PMatrix3D();
         modelViewInv.set( cameraInv );
@@ -3277,7 +3292,8 @@
         // becuase that's what Processing does.
         var view = new PMatrix3D();
         view.scale(1,-1,1);
-        view.apply(modelView.array());
+        //view.apply(modelView.array());
+        view.apply(forwardTransform.array());
 
         uniformMatrix(programObject, "model", true, model.array());
         uniformMatrix(programObject, "view", true, view.array());

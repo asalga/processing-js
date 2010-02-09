@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   
-  <body>
+  <body onload="runIt();">
     <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
     <h2>IDE 3D DEMO</h2>
 
@@ -24,43 +24,36 @@
       <tr>
         <td>
           <textarea id="source" rows="30" cols="30%">
-//     
-// EDIT ME! But don't get too ambitious.
-//    
-float rot = 0;
-float rot2 = 0;
+float r = 0;
 
 void setup()
 {
-  // Don't change, canvas needs have
-  // same dimensions here.
+  // Don't modify this...
   size(500,500,OPENGL);
 }
 
 void draw()
 {
   camera();
-
   background(33,66,99);
 
-  rot += 0.01;
-  rot2 += 0.015;
-
-  translate(250,250,380);
-  rotateY(rot);
-  rotateZ(rot*1.1);
-
-  // play with this!
-  strokeWeight(1);
-
-  // values scale the box
-  box(2,4,6);
+  translate(250,260,380);
+  rotateY(r += 0.01);
   
-  translate(0, 5 + sin(frameCount/10),0);
-  rotateX(rot2);
-
-  strokeWeight(2);
-  box(2,2,2);
+  strokeWeight(1);
+    
+  for(int i = 0; i < 12; i++)
+  {
+    pushMatrix();
+    translate(i-5,-2,0);
+    translate(0,cos(frameCount/5 + i),0);
+    rotateZ(sin(frameCount/30));
+    box(1,1,1);
+    popMatrix();
+  }
+  
+  strokeWeight(3);
+  box(13,1,13);
 }</textarea>
         </td>
 
