@@ -3013,74 +3013,112 @@
                       0, 0, -1, 0);
     };*/
     
-  p.camera = function camera(){
-    if( arguments.length === 0 ){
-      //in case canvas is resized
-      cameraX = curElement.width / 2;
-      cameraY = curElement.height / 2;
-      cameraZ = cameraY / Math.tan( cameraFOV / 2 );
-      p.camera( cameraX, cameraY, cameraZ,
-      cameraX, cameraY, 0,
-      0, 1, 0 );
+    p.camera = function camera(){
+      if( arguments.length === 0 ){
+        //in case canvas is resized
+        cameraX = curElement.width / 2;
+        cameraY = curElement.height / 2;
+        cameraZ = cameraY / Math.tan( cameraFOV / 2 );
+        p.camera( cameraX, cameraY, cameraZ,
+        cameraX, cameraY, 0,
+        0, 1, 0 );
+      }
+      else{
+        var a = arguments;
+        var z = new p.PVector( a[ 0 ] - a[ 3 ], a[ 1 ] - a[ 4 ], a[ 2 ] - a[ 5 ] );
+        var y = new p.PVector( a[ 6 ], a[ 7 ], a[ 8 ]);
+        var transX, transY, transZ;
+        z.normalize();
+        var x = p.PVector.cross( y, z );
+        y = p.PVector.cross( z, x );
+        x.normalize();
+        y.normalize();
+        cam = new PMatrix3D();
+        cam.set( x.x, x.y, x.z, 0,
+        y.x, y.y, y.z, 0,
+        z.x, z.y, z.z, 0,
+        0, 0, 0, 1 );
+        cam.translate( -a[ 0 ], -a[ 1 ], -a[ 2 ] );
+        cameraInv = new PMatrix3D();
+        cameraInv.set( x.x, x.y, x.z, 0,
+        y.x, y.y, y.z, 0,
+        z.x, z.y, z.z, 0,
+        0, 0, 0, 1 );
+        cameraInv.translate( a[ 0 ], a[ 1 ], a[ 2 ] );
+        modelView = new PMatrix3D();
+        modelView.set( cam );
+        modelViewInv = new PMatrix3D();
+        modelViewInv.set( cameraInv );
+      }
+    };
+     
+    p.perspective = function perspective(){
+      if( arguments.length === 0 ){
+        //in case canvas is resized\
+        cameraY = curElement.height / 2;
+        cameraZ = cameraY / Math.tan( cameraFOV / 2 );
+        cameraNear = cameraZ / 10;
+        cameraFar = cameraZ * 10;
+        cameraAspect = curElement.width / curElement.height;
+        p.perspective( cameraFOV, cameraAspect, cameraNear, cameraFar );
+      }
+      else{
+        var a = arguments;
+        var yMax, yMin, xMax, xMin;
+        yMax = a[ 2 ] * Math.tan( a[ 0 ] / 2 );
+        yMin = -1 * yMax;
+        xMax = yMax * a[ 1 ];
+        xMin = yMin * a[ 1 ];
+        p.frustum( xMin, xMax, yMin, yMax, a[ 2 ], a[ 3 ] );
+      }
+    };
+
+    p.frustum = function frustum( left, right, bottom, top, near, far ){
+      frustumMode = true;
+      projection = new PMatrix3D();
+      projection.set( (2*near)/(right-left), 0, (right+left)/(right-left), 0,
+      0, (2*near)/(top-bottom), (top+bottom)/(top-bottom), 0,
+      0, 0, -(far+near)/(far-near), -(2*far*near)/(far-near),
+      0, 0, -1, 0 );
+    };    
+      
+    p.modelX = function modelX(x, y, z) {
+      var ax = modelView.m00*x + modelView.m01*y + modelView.m02*z + modelView.m03;
+      var ay = modelView.m10*x + modelView.m11*y + modelView.m12*z + modelView.m13;
+      var az = modelView.m20*x + modelView.m21*y + modelView.m22*z + modelView.m23;
+      var aw = modelView.m30*x + modelView.m31*y + modelView.m32*z + modelview.m33;
+
+      var ox = cameraInv.m00*ax + cameraInv.m01*ay + cameraInv.m02*az + cameraInv.m03*aw;
+      var ow = cameraInv.m30*ax + cameraInv.m31*ay + cameraInv.m32*az + cameraInv.m33*aw;
+
+      return (ow != 0) ? ox / ow : ox;
     }
-    else{
-      var a = arguments;
-      var z = new p.PVector( a[ 0 ] - a[ 3 ], a[ 1 ] - a[ 4 ], a[ 2 ] - a[ 5 ] );
-      var y = new p.PVector( a[ 6 ], a[ 7 ], a[ 8 ]);
-      var transX, transY, transZ;
-      z.normalize();
-      var x = p.PVector.cross( y, z );
-      y = p.PVector.cross( z, x );
-      x.normalize();
-      y.normalize();
-      cam = new PMatrix3D();
-      cam.set( x.x, x.y, x.z, 0,
-      y.x, y.y, y.z, 0,
-      z.x, z.y, z.z, 0,
-      0, 0, 0, 1 );
-      cam.translate( -a[ 0 ], -a[ 1 ], -a[ 2 ] );
-      cameraInv = new PMatrix3D();
-      cameraInv.set( x.x, x.y, x.z, 0,
-      y.x, y.y, y.z, 0,
-      z.x, z.y, z.z, 0,
-      0, 0, 0, 1 );
-      cameraInv.translate( a[ 0 ], a[ 1 ], a[ 2 ] );
-      modelView = new PMatrix3D();
-      modelView.set( cam );
-      modelViewInv = new PMatrix3D();
-      modelViewInv.set( cameraInv );
+
+    p.modelY = function modelY(x, y, z) {
+      var ax = modelView.m00*x + modelView.m01*y + modelView.m02*z + modelView.m03;
+      var ay = modelView.m10*x + modelView.m11*y + modelView.m12*z + modelView.m13;
+      var az = modelView.m20*x + modelView.m21*y + modelView.m22*z + modelView.m23;
+      var aw = modelView.m30*x + modelView.m31*y + modelView.m32*z + modelView.m33;
+
+      var oy = cameraInv.m10*ax + cameraInv.m11*ay + cameraInv.m12*az + cameraInv.m13*aw;
+      var ow = cameraInv.m30*ax + cameraInv.m31*ay + cameraInv.m32*az + cameraInv.m33*aw;
+
+      return (ow != 0) ? oy / ow : oy;
     }
-  };
-   
-  p.perspective = function perspective(){
-    if( arguments.length === 0 ){
-      //in case canvas is resized\
-      cameraY = curElement.height / 2;
-      cameraZ = cameraY / Math.tan( cameraFOV / 2 );
-      cameraNear = cameraZ / 10;
-      cameraFar = cameraZ * 10;
-      cameraAspect = curElement.width / curElement.height;
-      p.perspective( cameraFOV, cameraAspect, cameraNear, cameraFar );
+
+    p.modelZ = function modelZ(x, y, z) {
+      var ax = modelView.m00*x + modelView.m01*y + modelView.m02*z + modelView.m03;
+      var ay = modelView.m10*x + modelView.m11*y + modelView.m12*z + modelView.m13;
+      var az = modelView.m20*x + modelView.m21*y + modelView.m22*z + modelView.m23;
+      var aw = modelView.m30*x + modelView.m31*y + modelView.m32*z + modelView.m33;
+
+      var oz = cameraInv.m20*ax + cameraInv.m21*ay + cameraInv.m22*az + cameraInv.m23*aw;
+      var ow = cameraInv.m30*ax + cameraInv.m31*ay + cameraInv.m32*az + cameraInv.m33*aw;
+
+      return (ow != 0) ? oz / ow : oz;
     }
-    else{
-      var a = arguments;
-      var yMax, yMin, xMax, xMin;
-      yMax = a[ 2 ] * Math.tan( a[ 0 ] / 2 );
-      yMin = -1 * yMax;
-      xMax = yMax * a[ 1 ];
-      xMin = yMin * a[ 1 ];
-      p.frustum( xMin, xMax, yMin, yMax, a[ 2 ], a[ 3 ] );
-    }
-  };
-  p.frustum = function frustum( left, right, bottom, top, near, far ){
-    frustumMode = true;
-    projection = new PMatrix3D();
-    projection.set( (2*near)/(right-left), 0, (right+left)/(right-left), 0,
-    0, (2*near)/(top-bottom), (top+bottom)/(top-bottom), 0,
-    0, 0, -(far+near)/(far-near), -(2*far*near)/(far-near),
-    0, 0, -1, 0 );
-  };    
-    
+
+
     ////////////////////////////////////////////////////////////////////////////
     // Matrix Stack
     ////////////////////////////////////////////////////////////////////////////
