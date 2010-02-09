@@ -2914,6 +2914,38 @@
       }
     };
 
+    function PMatrix3DStack(){
+      this.matrixStack = new Array();
+    };
+
+    PMatrix3DStack.prototype.load = function load(){
+      var tmpMatrix = new PMatrix3D();
+      if ( arguments.length === 1 ){
+        tmpMatrix.set( arguments[0] );
+      }
+      else{
+        tmpMatrix.set( arguments );
+      }
+      this.matrixStack.push( tmpMatrix );
+    };
+
+    PMatrix3DStack.prototype.push = function push() {
+      this.matrixStack.push( this.peek() );
+    };
+    PMatrix3DStack.prototype.pop = function pop() {
+      return this.matrixStack.pop();
+    };
+
+    PMatrix3DStack.prototype.peek = function peek(){
+      var tmpMatrix = new PMatrix3D();
+      tmpMatrix.set( this.matrixStack[ this.matrixStack.length - 1 ] );
+      return tmpMatrix;
+    };
+
+    PMatrix3DStack.prototype.mult = function mult( matrix ){
+      this.matrixStack[ this.matrixStack.length - 1 ].apply( matrix );
+    };
+
   /*
   my camera
   p.camera = function camera( eyeX, eyeY, eyeZ,
