@@ -3160,39 +3160,48 @@
     }
 
     p.screenX = function screenX(x, y, z) {
-      var ax = modelview.m00*x + modelview.m01*y + modelview.m02*z + modelview.m03;
-      var ay = modelview.m10*x + modelview.m11*y + modelview.m12*z + modelview.m13;
-      var az = modelview.m20*x + modelview.m21*y + modelview.m22*z + modelview.m23;
-      var aw = modelview.m30*x + modelview.m31*y + modelview.m32*z + modelview.m33;
+      var mv = modelView.array();
+      var pj = projection.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
 
-      var ox = projection.m00*ax + projection.m01*ay + projection.m02*az + projection.m03*aw;
-      var ow = projection.m30*ax + projection.m31*ay + projection.m32*az + projection.m33*aw;
+      var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
       if (ow != 0) ox /= ow;
-      return width * (1 + ox) / 2.0f;
+      return p.width * (1 + ox) / 2.0f;
     }
 
 	  p.screenY = function screenY(x, y, z) {
-	    var ax = modelview.m00*x + modelview.m01*y + modelview.m02*z + modelview.m03;
-	    var ay = modelview.m10*x + modelview.m11*y + modelview.m12*z + modelview.m13;
-	    var az = modelview.m20*x + modelview.m21*y + modelview.m22*z + modelview.m23;
-	    var aw = modelview.m30*x + modelview.m31*y + modelview.m32*z + modelview.m33;
+      var mv = modelView.array();
+      var pj = projection.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-	    var oy = projection.m10*ax + projection.m11*ay + projection.m12*az + projection.m13*aw;
-	    var ow = projection.m30*ax + projection.m31*ay + projection.m32*az + projection.m33*aw;
+	    var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
 	    if (ow != 0) oy /= ow;
-	    return height * (1 + oy) / 2.0f;
+	    return p.height * (1 + oy) / 2.0f;
 	  }
 
 	  p.screenZ = function screenZ(x, y,z) {
-	    var ax = modelview.m00*x + modelview.m01*y + modelview.m02*z + modelview.m03;
-	    var ay = modelview.m10*x + modelview.m11*y + modelview.m12*z + modelview.m13;
-	    var az = modelview.m20*x + modelview.m21*y + modelview.m22*z + modelview.m23;
-	    var aw = modelview.m30*x + modelview.m31*y + modelview.m32*z + modelview.m33;
+      var mv = modelView.array();
+      var pj = projection.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-	    var oz = projection.m20*ax + projection.m21*ay + projection.m22*az + projection.m23*aw;
-	    var ow = projection.m30*ax + projection.m31*ay + projection.m32*az + projection.m33*aw;
+	    var oz = pj[ 8]*ax + pj[ 9]*ay + pj[10]*az + pj[11]*aw;
+	    var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
 	    if (ow != 0) oz /= ow;
 	    return (oz + 1) / 2.0f;
