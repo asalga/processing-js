@@ -3115,37 +3115,46 @@
     };    
       
     p.modelX = function modelX(x, y, z) {
-      var ax = modelView.m00*x + modelView.m01*y + modelView.m02*z + modelView.m03;
-      var ay = modelView.m10*x + modelView.m11*y + modelView.m12*z + modelView.m13;
-      var az = modelView.m20*x + modelView.m21*y + modelView.m22*z + modelView.m23;
-      var aw = modelView.m30*x + modelView.m31*y + modelView.m32*z + modelview.m33;
+      var mv = modelView.array();
+      var ci = camInv.array();
 
-      var ox = cameraInv.m00*ax + cameraInv.m01*ay + cameraInv.m02*az + cameraInv.m03*aw;
-      var ow = cameraInv.m30*ax + cameraInv.m31*ay + cameraInv.m32*az + cameraInv.m33*aw;
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
+
+      var ox = ci[ 0]*ax + ci[ 1]*ay + ci[ 2]*az + ci[ 3]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;      
 
       return (ow != 0) ? ox / ow : ox;
     }
 
     p.modelY = function modelY(x, y, z) {
-      var ax = modelView.m00*x + modelView.m01*y + modelView.m02*z + modelView.m03;
-      var ay = modelView.m10*x + modelView.m11*y + modelView.m12*z + modelView.m13;
-      var az = modelView.m20*x + modelView.m21*y + modelView.m22*z + modelView.m23;
-      var aw = modelView.m30*x + modelView.m31*y + modelView.m32*z + modelView.m33;
+      var mv = modelView.array();
+      var ci = camInv.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
 
-      var oy = cameraInv.m10*ax + cameraInv.m11*ay + cameraInv.m12*az + cameraInv.m13*aw;
-      var ow = cameraInv.m30*ax + cameraInv.m31*ay + cameraInv.m32*az + cameraInv.m33*aw;
+      var oy = ci[ 4]*ax + ci[ 5]*ay + ci[ 6]*az + ci[ 7]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;
 
       return (ow != 0) ? oy / ow : oy;
     }
 
     p.modelZ = function modelZ(x, y, z) {
-      var ax = modelView.m00*x + modelView.m01*y + modelView.m02*z + modelView.m03;
-      var ay = modelView.m10*x + modelView.m11*y + modelView.m12*z + modelView.m13;
-      var az = modelView.m20*x + modelView.m21*y + modelView.m22*z + modelView.m23;
-      var aw = modelView.m30*x + modelView.m31*y + modelView.m32*z + modelView.m33;
+      var mv = modelView.array();
+      var ci = camInv.array();
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15]; 
 
-      var oz = cameraInv.m20*ax + cameraInv.m21*ay + cameraInv.m22*az + cameraInv.m23*aw;
-      var ow = cameraInv.m30*ax + cameraInv.m31*ay + cameraInv.m32*az + cameraInv.m33*aw;
+      var oz = ci[ 8]*ax + ci[ 9]*ay + ci[10]*az + ci[11]*aw;
+      var ow = ci[12]*ax + ci[13]*ay + ci[14]*az + ci[15]*aw;
 
       return (ow != 0) ? oz / ow : oz;
     }
