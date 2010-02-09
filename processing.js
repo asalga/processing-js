@@ -3150,6 +3150,44 @@
       return (ow != 0) ? oz / ow : oz;
     }
 
+    p.screenX = function screenX(x, y, z) {
+      var ax = modelview.m00*x + modelview.m01*y + modelview.m02*z + modelview.m03;
+      var ay = modelview.m10*x + modelview.m11*y + modelview.m12*z + modelview.m13;
+      var az = modelview.m20*x + modelview.m21*y + modelview.m22*z + modelview.m23;
+      var aw = modelview.m30*x + modelview.m31*y + modelview.m32*z + modelview.m33;
+
+      var ox = projection.m00*ax + projection.m01*ay + projection.m02*az + projection.m03*aw;
+      var ow = projection.m30*ax + projection.m31*ay + projection.m32*az + projection.m33*aw;
+
+      if (ow != 0) ox /= ow;
+      return width * (1 + ox) / 2.0f;
+    }
+
+	  p.screenY = function screenY(x, y, z) {
+	    var ax = modelview.m00*x + modelview.m01*y + modelview.m02*z + modelview.m03;
+	    var ay = modelview.m10*x + modelview.m11*y + modelview.m12*z + modelview.m13;
+	    var az = modelview.m20*x + modelview.m21*y + modelview.m22*z + modelview.m23;
+	    var aw = modelview.m30*x + modelview.m31*y + modelview.m32*z + modelview.m33;
+
+	    var oy = projection.m10*ax + projection.m11*ay + projection.m12*az + projection.m13*aw;
+	    var ow = projection.m30*ax + projection.m31*ay + projection.m32*az + projection.m33*aw;
+
+	    if (ow != 0) oy /= ow;
+	    return height * (1 + oy) / 2.0f;
+	  }
+
+	  p.screenZ = function screenZ(x, y,z) {
+	    var ax = modelview.m00*x + modelview.m01*y + modelview.m02*z + modelview.m03;
+	    var ay = modelview.m10*x + modelview.m11*y + modelview.m12*z + modelview.m13;
+	    var az = modelview.m20*x + modelview.m21*y + modelview.m22*z + modelview.m23;
+	    var aw = modelview.m30*x + modelview.m31*y + modelview.m32*z + modelview.m33;
+
+	    var oz = projection.m20*ax + projection.m21*ay + projection.m22*az + projection.m23*aw;
+	    var ow = projection.m30*ax + projection.m31*ay + projection.m32*az + projection.m33*aw;
+
+	    if (ow != 0) oz /= ow;
+	    return (oz + 1) / 2.0f;
+	  }
 
     ////////////////////////////////////////////////////////////////////////////
     // Matrix Stack
