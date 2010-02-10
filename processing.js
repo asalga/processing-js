@@ -2463,7 +2463,6 @@
           curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
 
-          testing = new PMatrix3D();
           p.camera();
           p.perspective();
         }
