@@ -6,6 +6,10 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   
+  <script>
+    var p = null;
+  </script>
+  
   <body onload="runIt();">
     <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
     <h2>PJS WEB IDE</h2>
@@ -60,20 +64,30 @@ void draw()
         </td>
 
         <td>
-          <canvas id="display" width="500" height="500"></canvas>  
+          <canvas id="display" width="500" height="500"></canvas>
         </td>
 
+      </tr>
+      <tr>
+        <td align="center" style="border:0px;"><input type="button" onclick="runIt();" value= "Double Compile!"/></td>
+        <td></td>
       </tr>
     </table>
 
     <script type="text/javascript">
       function runIt()
       {
-        Processing(display,source.value);
+        if(p)
+        {
+          p.exit();
+          delete p;
+        }
+
+        p = Processing(display,source.value);
       }
     </script>
     
-    <input type="button" onclick="runIt();" value= "Double Compile!"/><b>Click this furiously!</b>
+    
     
     <br />
     <br />
