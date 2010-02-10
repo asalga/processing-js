@@ -35,22 +35,24 @@ void draw()
   camera();
   background(33,66,99);
 
-  translate(250,260,380);
+  translate(250,270,380);
   rotateY(r += 0.01);
   
   strokeWeight(1);
 
-  for(int i = 0; i < 12; i++)
+  for(int i = 0; i < 15; i++)
   {
-    fill(i * 12, 1, 1)
+    fill(i * 10, 1, 1);
+    noStroke();
     pushMatrix();
-    translate(i-5,-2,0);
-    translate(0,cos(frameCount/5 + i),0);
-    rotateZ(sin(frameCount/30));
-    box(1,1,1);
+    translate(i-7,-3,0);
+    translate(0,sin(frameCount/5 + i),0);
+    rotateX(i/10 + frameCount/20);
+    box(1,1,3);
     popMatrix();
   }
   
+  stroke(50,200,100);
   noFill();
   strokeWeight(3);
   box(13,1,13);
@@ -67,9 +69,6 @@ void draw()
     <script type="text/javascript">
       function runIt()
       {
-       var a = document.getElementById('display');
-      // alert(a);
-      
         Processing(display,source.value);
       }
     </script>

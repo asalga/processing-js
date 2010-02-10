@@ -3299,12 +3299,15 @@
         uniformMatrix(programObject, "view", true, view.array());
         uniformMatrix(programObject, "projection", true, projection.array());
 
-        uniformf(programObject, "color", [0,0,0,1]);
-        vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
+        if(doStroke){
+          var c = curContext.strokeStyle.slice(5, -1).split(",");
+          uniformf(programObject, "color", [c[0]/255,c[1]/255,c[2]/255,c[3]]);
+          vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
         
-        // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth(lineWidth3D);
-        curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
+          // If you're working with styles, you'll need to change this literal.
+          curContext.lineWidth(lineWidth3D);
+          curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
+        }
 
         if(doFill === true){
           // fix stitching problems. (lines get occluded by triangles
