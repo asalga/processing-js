@@ -3106,7 +3106,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
       On some systems, if the variable exists in the shader but isn't used,
       the compiler will optimize it out and this function will fail.
     */
-    function uniformf(programObj, varName, varValue)
+    function uniformf( programObj, varName, varValue )
     {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
@@ -3200,7 +3200,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
 
 		p.perspective = function perspective(){
 			if( arguments.length === 0 ){
-				//in case canvas is resized\
+				//in case canvas is resized
 				cameraY         = curElement.height / 2;
 				cameraZ         = cameraY / Math.tan( cameraFOV / 2 );
 				cameraNear      = cameraZ / 10;
@@ -3279,7 +3279,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         uniformMatrix( programObject , "view" , true , view.array() );
         uniformMatrix( programObject , "projection" , true , projection.array() );
 
-        uniformf(programObject, "color", [0,0,0,1]);
+        uniformf( programObject, "color", [0,0,0,1] );
         vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
         
         // If you're working with styles, you'll need to change this literal.
