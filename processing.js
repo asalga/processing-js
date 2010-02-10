@@ -2510,42 +2510,6 @@
           p.camera();
           p.perspective();
         }
-
-          var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
-          curContext.shaderSource(vertexShaderObject, vertexShaderSource);
-          curContext.compileShader(vertexShaderObject);
-
-          if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)){
-              alert(curContext.getShaderInfoLog(vertexShaderObject));
-          }
-
-          var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
-          curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
-          curContext.compileShader(fragmentShaderObject);
-          if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)){
-            alert(curContext.getShaderInfoLog(fragmentShaderObject));
-          }
-
-          programObject = curContext.createProgram();
-          curContext.attachShader(programObject, vertexShaderObject);
-          curContext.attachShader(programObject, fragmentShaderObject);
-          curContext.linkProgram(programObject);
-
-          if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)){
-            alert("Error linking shaders.");
-          }
-          else{
-            curContext.useProgram(programObject);
-          }
-
-          boxBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts),curContext.DYNAMIC_DRAW);
-
-          boxOutlineBuffer = curContext.createBuffer();
-          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
-          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
-        }
         p.stroke(0);
         p.fill(255);
       } else {
@@ -3173,55 +3137,6 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
     this.matrixStack.push( tmp );
     };
 
-    /*
-      asalga.wordpress.com
-    */
-    p.box = function( w, h, d )
-    {
-      if(curContext)
-      {
-        // user can uniformly scale the box by  
-        // passing in only one argument.
-        if(!h || !d)
-        {
-          h = d = w;
-        }
-        
-        // Modeling transformation
-        var model = new PMatrix3D();
-        model.scale(w,h,d);
-
-        // viewing transformation needs to have Y flipped
-        // becuase that's what Processing does.
-        var view = new PMatrix3D();
-        view.scale(1,-1,1);
-        view.apply(modelView.array());
-
-        uniformMatrix(programObject, "model", true, model.array());
-        uniformMatrix(programObject, "view", true, view.array());
-        uniformMatrix(programObject, "projection", true, projection.array());
-
-        uniformf(programObject, "color", [0,0,0,1]);
-        vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
-        
-        // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth(1);
-        curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
-
-        // fix stitching problems. (lines get occluded by triangles
-        // since they share the same depth values). This is not entirely
-        // working, but it's a start for drawing the outline. So
-        // developers can start playing around with styles. 
-        curContext.enable(curContext.POLYGON_OFFSET_FILL);
-        curContext.polygonOffset(1,1);
-
-        uniformf(programObject, "color", [1,1,1,1]);
-        vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
-        curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
-        curContext.disable(curContext.POLYGON_OFFSET_FILL);
-      }
-    };
-
     ////////////////////////////////////////////////////////////////////////////
     // 3D Functions
     ////////////////////////////////////////////////////////////////////////////
@@ -3395,7 +3310,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         
         // Modeling transformation
         var model = new PMatrix3D();
-        model.scale(w,h,d);
+        model.scale( w, h, d );
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
@@ -3411,7 +3326,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
         
         // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth( lineWidth3D );
+        curContext.lineWidth( 1 );
         curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
 
         // fix stitching problems. (lines get occluded by triangles
@@ -3419,9 +3334,9 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         // working, but it's a start for drawing the outline. So
         // developers can start playing around with styles. 
         curContext.enable( curContext.POLYGON_OFFSET_FILL );
-        curContext.polygonOffset(1,1);
+        curContext.polygonOffset( 1, 1 );
 
-        uniformf( programObject, "color", [0.5,1,1,1] );
+        uniformf( programObject, "color", [1,1,1,1] );
         vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );         
         curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
