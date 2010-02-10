@@ -520,7 +520,6 @@
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0;      
 
-var test = 0;
       // Camera defaults and settings
       var cam,
       cameraInv,
@@ -533,17 +532,10 @@ var test = 0;
       cameraX = curElement.width / 2,
       cameraY = curElement.height / 2,
       cameraZ = cameraY / Math.tan(cameraFOV / 2),
-//      cameraNear = 0.00001;//cameraZ / 1000,
-      cameraNear = cameraZ / 10000,
+      cameraNear = cameraZ / 10,
       cameraFar = cameraZ * 10,
       cameraAspect = curElement.width / curElement.height;
       
-//      var rotTest;
-  //    var transTest;
-  var testing = null;
-
-      var counter1 = 0;
-
     var firstX, firstY, secondX, secondY, prevX, prevY;
 
     // Stores states for pushStyle() and popStyle().
@@ -1218,26 +1210,7 @@ var test = 0;
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
     p.translate = function translate(x, y,z) {
-      if(p.use3DContext)
-      {
-        if(!testing)
-        {
-          testing = new PMatrix3D();
-        }
-        // trans...
-        //forwardTransform.translate(x,y,z);
-        modelView.translate(x,y,z);
-//        alert(forwardTransform.array());
-
-/*        testing.apply([1,0,0,0,
-        0,1,0,0,
-        0,0,1,0,
-        x,y,z,1]);*/
-      }
-      else
-      {
-        curContext.translate(x, y);
-      }
+      curContext.translate(x, y);
     };
     p.scale = function scale(x, y) {
       curContext.scale(x, y || x);
@@ -1251,23 +1224,6 @@ var test = 0;
     p.popMatrix = function popMatrix() {
       curContext.restore();
     };
-    
-    p.rotateX = function(angleInRadians)
-    {
-      modelView.rotateX(angleInRadians);
-    }
-    
-    p.rotateZ = function(angleInRadians)
-    {
-      modelView.rotateZ(angleInRadians);
-    }
-    p.rotateY = function(angleInRadians)
-    {
-      modelView.rotateY(angleInRadians);
-    }
-
-    // what's this doing here?
-    ///p.ortho = function ortho() {};
 
     p.pushStyle = function pushStyle() {
       // Save the canvas state.
@@ -3222,91 +3178,6 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
     */
     p.box = function( w, h, d )
     {
-      if(curContext)
-      {
-        // user can uniformly scale the box by  
-        // passing in only one argument.
-        if(!h || !d)
-        {
-          h = d = w;
-        }
-        test += 0.9;
-        // Modeling transformation
-        var model = new PMatrix3D();
-       // modelView.scale(1,-1,1);
-      //  model.set(testing);
-      var mv = new PMatrix3D();
-      modelView.rotateX(test);
-     // mv.set(modelView);
-      //alert(mv.toString());
-      
-      var test_ = new PMatrix3D();
-      test_.set(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
-      
-      var test2 = new PMatrix3D();
-      test2.set(4,3,2,5,6,7,8,3,4,2,1,3,4,5,6,7);
-      
-      test_.apply(test2);
-      44, 43, 45, 48, 116, 111, 113, 120, 188, 179, 181, 192, 260, 247, 249, 264
-     // alert(test_.toString());
-      
-       // mv.translate(250,250,400);
-     
-     //   alert(modelView.toString());
-/*forwardTransform.translate(250,250,370);
-alert(forwardTransform.array());
-
-forwardTransform.rotateX(3.14/4);
-alert(forwardTransform.array());*/
-/*       model.apply(
-       1,0,0,250,
-       0,1,0,250,
-       0,0,1,400,
-       0,0,0,1);
-              model.rotateX(1);*/
-       
-//        model.apply(rotTest);
-  ///      model.apply(transTest);
-        /*
-                model.rotateX(0.51);
-                model.apply(
-                [1,0,0,0,
-                0,1,0,0,
-                0,0,1,0,
-                250,250,425,1]);*/
-        //model.apply(testing);
-        
-       // model.scale(w,h,d);
-
-        // viewing transformation needs to have Y flipped
-        // becuase that's what Processing does.
-        var view = new PMatrix3D();
-        view.apply(modelView.array());
-        view.scale(1,-1,1);
-
-        uniformMatrix(programObject, "model", true, model.array());
-        uniformMatrix(programObject, "view", true, view.array());
-        uniformMatrix(programObject, "projection", true, projection.array());
-
-        uniformf(programObject, "color", [0,0,0,1]);
-        vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
-        
-        // If you're working with styles, you'll need to change this literal.
-        curContext.lineWidth(1);
-        curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
-
-        // fix stitching problems. (lines get occluded by triangles
-        // since they share the same depth values). This is not entirely
-        // working, but it's a start for drawing the outline. So
-        // developers can start playing around with styles. 
-        curContext.enable(curContext.POLYGON_OFFSET_FILL);
-        curContext.polygonOffset(1,1);
-
-        uniformf(programObject, "color", [0.5,1,1,1]);
-        vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
-        curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
-        curContext.disable(curContext.POLYGON_OFFSET_FILL);
-      }
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -3330,7 +3201,7 @@ alert(forwardTransform.array());*/
         if      (varValue.length === 4){curContext.uniform4fv(varLocation, varValue);}
         else if (varValue.length === 3){curContext.uniform3fv(varLocation, varValue);}
         else if (varValue.length === 2){curContext.uniform2fv(varLocation, varValue);}
-        else                          {curContext.uniform1f (varLocation, varValue);}
+        else                           {curContext.uniform1f (varLocation, varValue);}
       }
     }
 		
@@ -3343,20 +3214,20 @@ alert(forwardTransform.array());*/
         if      (varValue.length === 4){curContext.uniform4iv(varLocation, varValue);}
         else if (varValue.length === 3){curContext.uniform3iv(varLocation, varValue);}
         else if (varValue.length === 2){curContext.uniform2iv(varLocation, varValue);}
-        else                          {curContext.uniform1i (varLocation, varValue);}
+        else                           {curContext.uniform1i (varLocation, varValue);}
       }
     }
 		
-		function vertexAttribPointer(programObj, varName, size, VBO)
-		{
-			var varLocation = curContext.getAttribLocation(programObj, varName);
-			if(varLocation !== -1)
-			{
-			curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
-			curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
-			curContext.enableVertexAttribArray(varLocation);
-			}
-		}
+    function vertexAttribPointer(programObj, varName, size, VBO)
+    {
+      var varLocation = curContext.getAttribLocation(programObj, varName);
+      if(varLocation !== -1)
+      {
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
+        curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
+        curContext.enableVertexAttribArray(varLocation);
+      }
+    }
 		
 		function uniformMatrix( programObj, varName, transpose, matrix )
     {
