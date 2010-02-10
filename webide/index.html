@@ -4,19 +4,16 @@
     <title>PJS WEB IDE</title>
     <script src="../processing.js" type="text/javascript"></script>
     <link rel="stylesheet" href="style.css" />
+    <script>var p = null;</script>
   </head>
-  
-  <script>
-    var p = null;
-  </script>
   
   <body onload="runIt();">
     <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
     <h2>PJS WEB IDE</h2>
 
     <p>
-     <!-- Page seems to work with <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Minefield</a> and <a href="http://build.chromium.org/buildbot/snapshots/">Chrome</a>, but not <a href="http://nightly.webkit.org/">Webkit</a><br />
-      <br />-->
+      This seems to work with <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Minefield</a> and <a href="http://nightly.webkit.org/">Webkit</a>, but not <a href="http://build.chromium.org/buildbot/snapshots/">Chromium</a><br />
+      <br />
       Make changes to the sketch source on the left and click the button on the bottom<br />
       to update the canvas. Keep in mind not all 3D functionality has been implemented and<br />
       there are still some bugs...<br />
@@ -69,8 +66,8 @@ void draw()
 
       </tr>
       <tr>
-        <td align="center" style="border:0px;"><input type="button" onclick="runIt();" value= "Double Compile!"/></td>
-        <td></td>
+        <td style="border:0px;" align="center"><input type="button" onclick="runIt();" value= "Double Compile!"/></td>
+        <td style="border:0px;"></td>
       </tr>
     </table>
 
@@ -86,9 +83,7 @@ void draw()
         p = Processing(display,source.value);
       }
     </script>
-    
-    
-    
+
     <br />
     <br />
     <br />
