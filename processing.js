@@ -3178,6 +3178,48 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
     */
     p.box = function( w, h, d )
     {
+      if(curContext)
+      {
+        // user can uniformly scale the box by  
+        // passing in only one argument.
+        if(!h || !d)
+        {
+          h = d = w;
+        }
+        
+        // Modeling transformation
+        var model = new PMatrix3D();
+        model.scale(w,h,d);
+
+        // viewing transformation needs to have Y flipped
+        // becuase that's what Processing does.
+        var view = new PMatrix3D();
+        view.scale(1,-1,1);
+        view.apply(modelView.array());
+
+        uniformMatrix(programObject, "model", true, model.array());
+        uniformMatrix(programObject, "view", true, view.array());
+        uniformMatrix(programObject, "projection", true, projection.array());
+
+        uniformf(programObject, "color", [0,0,0,1]);
+        vertexAttribPointer(programObject, "Vertex", 3, boxOutlineBuffer);
+        
+        // If you're working with styles, you'll need to change this literal.
+        curContext.lineWidth(1);
+        curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
+
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles. 
+        curContext.enable(curContext.POLYGON_OFFSET_FILL);
+        curContext.polygonOffset(1,1);
+
+        uniformf(programObject, "color", [1,1,1,1]);
+        vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
+        curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
+        curContext.disable(curContext.POLYGON_OFFSET_FILL);
+      }
     };
 
     ////////////////////////////////////////////////////////////////////////////
