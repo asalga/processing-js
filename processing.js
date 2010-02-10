@@ -3306,17 +3306,20 @@
         curContext.lineWidth(lineWidth3D);
         curContext.drawArrays(curContext.LINES, 0, boxOutlineVerts.length/3);
 
-        // fix stitching problems. (lines get occluded by triangles
-        // since they share the same depth values). This is not entirely
-        // working, but it's a start for drawing the outline. So
-        // developers can start playing around with styles. 
-        curContext.enable(curContext.POLYGON_OFFSET_FILL);
-        curContext.polygonOffset(1,1);
+        if(doFill === true){
+          // fix stitching problems. (lines get occluded by triangles
+          // since they share the same depth values). This is not entirely
+          // working, but it's a start for drawing the outline. So
+          // developers can start playing around with styles. 
+          curContext.enable(curContext.POLYGON_OFFSET_FILL);
+          curContext.polygonOffset(1,1);
 
-        uniformf(programObject, "color", [0.5,1,1,1]);
-        vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
-        curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
-        curContext.disable(curContext.POLYGON_OFFSET_FILL);
+          var c = curContext.fillStyle.slice(5, -1).split(",");
+          uniformf(programObject, "color", [c[0]/255,c[1]/255,c[2]/255,c[3]]);
+          vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
+          curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
+          curContext.disable(curContext.POLYGON_OFFSET_FILL);
+        }
       }
     };
 

@@ -39,9 +39,10 @@ void draw()
   rotateY(r += 0.01);
   
   strokeWeight(1);
-    
+
   for(int i = 0; i < 12; i++)
   {
+    fill(i * 12, 1, 1)
     pushMatrix();
     translate(i-5,-2,0);
     translate(0,cos(frameCount/5 + i),0);
@@ -50,6 +51,7 @@ void draw()
     popMatrix();
   }
   
+  noFill();
   strokeWeight(3);
   box(13,1,13);
 }</textarea>
