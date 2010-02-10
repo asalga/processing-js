@@ -63,6 +63,49 @@
     }
 
   };
+	/*
+    Andor Salga
+    asalga.wordpress.com
+    Compatibility wrapper for older browsers
+  */
+  var newWebGLArray = function(data)
+  {
+    var WebGLFloatArrayExists = false;
+
+    try{
+      WebGLFloatArray;
+      WebGLFloatArrayExists = true;
+    }
+    catch(e){}     
+
+    return WebGLFloatArrayExists === true ? new WebGLFloatArray(data) : new CanvasFloatArray(data);    
+  }
+
+  var boxVerts = [0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5,0.5,0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,0.5,-0.5,0.5,-0.5,-0.5,-0.5,-0.5,0.5,0.5, 0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+  var boxOutlineVerts = [0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5,-0.5, 0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5,0.5,-0.5,-0.5, 0.5,-0.5,-0.5, 0.5, 0.5,-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,-0.5, 0.5, 0.5,-0.5,-0.5, 0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5, 0.5,-0.5,-0.5,0.5, 0.5,-0.5,0.5];
+  
+  var programObject;
+  var boxBuffer;
+  var boxOutlineBuffer;
+  
+  var vertexShaderSource = 
+  "attribute vec3 Vertex;" +
+  
+  "uniform vec4 color;" +
+
+  "uniform mat4 model;" +
+  "uniform mat4 view;" +
+  "uniform mat4 projection;" +
+
+  "void main(void){" +
+  "  gl_FrontColor = color;" +
+  "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
+  "}";
+
+  var fragmentShaderSource = 
+  "void main(void){" +
+  "  gl_FragColor = gl_Color;" +
+  "}";
 
   document.addEventListener('DOMContentLoaded', function () {
     init();
@@ -198,15 +241,15 @@
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
-    var classes = ["int", "float", "boolean", "String", "byte", "double", "long"];
+    var classes = ["int", "float", "boolean", "String", "byte", "double", "long", "ArrayList"];
 
     var classReplace = function (all, name, extend, vars, last) {
       classes.push(name);
 
       var staticVar = "";
 
-      vars = vars.replace(/final\s+var\s+(\w+\s*=\s*.*?;)/g, function (all, set) {
-        staticVar += " " + name + "." + set;
+      vars = vars.replace(/final\s+var\s+(\w+\s*=\s*.*?;)/g, function (all, setting) {
+        staticVar += " " + name + "." + setting;
         return "";
       });
 
@@ -358,7 +401,7 @@
     
     for (var i in Processing.lib) {
       if (1) {
-        p[i] = window.Processing.lib[i];
+        p[i] = Processing.lib[i];
       }
     }
 
@@ -466,6 +509,7 @@
       blueRange = 255,
       pathOpen = false,
       mousePressed = false,
+      mouseDragging = false,
       keyPressed = false,
       curColorMode = p.RGB,
       curTint = -1,
@@ -587,7 +631,37 @@ var test = 0;
     p.concat = function concat(array1, array2) {
       return array1.concat(array2);
     };
+		
+		p.sort = function(array, numElem){
+			var ret = [];
 
+			// depending on the type used (int, float) or string
+			// we'll need to use a different compare function
+			if(array.length > 0){
+				// copy since we need to return another array
+				var elemsToCopy = numElem > 0 ? numElem : array.length;
+				for(var i=0; i < elemsToCopy; i++){
+					ret.push(array[i]);
+				}
+				if(typeof array[0] === "string"){  
+					ret.sort();
+				}
+				// int or float
+				else{
+					ret.sort(function(a,b){return a-b;});
+				}
+						
+				// copy on the rest of the elements that were not sorted in case the user
+				// only wanted a subset of an array to be sorted.
+				if(numElem > 0){
+					for(var i = ret.length; i < array.length; i++){
+						ret.push(array[i]);
+					}
+				}
+			}
+			return ret;
+		};
+		
     p.splice = function (array, value, index) {
       if (array.length === 0 && value.length === 0) {
         return array;
@@ -724,6 +798,7 @@ var test = 0;
     ////////////////////////////////////////////////////////////////////////////
     // convert rgba color strings to integer
     p.rgbaToInt = function (color) {
+      //alert(color);
       var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
       return ((rgbaAry[3] * 255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
     };
@@ -1292,7 +1367,7 @@ var test = 0;
       inDraw = true;
 
       if (p.use3DContext) {
-        //curContext.clear(curContext.COLOR_BUFFER_BIT);
+        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.draw();
       } else {
         p.pushMatrix();
@@ -1381,6 +1456,68 @@ var test = 0;
     ////////////////////////////////////////////////////////////////////////////
     // Binary Functions
     ////////////////////////////////////////////////////////////////////////////
+    function decToBin(value, numBitsInValue) {
+			var mask = 1;
+			mask = mask << (numBitsInValue-1);
+
+			var str = "";
+			for(var i=0; i < numBitsInValue ;i++) {
+				str += (mask & value) ? "1" : "0";
+				mask = mask >>> 1; 
+			}
+			return str;
+		}
+
+		p.binary = function(num, numBits) {
+			var numBitsInValue = 32;
+				
+			// color
+			if(typeof num === "string" && num.length > 1) {
+				var c = num.slice(5,-1).split(",");
+						
+				// if all components are zero, a single "0" is returned
+				// for some reason
+				var sbin = [
+				decToBin(c[3]*255,8), // alpha is normalized
+				decToBin(c[0],8), // r
+				decToBin(c[1],8), // g
+				decToBin(c[2],8), // b
+				];
+						
+				var s = sbin[0]+sbin[1]+sbin[2]+sbin[3];
+						
+				if(numBits) { 
+					s = s.substr(-numBits);
+				}
+				// if the user didn't specify number of bits,
+				// trim leading zeros.
+				else {
+					s = s.replace(/^0+$/g,"0");
+					s = s.replace(/^0{1,}1/g,"1");
+				}
+				return s;
+			}
+				
+			// char
+			if(typeof num === "string") {
+				num = num.charCodeAt(0);
+						
+				if(numBits) {
+					numBitsInValue = 32;
+				}
+				else {
+					numBitsInValue = 16;
+				}
+			}
+				
+			var str = decToBin(num, numBitsInValue);
+				
+			// trim string if user wanted less chars
+			if(numBits) {
+				str = str.substr(-numBits);
+			}    
+			return str;
+		};  
     p.unbinary = function unbinary(binaryString) {
       var binaryPattern = new RegExp("^[0|1]{8}$");
       var addUp = 0;
@@ -1477,68 +1614,41 @@ var test = 0;
       return str;
     };
 
-    //function i use to convert decimals to a padded hex value
-    p.decimalToHex = function decimalToHex(d, padding) {
-      //if there is no padding value added, default padding to 8  else  go into while statement.
+    var decimalToHex = function decimalToHex(d, padding) {
+      //if there is no padding value added, default padding to 8 else go into while statement.
       padding = typeof(padding) === "undefined" || padding === null ? padding = 8 : padding;
-      var hex = Number(d).toString(16);
-
+      if (d < 0) {
+        d = 0xFFFFFFFF + d + 1;
+      }
+      var hex = Number(d).toString(16).toUpperCase();
       while (hex.length < padding) {
         hex = "0" + hex;
       }
+      if (hex.length >= padding){
+        hex = hex.substring(hex.length - padding, hex.length);
+      }
       return hex;
     };
-
-    //regExp i made to pattern match rgba and extract it's values
-    p.colorRGB = function colorRGB(col) {
-      var patt = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i; //grouped \d{1,3} with ( ) so they can be referenced w\ $1-$4
-      // What's up with the crazy variable names? -F1LT3R
-      var al = col.replace(patt, "$4");
-      var reD = col.replace(patt, "$1");
-      var gree = col.replace(patt, "$2");
-      var blu = col.replace(patt, "$3");
-
-      return ("" + Number(al).toString(16) + Number(reD).toString(16) + Number(gree).toString(16) + Number(blu).toString(16)).toUpperCase();
-    };
-
-    p.hex = function hex(decimal, len) {
-      var hexadecimal = "";
-
-      var patternRGBa = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3}),?(\d{0,3})\)$/i; //match rgba(20,20,20,0) or rgba(20,20,20)
-      var patternDigits = /^\d+$/;
-      //**************************   dealing with 2 parameters   *************************************************
-      if (arguments.length === 2) {
-        if (patternDigits.test(decimal)) {
-          hexadecimal = p.decimalToHex(decimal, len);
-        } else if (patternRGBa.test(decimal)) //check to see if it's an rgba color
-        {
-          hexadecimal = p.colorRGB(decimal);
-          hexadecimal = hexadecimal.substring(hexadecimal.length - len, hexadecimal.length);
-        }
-      } else if (arguments.length === 1) //****************   dealing with 1 parameter  ********************************
-      {
-        if (patternDigits.test(decimal)) { //check to see if it's a decimal
-          hexadecimal = p.decimalToHex(decimal);
-        } else if (patternRGBa.test(decimal)) //check to see if it's an rgba color
-        {
-          hexadecimal = p.colorRGB(decimal);
-        }
-        else if (decimal.indexOf("#") === 0) //check to see if it's hex color in format #ffffff
-        {
-          if (decimal.length < 7) {
-            throw "Not Hex format: the value passed into hex was not in the format #FFFFFF";
-          } else {
-            decimal = (decimal.slice(1)).toUpperCase();
-            while (decimal.length < 8) {
-              decimal = "FF" + decimal;
-            }
-            hexadecimal = decimal;
-          }
+    // note: since we cannot keep track of byte, char, and int types by default the returned string is 8 chars long
+    // if no 2nd argument is passed.  closest compromise we can use to match java implementation Feb 5 2010
+    // also the char parser has issues with chars that are not digits or letters IE: !@#$%^&*
+    p.hex = function hex(value, len) {
+      var hexstring = "";
+      var patternRGBa = /^rgba?\((\d{1,3}),(\d{1,3}),(\d{1,3})(,\d?\.?\d*)?\)$/i; //match rgba(20,20,20,0) or rgba(20,20,20)
+      if (arguments.length === 1) {
+        hexstring = hex(value, 8);
+      } else {
+        if (patternRGBa.test(value)) {
+          // its a color
+          hexstring = decimalToHex(p.rgbaToInt(value),len);
+        } else {
+          // its a byte, char, or int
+          hexstring = decimalToHex(value, len);
         }
       }
-      return hexadecimal;
+      return hexstring;
     };
-
+    
     p.unhex = function (str) {
       var value = 0,
         multiplier = 1,
@@ -1625,12 +1735,99 @@ var test = 0;
     };
 
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
-    // This breaks the join() ref-test. The Processing.org documentation says String or String[].
-    p.nf = function (num, pad) {
-      var str = "" + num;
-      for (var i = pad - str.length; i > 0; i--) {
-        str = "0" + str;
+    // This breaks the join() ref-test. The Processing.org documentation says String or String[]. SHOULD BE FIXED NOW
+		p.nf = function() {
+      var str, num, pad, arr, left, right, isNegative;
+
+      if ( arguments.length === 2 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && (arguments[0]+"").indexOf('.') === -1 ) {
+        num = arguments[0];
+        pad = arguments[1];
+
+        isNegative = num < 0;
+
+        if ( isNegative ) {
+          num = Math.abs(num);
+        }
+
+        str = "" + num;
+        for ( var i = pad - str.length; i > 0; i-- ) {
+          str = "0" + str;
+        }
+
+        if ( isNegative ) {
+          str = "-" + str;
+        }
+      } else if ( arguments.length === 2 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' ) {
+        arr = arguments[0];
+        pad = arguments[1];
+
+        str = new Array( arr.length );
+
+        for ( var i = 0; i < arr.length && str !== undefined; i++ ) {
+          var test = this.nf( arr[i], pad );
+          if ( test === undefined ) {
+            str = undefined;
+          } else {
+            str[i] = test;
+          }
+        }
+      } else if ( arguments.length === 3 && typeof arguments[0] === 'number' && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' && (arguments[0]+"").indexOf( '.' ) >= 0 ) {
+        num = arguments[0];
+        left = arguments[1];
+        right = arguments[2];
+
+        isNegative = num < 0;
+
+        if ( isNegative ) {
+          num = Math.abs(num);
+        }
+
+        // Change the way the number is 'floored' based on whether it is odd or even.
+        if ( right < 0 && Math.floor( num ) % 2 === 1 ) {
+          // Make sure 1.49 rounds to 1, but 1.5 rounds to 2.
+          if ( (num) - Math.floor( num ) >= 0.5 ) {
+            num = num + 1;
+          }
+        }
+
+        str = "" + num;
+
+        for ( var i = left - str.indexOf( '.' ); i > 0; i-- ) {
+          str = "0" + str;  
+        }
+
+        var numDec = str.length - str.indexOf( '.' ) - 1;
+        if ( numDec <= right ) {
+          for ( var i = right - ( str.length - str.indexOf( '.' ) - 1 ); i > 0; i-- ) {
+            str = str + "0";  
+          }
+        } else if ( right > 0 ) {
+          str = str.substring( 0, str.length - ( numDec - right ) );
+        } else if ( right < 0 ) {
+
+          str = str.substring( 0, str.indexOf( '.' ) );
+        }
+
+        if ( isNegative ) {
+          str = "-" + str;
+        }
+      } else if ( arguments.length === 3 && typeof arguments[0] === 'object' && arguments[0].constructor === Array && typeof arguments[1] === 'number' && typeof arguments[2] === 'number' ) {
+        arr = arguments[0];
+        left = arguments[1];
+        right = arguments[2];
+
+        str = new Array( arr.length );
+
+        for ( var i = 0; i < arr.length && str !== undefined; i++ ) {
+          var test = this.nf( arr[i], left, right );
+          if ( test === undefined ) {
+            str = undefined;
+          } else {
+            str[i] = test;
+          }
+        }
       }
+
       return str;
     };
 
@@ -1702,7 +1899,24 @@ var test = 0;
     String.prototype.replaceAll = function (re, replace) {
       return this.replace(new RegExp(re, "g"), replace);
     };
+		
+		String.prototype.equals = function equals( str ) {
+      var ret = true;
 
+      if ( this.length === str.length ) {
+        for ( var i = 0; i < this.length; i++) {
+          if ( this.charAt( i ) !== str.charAt( i ) ) {
+            ret = false;
+            break;
+          }
+        }
+      } else {
+        ret = false;
+      }
+
+      return ret;
+    };
+		
     p.match = function (str, regexp) {
       return str.match(regexp);
     };
@@ -1743,7 +1957,19 @@ var test = 0;
       return key;
     };
 
-
+    p.trim = function( str ) {
+      var newstr;
+      if (typeof str === "object" && str.constructor === Array) {
+        newstr = new Array(0);
+        for (var i = 0; i < str.length; i++) {
+          newstr[i] = p.trim(str[i]);
+        }
+      } else {
+        // if str is not an array then remove all whitespace, tabs, and returns
+        newstr = str.replace(/^\s*/,'').replace(/\s*$/,'').replace(/\r*$/,''); 
+      }
+      return newstr; 
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Math functions
@@ -1758,13 +1984,53 @@ var test = 0;
     p.int = function (aNumber) {
       return Math.floor(aNumber);
     };
+		
+		//Determines the smallest value in a sequence of numbers.
+		//Can accept more than 2 parameters or an array
+		//Undefined if passed in an array and a scalar; or if a non number was passed in
+    p.min = function() {
+      var numbers;
 
-    p.min = function min(aNumber, aNumber2) {
-      return Math.min(aNumber, aNumber2);
+      if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
+        numbers = arguments[0];
+      } else {
+        numbers = arguments;
+      }
+
+      // Scan for illegal non-numbers
+      for ( var i = 0; i < numbers.length; i++ ) {
+        if ( typeof numbers[i] !== 'number' ) {
+          //throw "Value sent to min is not a number.";
+          return undefined;
+        }
+      }
+      
+      return Math.min.apply(this, numbers);
     };
-    p.max = function max(aNumber, aNumber2) {
-      return Math.max(aNumber, aNumber2);
+
+		//Determines the biggest value in a sequence of numbers.
+		//Can accept more than 2 parameters or an array
+		//Undefined if passed in an array and a scalar; or if a non number was passed in 
+    p.max = function() {
+      var numbers;
+
+      if (arguments.length === 1 && typeof arguments[0] === 'object' && arguments[0].constructor === Array ) {
+        numbers = arguments[0];
+      } else {
+        numbers = arguments;
+      }
+
+      // Scan for illegal non-numbers
+      for ( var i = 0; i < numbers.length; i++ ) {
+        if ( typeof numbers[i] !== 'number' ) {
+          //throw "Value sent to max is not a number.";
+          return undefined;
+        }
+      }
+      
+      return Math.max.apply(this, numbers);
     };
+
     p.floor = function floor(aNumber) {
       return Math.floor(aNumber);
     };
@@ -1793,9 +2059,6 @@ var test = 0;
     };
     p.pow = function pow(aNumber, aExponent) {
       return Math.pow(aNumber, aExponent);
-    };
-    p.sqrt = function sqrt(aNumber) {
-      return Math.sqrt(aNumber);
     };
     p.tan = function tan(aNumber) {
       return Math.tan(aNumber);
@@ -2243,7 +2506,7 @@ var test = 0;
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
         }
-        else
+				else
         {
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
@@ -2289,10 +2552,44 @@ var test = 0;
 
           testing = new PMatrix3D();
           p.camera();
-          //p.camera(70.0, 35.0, 120.0, 50.0, 50.0, 0.0, 0.0, 1.0, 0.0);
           p.perspective();
         }
 
+          var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
+          curContext.shaderSource(vertexShaderObject, vertexShaderSource);
+          curContext.compileShader(vertexShaderObject);
+
+          if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)){
+              alert(curContext.getShaderInfoLog(vertexShaderObject));
+          }
+
+          var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
+          curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
+          curContext.compileShader(fragmentShaderObject);
+          if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)){
+            alert(curContext.getShaderInfoLog(fragmentShaderObject));
+          }
+
+          programObject = curContext.createProgram();
+          curContext.attachShader(programObject, vertexShaderObject);
+          curContext.attachShader(programObject, fragmentShaderObject);
+          curContext.linkProgram(programObject);
+
+          if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)){
+            alert("Error linking shaders.");
+          }
+          else{
+            curContext.useProgram(programObject);
+          }
+
+          boxBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxVerts),curContext.DYNAMIC_DRAW);
+
+          boxOutlineBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(boxOutlineVerts),curContext.DYNAMIC_DRAW);
+        }
         p.stroke(0);
         p.fill(255);
       } else {
@@ -2470,67 +2767,10 @@ var test = 0;
 
     p.PVector = PVector;
 
-    /*
-      Sets the uniform variable 'varName' to the value specified by 'value'.
-      Before calling this function, make sure the correct program object 
-      has been installed as part of the current rendering state.
-
-      On some systems, if the variable exists in the shader but isn't used,
-      the compiler will optimize it out and this function will fail.
-    */
-    function uniformf(programObj, varName, varValue)
-    {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
-      // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (varValue.length == 4){curContext.uniform4fv(varLocation, varValue);}
-        else if (varValue.length == 3){curContext.uniform3fv(varLocation, varValue);}
-        else if (varValue.length == 2){curContext.uniform2fv(varLocation, varValue);}
-        else                          {curContext.uniform1f (varLocation, varValue);}
-      }
-    }
-
-    function uniformi(programObj, varName, varValue)
-    {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
-      // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (varValue.length == 4){curContext.uniform4iv(varLocation, varValue);}
-        else if (varValue.length == 3){curContext.uniform3iv(varLocation, varValue);}
-        else if (varValue.length == 2){curContext.uniform2iv(varLocation, varValue);}
-        else                          {curContext.uniform1i (varLocation, varValue);}
-      }
-    }
-    
-    function uniformMatrix(programObj, varName, transpose, matrix)
-    {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
-      // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (matrix.length === 16){curContext.uniformMatrix4fv(varLocation, transpose, matrix);}
-        else if (matrix.length ===  9){curContext.uniformMatrix3fv(varLocation, transpose, matrix);}
-        else                          {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
-      }
-    }
-
-    function vertexAttribPointer(programObj, varName, size, VBO)
-    {
-      var varLocation = curContext.getAttribLocation(programObj, varName);
-
-      if(varLocation !== -1)
-      {
-        curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
-        curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
-        curContext.enableVertexAttribArray(varLocation);
-      }
-    }
 
 
     /*
-      When a matrix is created, it is set to an identity matrix.
+      When a matrix is created, it is set to an identity matrix
     */
     var PMatrix3D = function(){
       this.reset();
@@ -2565,7 +2805,7 @@ var test = 0;
         return this.elements.slice();
       },
       translate: function( tx, ty, tz ){
-        if(tx && ty && !tz)
+        if( tx && ty && !tz )
         {
           this.translate( tx, ty, 0 );
         }
@@ -2669,13 +2909,12 @@ var test = 0;
                         0, 0, 0, 0,
                         0, 0, 0, 0];
           var e = 0;
-          for(var row = 0; row < 4; row++){
-            for(var col = 0; col < 4; col++, e++){
-              result[e] += this.elements[col + 0] *   source[row *4 + 0] +
-                           this.elements[col + 4] *   source[row *4 + 1] +
-                           this.elements[col + 8] *   source[row *4 + 2] +
-                           this.elements[col +  12] * source[row *4 + 3];
-
+          for( var row = 0; row < 4; row++ ){
+            for( var col = 0; col < 4; col++, e++ ){
+              result[e] += this.elements[col +  0] * source[row *4 + 0] +
+                           this.elements[col +  4] * source[row *4 + 1] +
+                           this.elements[col +  8] * source[row *4 + 2] +
+                           this.elements[col + 12] * source[row *4 + 3];
             }
           }
           this.elements = result.slice();
@@ -2727,12 +2966,15 @@ var test = 0;
         var s = Math.sin( angle );
         this.apply([c, -s, 0, 0,  s, c, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1]);
       },
+      /*
+        Uniform scaling if only one value passed in
+      */
       scale: function( sx, sy, sz ){
         if( sx && !sy && !sz )
         {
           sy = sz = sx;
         }
-        else if(sx && sy && !sz)
+        else if( sx && sy && !sz )
         {
           sz = 1;
         }
@@ -2772,7 +3014,7 @@ var test = 0;
         
         // Account for a very small value
         // return false if not successful.
-        if (Math.abs(fDet) <= 1e-9)
+        if ( Math.abs( fDet ) <= 1e-9 )
         {
           return false;
         }
@@ -3064,10 +3306,214 @@ alert(forwardTransform.array());*/
         vertexAttribPointer(programObject, "Vertex", 3, boxBuffer);         
         curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length/3);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
-           //alert('f');
       }
     };
 
+    ////////////////////////////////////////////////////////////////////////////
+    // 3D Functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    /*
+      Sets the uniform variable 'varName' to the value specified by 'value'.
+      Before calling this function, make sure the correct program object 
+      has been installed as part of the current rendering state.
+
+      On some systems, if the variable exists in the shader but isn't used,
+      the compiler will optimize it out and this function will fail.
+    */
+    function uniformf(programObj, varName, varValue)
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (varValue.length === 4){curContext.uniform4fv(varLocation, varValue);}
+        else if (varValue.length === 3){curContext.uniform3fv(varLocation, varValue);}
+        else if (varValue.length === 2){curContext.uniform2fv(varLocation, varValue);}
+        else                          {curContext.uniform1f (varLocation, varValue);}
+      }
+    }
+		
+		function uniformi(programObj, varName, varValue)
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (varValue.length === 4){curContext.uniform4iv(varLocation, varValue);}
+        else if (varValue.length === 3){curContext.uniform3iv(varLocation, varValue);}
+        else if (varValue.length === 2){curContext.uniform2iv(varLocation, varValue);}
+        else                          {curContext.uniform1i (varLocation, varValue);}
+      }
+    }
+		
+		function vertexAttribPointer(programObj, varName, size, VBO)
+		{
+			var varLocation = curContext.getAttribLocation(programObj, varName);
+			if(varLocation !== -1)
+			{
+			curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
+			curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
+			curContext.enableVertexAttribArray(varLocation);
+			}
+		}
+		
+		function uniformMatrix( programObj, varName, transpose, matrix )
+    {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if( varLocation !== -1)
+      {
+        if      (matrix.length === 16){curContext.uniformMatrix4fv(varLocation, transpose, matrix);}
+        else if (matrix.length ===  9){curContext.uniformMatrix3fv(varLocation, transpose, matrix);}
+        else                          {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
+      }
+    }
+		
+		////////////////////////////////////////////////////////////////////////////
+    // Camera functions
+    ////////////////////////////////////////////////////////////////////////////
+    
+		p.camera = function camera(){
+			if( arguments.length === 0 ){
+				//in case canvas is resized
+				cameraX = curElement.width / 2;
+				cameraY = curElement.height / 2;
+				cameraZ = cameraY / Math.tan( cameraFOV / 2 );
+				p.camera( cameraX, cameraY, cameraZ,
+							    cameraX, cameraY, 0,
+							    0 , 1 , 0 );
+			}
+			else{
+				var a = arguments;
+				var z = new p.PVector( a[ 0 ] - a[ 3 ], a[ 1 ] - a[ 4 ], a[ 2 ] - a[ 5 ] );
+				var y = new p.PVector( a[ 6 ], a[ 7 ], a[ 8 ]);
+				var transX, transY, transZ;            
+				z.normalize();            
+				var x = p.PVector.cross( y, z );        
+				y = p.PVector.cross( z, x );            
+				x.normalize();
+				y.normalize();
+				cam = new PMatrix3D();
+				cam.set( x.x, x.y, x.z, 0,
+						 y.x, y.y, y.z, 0,
+						 z.x, z.y, z.z, 0,
+						 0,   0,   0,   1 );
+				cam.translate( -a[ 0 ], -a[ 1 ], -a[ 2 ] );
+				cameraInv = new PMatrix3D();
+				cameraInv.set( x.x, x.y, x.z, 0,
+								 y.x, y.y, y.z, 0,
+								 z.x, z.y, z.z, 0,
+								 0,   0,   0,   1 );
+				cameraInv.translate( a[ 0 ], a[ 1 ], a[ 2 ] );
+				modelView = new PMatrix3D();
+				modelView.set( cam );
+				modelViewInv = new PMatrix3D();
+				modelViewInv.set( cameraInv );
+			}
+		};
+
+		p.perspective = function perspective(){
+			if( arguments.length === 0 ){
+				//in case canvas is resized\
+				cameraY         = curElement.height / 2;
+				cameraZ         = cameraY / Math.tan( cameraFOV / 2 );
+				cameraNear      = cameraZ / 10;
+				cameraFar       = cameraZ * 10;
+				cameraAspect    = curElement.width / curElement.height;
+				p.perspective( cameraFOV, cameraAspect, cameraNear, cameraFar );
+			}
+			else{        
+				var a = arguments;
+				var yMax, yMin, xMax, xMin;            
+				yMax = a[ 2 ] * Math.tan( a[ 0 ] / 2 );
+				yMin = -1 * yMax;            
+				xMax = yMax * a[ 1 ];
+				xMin = yMin * a[ 1 ];            
+				p.frustum( xMin, xMax, yMin, yMax, a[ 2 ], a[ 3 ] );        
+			}
+		};
+
+		p.frustum = function frustum( left, right, bottom, top, near, far ){
+			frustumMode = true;
+			projection = new PMatrix3D();
+			projection.set( (2*near)/(right-left), 0 , (right+left)/(right-left),	0 ,
+							0, (2*near)/(top-bottom), (top+bottom)/(top-bottom), 0 ,
+							0, 0 , -(far+near)/(far-near), -(2*far*near)/(far-near) ,
+							0, 0 , -1, 0 );
+		};
+
+		p.ortho = function ortho(){
+			if( arguments.length === 0 )
+				p.ortho( 0, p.width, 0, p.height, -10, 10 );
+			else{
+				var a = arguments;
+				var x = 2 / ( a[ 1 ] - a[ 0 ] );
+				var y = 2 / ( a[ 3 ] - a[ 2 ] );
+				var z = -2 / ( a[ 5 ] - a[ 4 ] );
+				var tx = -( a[ 1 ] + a[ 0 ] ) / ( a[ 1 ] - a[ 0 ] );
+				var ty = -( a[ 3 ] + a[ 2 ] ) / ( a[ 3 ] - a[ 2 ] );
+				var tz = -( a[ 5 ] + a[ 4 ] ) / ( a[ 5 ] - a[ 4 ] );
+				projection = new PMatrix3D();
+				projection.set( x , 0 , 0 , tx,
+												0 , y , 0 , ty,
+												0 , 0 , z , tz,
+												0 , 0 , 0 , 1 );
+				frustumMode = false;
+			}
+		};	
+		
+		////////////////////////////////////////////////////////////////////////////
+    // Shapes
+    ////////////////////////////////////////////////////////////////////////////
+		/*
+      asalga.wordpress.com
+    */
+    p.box = function( w, h, d )
+    {
+      if(curContext)
+      {
+        // user can uniformly scale the box by  
+        // passing in only one argument.
+        if(!h || !d)
+        {
+          h = d = w;
+        }
+        
+        // Modeling transformation
+        var model = new PMatrix3D();
+        model.scale(w,h,d);
+
+        // viewing transformation needs to have Y flipped
+        // becuase that's what Processing does.
+        var view = new PMatrix3D();
+        view.scale( 1, -1 , 1 );
+        view.apply( modelView.array() );
+
+        uniformMatrix( programObject , "model" , true,  model.array() );
+        uniformMatrix( programObject , "view" , true , view.array() );
+        uniformMatrix( programObject , "projection" , true , projection.array() );
+
+        uniformf(programObject, "color", [0,0,0,1]);
+        vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
+        
+        // If you're working with styles, you'll need to change this literal.
+        curContext.lineWidth( lineWidth3D );
+        curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
+
+        // fix stitching problems. (lines get occluded by triangles
+        // since they share the same depth values). This is not entirely
+        // working, but it's a start for drawing the outline. So
+        // developers can start playing around with styles. 
+        curContext.enable( curContext.POLYGON_OFFSET_FILL );
+        curContext.polygonOffset(1,1);
+
+        uniformf( programObject, "color", [0.5,1,1,1] );
+        vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );         
+        curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
+        curContext.disable( curContext.POLYGON_OFFSET_FILL );
+      }
+    };		
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
@@ -3094,12 +3540,12 @@ alert(forwardTransform.array());*/
       curContext.lineWidth = w;
     };
 
-    p.strokeCap = function strokeCap(set) {
-      curContext.lineCap = set;
+    p.strokeCap = function strokeCap(value) {
+      curContext.lineCap = value;
     };
 
-    p.strokeJoin = function strokeJoin(set) {
-      curContext.lineJoin = set;
+    p.strokeJoin = function strokeJoin(value) {
+      curContext.lineJoin = value;
     };
 
     ////////////////////////////////////////////////////////////////////////////
@@ -3375,6 +3821,10 @@ alert(forwardTransform.array());*/
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
 
+	p.bezierTangent = function bezierTangent(a, b, c, d, t) {
+      return ( 3 * t * t * ( -a + 3 * b -3 * c + d ) +6 *t * ( a - 2 * b + c ) + 3 * ( -a + b ) );
+    };
+	
     p.curvePoint = function curvePoint(a, b, c, d, t) {
       return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
     };
@@ -4105,48 +4555,60 @@ alert(forwardTransform.array());*/
 
     // Print some text to the Canvas
     p.text = function text(str, x, y) {
-
-      // If the font is a standard Canvas font...
-      if (!curTextFont.glyph) {
-
-        if (str && curContext.mozDrawText) {
-
-          curContext.save();
-          curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
-          curContext.translate(x, y);
-          curContext.mozDrawText(
-          typeof str === "number" ? String.fromCharCode(str) : str);
-          curContext.restore();
-
+ 
+      if ( typeof str === 'number' && (str+"").indexOf('.') >= 0 ) {
+ 
+        // Make sure .15 rounds to .1, but .151 rounds to .2.
+        if ( ( str * 1000 ) - Math.floor( str * 1000 ) === 0.5 ) {
+          str = str - 0.0001;
         }
-
+        str = str.toFixed(3);
+      } else if ( str === 0 ) {
+        str = str.toString();
+      }
+      // If the font is a standard Canvas font...
+      if ( !curTextFont.glyph ) {
+ 
+        if (str && ( curContext.fillText || curContext.mozDrawText )) {
+          curContext.save();
+          curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
+ 
+          if ( curContext.fillText ) {
+ 
+            curContext.fillText(str, x, y);
+ 
+          } else if ( curContext.mozDrawText ) {
+ 
+            curContext.translate( x, y );
+            curContext.mozDrawText( str );
+          }
+          curContext.restore();
+        }
       } else {
-
+ 
         // If the font is a Batik SVG font...
         var font = p.glyphTable[curTextFont.name];
         curContext.save();
-        curContext.translate(x, y + curTextSize);
-
+        curContext.translate( x, y + curTextSize );
+ 
         var upem = font.units_per_em,
-          newScale = 1 / upem * curTextSize;
-
-        curContext.scale(newScale, newScale);
-
+        newScale = 1 / upem * curTextSize;
+ 
+        curContext.scale( newScale, newScale );
+ 
         var len = str.length;
-
-        for (var i = 0; i < len; i++) {
+ 
+        for ( var i = 0; i < len; i++ ) {
           // Test character against glyph table
           try {
-            p.glyphLook(font, str[i]).draw();
+            p.glyphLook( font, str[i] ).draw();
           }
           catch(e) {
             Processing.debug(e);
           }
         }
-
         curContext.restore();
       }
-
     };
 
     // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
@@ -4463,11 +4925,12 @@ alert(forwardTransform.array());*/
         p.mouseY = e.clientY - curElement.offsetTop + scrollY;
         p.cursor(curCursor);
 
-        if (p.mouseMoved) {
+        if (p.mouseMoved && !mousePressed) {
           p.mouseMoved();
         }
         if (mousePressed && p.mouseDragged) {
           p.mouseDragged();
+          p.mouseDragging = true;
         }
       });
 
@@ -4477,6 +4940,7 @@ alert(forwardTransform.array());*/
 
       attach(curElement, "mousedown", function (e) {
         mousePressed = true;
+        p.mouseDragging = false;
         switch (e.which) {
         case 1:
           p.mouseButton = p.LEFT;
@@ -4498,7 +4962,7 @@ alert(forwardTransform.array());*/
 
       attach(curElement, "mouseup", function (e) {
         mousePressed = false;
-        if (p.mouseClicked) {
+        if (p.mouseClicked && !p.mouseDragging) {
           p.mouseClicked();
         }
         if (typeof p.mousePressed !== "function") {
