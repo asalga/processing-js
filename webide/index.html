@@ -29,17 +29,17 @@
     </p>
 
     <p>
-
       <span>
         <textarea id="source" rows="30" cols="30%"></textarea></span>&nbsp;&nbsp;&nbsp;
         <span id="d">
           <canvas id="display" width="500" height="500"></canvas>
         </span
       </p>
+    </p>
 
-      <p>
-        <input type="button" onclick="runIt();" value= "Double Compile!"/>
-      </p>
+    <p>
+      <input type="button" onclick="runIt();" value= "Double Compile!"/>
+    </p>
 
 
     <script type="text/javascript">
@@ -77,12 +77,10 @@
         // because Minefield is telling me to...
         selection = document.getElementById('sketchSelect');
         src = document.getElementById('source');
-        
         var fileSource = "";
 
         switch(selection.selectedIndex)
         {
-          //case 0: break; // nothing selected
           case 0: fileSource = "sketches/andor.js";break;
           case 1: fileSource = "sketches/rot_red_cube.js";break;
           case 2: fileSource = "sketches/light_speed.js";break;
