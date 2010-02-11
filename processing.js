@@ -475,14 +475,15 @@
       getLoaded = false,
       start = new Date().getTime(),
       timeSinceLastFPS = start,
-      framesSinceLastFPS = 0;      
+      framesSinceLastFPS = 0;
 
-      // Camera defaults and settings
-      var cam,
+    // Camera defaults and settings
+    var cam,
       cameraInv,
       forwardTransform,
       modelView,
       modelViewInv,
+      userMatrixStack,
       projection,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
@@ -492,7 +493,7 @@
       cameraNear = cameraZ / 10,
       cameraFar = cameraZ * 10,
       cameraAspect = curElement.width / curElement.height;
-      
+
     var firstX, firstY, secondX, secondY, prevX, prevY;
 
     // Stores states for pushStyle() and popStyle().
@@ -747,7 +748,6 @@
     ////////////////////////////////////////////////////////////////////////////
     // convert rgba color strings to integer
     p.rgbaToInt = function (color) {
-      //alert(color);
       var rgbaAry = /\(([^\)]+)\)/.exec(color).slice(1, 2)[0].split(',');
       return ((rgbaAry[3] * 255) << 24) | (rgbaAry[0] << 16) | (rgbaAry[1] << 8) | (rgbaAry[2]);
     };
@@ -959,8 +959,7 @@
       var r, g, b, rgb, aColor;
 
       // HSB conversion function from Mootools, MIT Licensed
-
-      function HSBtoRGB(h, s, b) {
+      function toRGB(h, s, b) {
         h = (h / redRange) * 360;
         s = (s / greenRange) * 100;
         b = (b / blueRange) * 100;
@@ -1000,7 +999,7 @@
         var a = aValue4 / opacityRange;
         a = isNaN(a) ? 1 : a;
         if (curColorMode === p.HSB) {
-          rgb = HSBtoRGB(aValue1, aValue2, aValue3);
+          rgb = toRGB(aValue1, aValue2, aValue3);
           r = rgb[0];
           g = rgb[1];
           b = rgb[2];
@@ -1166,8 +1165,12 @@
     ////////////////////////////////////////////////////////////////////////////
     // Canvas-Matrix manipulation
     ////////////////////////////////////////////////////////////////////////////
-    p.translate = function translate(x, y,z) {
-      curContext.translate(x, y);
+    p.translate = function translate(x, y, z) {
+      if (p.use3DContext) {
+        forwardTransform.translate(x, y, z);
+      } else {
+        curContext.translate(x, y);
+      }
     };
     p.scale = function scale(x, y) {
       curContext.scale(x, y || x);
@@ -1175,11 +1178,37 @@
     p.rotate = function rotate(aAngle) {
       curContext.rotate(aAngle);
     };
+
     p.pushMatrix = function pushMatrix() {
-      curContext.save();
+      if (p.use3DContext) {
+        userMatrixStack.load(modelView);
+      } else {
+        curContext.save();
+      }
     };
+
     p.popMatrix = function popMatrix() {
-      curContext.restore();
+      if (p.use3DContext) {
+        modelView.set(userMatrixStack.pop());
+      } else {
+        curContext.restore();
+      }
+    };
+
+    p.resetMatrix = function resetMatrix() {
+      forwardTransform.reset();
+    };
+    
+    p.rotateX = function(angleInRadians) {
+      forwardTransform.rotateX(angleInRadians);
+    };
+    
+    p.rotateZ = function(angleInRadians) {
+      forwardTransform.rotateZ(angleInRadians);
+    };
+
+    p.rotateY = function(angleInRadians) {
+      forwardTransform.rotateY(angleInRadians);
     };
 
     p.pushStyle = function pushStyle() {
@@ -1394,7 +1423,7 @@
 				decToBin(c[3]*255,8), // alpha is normalized
 				decToBin(c[0],8), // r
 				decToBin(c[1],8), // g
-				decToBin(c[2],8), // b
+				decToBin(c[2],8)  // b
 				];
 						
 				var s = sbin[0]+sbin[1]+sbin[2]+sbin[3];
@@ -2418,9 +2447,7 @@
 
         if (!curContext) {
           throw "OPENGL 3D context is not supported on this browser.";
-        }
-				else
-        {
+        } else {
           curContext.viewport(0,0,curElement.width, curElement.height);
           curContext.clearColor(204/255, 204/255, 204/255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
@@ -2428,17 +2455,16 @@
           var vertexShaderObject = curContext.createShader(curContext.VERTEX_SHADER);
           curContext.shaderSource(vertexShaderObject, vertexShaderSource);
           curContext.compileShader(vertexShaderObject);
-          if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS))
-          {
-              alert(curContext.getShaderInfoLog(vertexShaderObject));
+
+          if(!curContext.getShaderParameter(vertexShaderObject, curContext.COMPILE_STATUS)){
+            throw curContext.getShaderInfoLog(vertexShaderObject);
           }
 
           var fragmentShaderObject = curContext.createShader(curContext.FRAGMENT_SHADER);
           curContext.shaderSource(fragmentShaderObject, fragmentShaderSource);
           curContext.compileShader(fragmentShaderObject);
-          if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS))
-          {
-            alert(curContext.getShaderInfoLog(fragmentShaderObject));
+          if(!curContext.getShaderParameter(fragmentShaderObject, curContext.COMPILE_STATUS)){
+            throw curContext.getShaderInfoLog(fragmentShaderObject);
           }
 
           programObject = curContext.createProgram();
@@ -2446,12 +2472,9 @@
           curContext.attachShader(programObject, fragmentShaderObject);
           curContext.linkProgram(programObject);
 
-          if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS))
-          {
-            alert("Error linking shaders.");
-          }
-          else
-          {
+          if(!curContext.getProgramParameter(programObject, curContext.LINK_STATUS)){
+            throw "Error linking shaders.";
+          } else{
             curContext.useProgram(programObject);
           }
 
@@ -2465,6 +2488,7 @@
 
           p.camera();
           p.perspective();
+          userMatrixStack = new PMatrix3DStack();
         }
         p.stroke(0);
         p.fill(255);
@@ -3094,6 +3118,42 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
     };
 
     ////////////////////////////////////////////////////////////////////////////
+    // Matrix Stack
+    ////////////////////////////////////////////////////////////////////////////
+
+    function PMatrix3DStack() {
+      this.matrixStack = new Array();
+    };
+
+    PMatrix3DStack.prototype.load = function load() {
+      var tmpMatrix = new PMatrix3D();
+      if ( arguments.length === 1 ) {
+        tmpMatrix.set( arguments[0] );
+      } else {
+        tmpMatrix.set( arguments );
+      }
+      this.matrixStack.push( tmpMatrix );
+    };
+
+    PMatrix3DStack.prototype.push = function push() {
+      this.matrixStack.push( this.peek() );
+    };
+
+    PMatrix3DStack.prototype.pop = function pop() {
+      return this.matrixStack.pop();
+    };
+
+    PMatrix3DStack.prototype.peek = function peek() {
+      var tmpMatrix = new PMatrix3D();
+      tmpMatrix.set( this.matrixStack[this.matrixStack.length - 1] );
+      return tmpMatrix;
+    };
+
+    PMatrix3DStack.prototype.mult = function mult( matrix ){
+      this.matrixStack[this.matrixStack.length - 1].apply( matrix );
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
     // 3D Functions
     ////////////////////////////////////////////////////////////////////////////
 
@@ -3105,52 +3165,44 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
       On some systems, if the variable exists in the shader but isn't used,
       the compiler will optimize it out and this function will fail.
     */
-    function uniformf( programObj, varName, varValue )
-    {
+    function uniformf(programObj, varName, varValue) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (varValue.length === 4){curContext.uniform4fv(varLocation, varValue);}
-        else if (varValue.length === 3){curContext.uniform3fv(varLocation, varValue);}
-        else if (varValue.length === 2){curContext.uniform2fv(varLocation, varValue);}
-        else                           {curContext.uniform1f (varLocation, varValue);}
+      if (varLocation !== -1) {
+        if      (varValue.length === 4) {curContext.uniform4fv(varLocation, varValue);}
+        else if (varValue.length === 3) {curContext.uniform3fv(varLocation, varValue);}
+        else if (varValue.length === 2) {curContext.uniform2fv(varLocation, varValue);}
+        else                            {curContext.uniform1f (varLocation, varValue);}
+      }
+    }
+
+    function uniformi(programObj, varName, varValue) {
+      var varLocation = curContext.getUniformLocation(programObj, varName);
+      // the variable won't be found if it was optimized out.
+      if (varLocation !== -1) {
+        if      (varValue.length === 4) {curContext.uniform4iv(varLocation, varValue);}
+        else if (varValue.length === 3) {curContext.uniform3iv(varLocation, varValue);}
+        else if (varValue.length === 2) {curContext.uniform2iv(varLocation, varValue);}
+        else                            {curContext.uniform1i (varLocation, varValue);}
       }
     }
 		
-		function uniformi(programObj, varName, varValue)
-    {
-      var varLocation = curContext.getUniformLocation(programObj, varName);
-      // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (varValue.length === 4){curContext.uniform4iv(varLocation, varValue);}
-        else if (varValue.length === 3){curContext.uniform3iv(varLocation, varValue);}
-        else if (varValue.length === 2){curContext.uniform2iv(varLocation, varValue);}
-        else                           {curContext.uniform1i (varLocation, varValue);}
-      }
-    }
-		
-    function vertexAttribPointer(programObj, varName, size, VBO)
-    {
+    function vertexAttribPointer(programObj, varName, size, VBO) {
       var varLocation = curContext.getAttribLocation(programObj, varName);
-      if(varLocation !== -1)
-      {
+      if(varLocation !== -1) {
         curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
         curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
         curContext.enableVertexAttribArray(varLocation);
       }
     }
 		
-		function uniformMatrix( programObj, varName, transpose, matrix )
-    {
+    function uniformMatrix( programObj, varName, transpose, matrix ) {
       var varLocation = curContext.getUniformLocation(programObj, varName);
       // the variable won't be found if it was optimized out.
-      if( varLocation !== -1)
-      {
-        if      (matrix.length === 16){curContext.uniformMatrix4fv(varLocation, transpose, matrix);}
-        else if (matrix.length ===  9){curContext.uniformMatrix3fv(varLocation, transpose, matrix);}
-        else                          {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
+      if ( varLocation !== -1) {
+        if      (matrix.length === 16) {curContext.uniformMatrix4fv(varLocation, transpose, matrix);}
+        else if (matrix.length ===  9) {curContext.uniformMatrix3fv(varLocation, transpose, matrix);}
+        else                           {curContext.uniformMatrix2fv(varLocation, transpose, matrix);}
       }
     }
 		
@@ -3192,6 +3244,9 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
 				cameraInv.translate( a[ 0 ], a[ 1 ], a[ 2 ] );
 				modelView = new PMatrix3D();
 				modelView.set( cam );
+
+        forwardTransform = modelView;        
+
 				modelViewInv = new PMatrix3D();
 				modelViewInv.set( cameraInv );
 			}
@@ -3218,34 +3273,34 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
 			}
 		};
 
-		p.frustum = function frustum( left, right, bottom, top, near, far ){
-			frustumMode = true;
-			projection = new PMatrix3D();
-			projection.set( (2*near)/(right-left), 0 , (right+left)/(right-left),	0 ,
-							0, (2*near)/(top-bottom), (top+bottom)/(top-bottom), 0 ,
-							0, 0 , -(far+near)/(far-near), -(2*far*near)/(far-near) ,
-							0, 0 , -1, 0 );
-		};
+    p.frustum = function frustum( left, right, bottom, top, near, far ) {
+      frustumMode = true;
+      projection = new PMatrix3D();
+      projection.set( (2*near)/(right-left), 0 , (right+left)/(right-left),	0 ,
+        0, (2*near)/(top-bottom), (top+bottom)/(top-bottom), 0 ,
+        0, 0 , -(far+near)/(far-near), -(2*far*near)/(far-near) ,
+        0, 0 , -1, 0 );
+    };
 
-		p.ortho = function ortho(){
-			if( arguments.length === 0 )
-				p.ortho( 0, p.width, 0, p.height, -10, 10 );
-			else{
-				var a = arguments;
-				var x = 2 / ( a[ 1 ] - a[ 0 ] );
-				var y = 2 / ( a[ 3 ] - a[ 2 ] );
-				var z = -2 / ( a[ 5 ] - a[ 4 ] );
-				var tx = -( a[ 1 ] + a[ 0 ] ) / ( a[ 1 ] - a[ 0 ] );
-				var ty = -( a[ 3 ] + a[ 2 ] ) / ( a[ 3 ] - a[ 2 ] );
-				var tz = -( a[ 5 ] + a[ 4 ] ) / ( a[ 5 ] - a[ 4 ] );
-				projection = new PMatrix3D();
-				projection.set( x , 0 , 0 , tx,
-												0 , y , 0 , ty,
-												0 , 0 , z , tz,
-												0 , 0 , 0 , 1 );
-				frustumMode = false;
-			}
-		};	
+    p.ortho = function ortho() {
+      if ( arguments.length === 0 ) {
+        p.ortho( 0, p.width, 0, p.height, -10, 10 );
+      } else {
+        var a = arguments;
+        var x = 2 / ( a[ 1 ] - a[ 0 ] );
+        var y = 2 / ( a[ 3 ] - a[ 2 ] );
+        var z = -2 / ( a[ 5 ] - a[ 4 ] );
+        var tx = -( a[ 1 ] + a[ 0 ] ) / ( a[ 1 ] - a[ 0 ] );
+        var ty = -( a[ 3 ] + a[ 2 ] ) / ( a[ 3 ] - a[ 2 ] );
+        var tz = -( a[ 5 ] + a[ 4 ] ) / ( a[ 5 ] - a[ 4 ] );
+        projection = new PMatrix3D();
+        projection.set( x , 0 , 0 , tx,
+                        0 , y , 0 , ty,
+                        0 , 0 , z , tz,
+                        0 , 0 , 0 , 1 );
+        frustumMode = false;
+      }
+    };	
 		
 		////////////////////////////////////////////////////////////////////////////
     // Shapes
@@ -3263,7 +3318,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         {
           h = d = w;
         }
-        
+
         // Modeling transformation
         var model = new PMatrix3D();
         model.scale( w, h, d );
@@ -3280,7 +3335,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
 
         uniformf( programObject, "color", [0,0,0,1] );
         vertexAttribPointer( programObject , "Vertex", 3 , boxOutlineBuffer );
-        
+
         // If you're working with styles, you'll need to change this literal.
         curContext.lineWidth( 1 );
         curContext.drawArrays( curContext.LINES, 0 , boxOutlineVerts.length/3 );
@@ -3293,11 +3348,12 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
         curContext.polygonOffset( 1, 1 );
 
         uniformf( programObject, "color", [1,1,1,1] );
-        vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );         
+        vertexAttribPointer( programObject, "Vertex", 3 , boxBuffer );
         curContext.drawArrays( curContext.TRIANGLES, 0 , boxVerts.length/3 );
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
-    };		
+    };
+
     ////////////////////////////////////////////////////////////////////////////
     // Style functions
     ////////////////////////////////////////////////////////////////////////////
@@ -3360,7 +3416,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
 
       if (curShapeCount !== 0) {
 
-        if (close || doFill) {
+        if (close && doFill) {
           curContext.lineTo(firstX, firstY);
         }
         if (doFill) {
@@ -3544,6 +3600,15 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
 
     };
 
+    p.curve = function curve(x1, y1, x2, y2, x3, y3, x4, y4) {
+      p.beginShape();
+        p.curveVertex(x1, y1);
+        p.curveVertex(x2, y2);
+        p.curveVertex(x3, y3);
+        p.curveVertex(x4, y4);
+      p.endShape();
+    };
+
     p.curveTightness = function (tightness) {
       curTightness = tightness;
     };
@@ -3605,7 +3670,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
       return (1 - t) * (1 - t) * (1 - t) * a + 3 * (1 - t) * (1 - t) * t * b + 3 * (1 - t) * t * t * c + t * t * t * d;
     };
 
-	p.bezierTangent = function bezierTangent(a, b, c, d, t) {
+    p.bezierTangent = function bezierTangent(a, b, c, d, t) {
       return ( 3 * t * t * ( -a + 3 * b -3 * c + d ) +6 *t * ( a - 2 * b + c ) + 3 * ( -a + b ) );
     };
 	
@@ -4769,7 +4834,7 @@ P3DMatrixStack.prototype.mult = function mult( matrix ){
               p.keyCode = p.UP;
               break;
             case 71:
-              keyCode = p.RIGHT;
+              p.keyCode = p.RIGHT;
               break;
             case 72:
               p.keyCode = p.DOWN;
