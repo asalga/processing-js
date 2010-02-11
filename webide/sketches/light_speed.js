@@ -7,8 +7,7 @@ float x[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 float y[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 float z[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-float r = 0;
-float speed = 0.8;
+float speed = 2;
 
 void setup()
 {
@@ -33,7 +32,6 @@ void draw()
   camera();
   perspective(60,1,0.01,1000);
   background(0,0,0);
-
   translate(250,250,200);
 
   for(int i = 0; i < x.length; i ++)
