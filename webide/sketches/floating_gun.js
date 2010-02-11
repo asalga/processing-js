@@ -34,7 +34,7 @@ void draw()
 
   frameCounter++;
 
-  if(waiting && random(0,200) < 1 && frameCounter >= 200)
+  if(waiting && random(0,200) < 1 && frameCounter >= 800)
   {
     frameCounter = 0;
     waiting = false;
