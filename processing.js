@@ -3151,7 +3151,24 @@
       0, 0, -(far+near)/(far-near), -(2*far*near)/(far-near),
       0, 0, -1, 0 );
     };    
-      
+
+    p.ortho = function frustum(var left, var right,
+                      var bottom, var top,
+                      var near, var far) {
+      var x =  2.0f / (right - left);
+      var y =  2.0f / (top - bottom);
+      var z = -2.0f / (far - near);
+
+      var tx = -(right + left) / (right - left);
+      var ty = -(top + bottom) / (top - bottom);
+      var tz = -(far + near) / (far - near);
+
+      projection.set(x, 0, 0, tx,
+                     0, y, 0, ty,
+                     0, 0, z, tz,
+                     0, 0, 0, 1);
+    }
+
     p.modelX = function modelX(x, y, z) {
       var mv = modelView.array();
       var ci = camInv.array();
