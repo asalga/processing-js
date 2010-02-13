@@ -25,6 +25,8 @@
         <option value="2">Rotating Red Cube</option>
         <option value="3">Light Speed</option>
         <option value="4">Floating Gun</option>
+        <option value="5">Perspective</option>
+        <option value="6">Move Eye</option>
       </select>
       <input type="button" value="Load Sketch" onclick="loadSketch();" />
     </p>
@@ -34,20 +36,35 @@
         <textarea id="source" rows="30" cols="30%"></textarea></span>&nbsp;&nbsp;&nbsp;
         <span id="d">
           <canvas id="display" width="500" height="500"></canvas>
-        </span
+        </span>
       </p>
     </p>
 
     <p>
-      <input type="button" onclick="runIt();" value= "Double Compile!"/>
+      <input type="button" onclick="recompileAndRun();" value= "Double Compile!"/>
     </p>
 
-
     <script type="text/javascript">
+      function recompileAndRun()
+      {
+        var newWidth;
+        var newHeight;
+
+        var r = "" + source.value.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\);/);
+        r = r.replace(/size\(/, "");
+        r = r.replace(/,(OPENGL|P3D)\);/, "");
+        newWidth = parseInt(r.split(",")[0]);
+        newHeight = parseInt(r.split(",")[1]);
+
+        document.getElementById('d').innerHTML = "<canvas id='display' width='" + newWidth + "' height='" + newHeight + "'></canvas>";
+
+        runIt();
+      }
+
       function loadDefault()
       {
-          source.value = ajax("sketches/andor.js");
-          runIt();
+        source.value = ajax("sketches/andor.js");
+        runIt();
       }
       
       function runIt()
@@ -58,7 +75,9 @@
           delete p;
         }
 
-        p = Processing(display,source.value);
+        // get the new reference of the added canvas
+        var newDisplayRef = document.getElementById('display');
+        p = Processing(newDisplayRef,source.value);
       }
       
       function ajax(url)
@@ -80,19 +99,21 @@
         src = document.getElementById('source');
         var fileSource = "";
 
-        switch(selection.selectedIndex)
+        switch(selection.selectedIndex+1)
         {
-          case 0: fileSource = "sketches/andor.js";break;
-          case 1: fileSource = "sketches/rot_red_cube.js";break;
-          case 2: fileSource = "sketches/light_speed.js";break;
-          case 3: fileSource = "sketches/floating_gun.js";break;
+          case 1: fileSource = "sketches/andor.js";break;
+          case 2: fileSource = "sketches/rot_red_cube.js";break;
+          case 3: fileSource = "sketches/light_speed.js";break;
+          case 4: fileSource = "sketches/floating_gun.js";break;
+          case 5: fileSource = "sketches/perspective.js";break;
+          case 6: fileSource = "sketches/move_eye.js";break;
           default:break;
         }
         
         if(fileSource.length > 0)
         {
           source.value = ajax(fileSource);
-          runIt();
+          recompileAndRun();
         }
       }
     </script>
