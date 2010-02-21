@@ -6,7 +6,6 @@ float r = 0;
 
 void setup()
 {
-  // Don't modify this...
   size(500,500,OPENGL);
 }
 
