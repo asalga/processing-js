@@ -1,0 +1,126 @@
+<html>
+
+  <head>
+    <title>PJS WEB IDE</title>
+    <script src="../processing.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script>var p = null;</script>
+  </head>
+  
+  <body onload="loadDefault();">
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>PJS WEB IDE</h2>
+
+    <p>
+      This seems to work with <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Minefield</a> and <a href="http://nightly.webkit.org/">Webkit</a>, but not <a href="http://build.chromium.org/buildbot/snapshots/">Chromium</a><br />
+      <br />
+      Make changes to the sketch source on the left and click the button on the bottom<br />
+      to update the canvas. Keep in mind not all 3D functionality has been implemented and<br />
+      there are still some bugs...<br />
+    </p>
+
+    <p>
+      <select id="sketchSelect">
+        <option value="1" selected="selected">Andor CorkScrew</option>
+        <option value="2">Rotating Red Cube</option>
+        <option value="3">Light Speed</option>
+        <option value="4">Floating Gun</option>
+        <option value="5">Perspective</option>
+        <option value="6">Move Eye</option>
+      </select>
+      <input type="button" value="Load Sketch" onclick="loadSketch();" />
+    </p>
+
+    <p>
+      <span>
+        <textarea id="source" rows="30" cols="30%"></textarea></span>&nbsp;&nbsp;&nbsp;
+        <span id="d">
+          <canvas id="display" width="500" height="500"></canvas>
+        </span>
+      </p>
+    </p>
+
+    <p>
+      <input type="button" onclick="recompileAndRun();" value= "Double Compile!"/>
+    </p>
+
+    <script type="text/javascript">
+      function recompileAndRun()
+      {
+        var newWidth;
+        var newHeight;
+
+        var r = "" + source.value.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\);/);
+        r = r.replace(/size\(/, "");
+        r = r.replace(/,(OPENGL|P3D)\);/, "");
+        newWidth = parseInt(r.split(",")[0]);
+        newHeight = parseInt(r.split(",")[1]);
+
+        document.getElementById('d').innerHTML = "<canvas id='display' width='" + newWidth + "' height='" + newHeight + "'></canvas>";
+
+        runIt();
+      }
+
+      function loadDefault()
+      {
+        source.value = ajax("sketches/andor.js");
+        runIt();
+      }
+      
+      function runIt()
+      {
+        if(p)
+        {
+          p.exit();
+          delete p;
+        }
+
+        // get the new reference of the added canvas
+        var newDisplayRef = document.getElementById('display');
+        p = Processing(newDisplayRef,source.value);
+      }
+      
+      function ajax(url)
+      {
+        var AJAX = new window.XMLHttpRequest();
+        if (AJAX) {
+          AJAX.open("GET", url + "?t=" + new Date().getTime(), false);
+          AJAX.send(null);
+          return AJAX.responseText;
+        } else {
+          return false;
+        }
+      };
+  
+      function loadSketch()
+      {
+        // because Minefield is telling me to...
+        selection = document.getElementById('sketchSelect');
+        src = document.getElementById('source');
+        var fileSource = "";
+
+        switch(selection.selectedIndex+1)
+        {
+          case 1: fileSource = "sketches/andor.js";break;
+          case 2: fileSource = "sketches/rot_red_cube.js";break;
+          case 3: fileSource = "sketches/light_speed.js";break;
+          case 4: fileSource = "sketches/floating_gun.js";break;
+          case 5: fileSource = "sketches/perspective.js";break;
+          case 6: fileSource = "sketches/move_eye.js";break;
+          default:break;
+        }
+        
+        if(fileSource.length > 0)
+        {
+          source.value = ajax(fileSource);
+          recompileAndRun();
+        }
+      }
+    </script>
+
+    <!-- Don't force the recompile button to be right near the bottom of the page -->
+    <br />
+    <br />
+    <br />
+  </body>
+</html>
