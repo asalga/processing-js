@@ -3,13 +3,13 @@
 //
 
 void setup() {
-  size(640,360,P3D);
+  size( 640, 360, P3D );
   noStroke();
 }
 
 void draw() {
   // removed lights();
-  background(204);
+  background( 200 );
   float cameraY = height/2.0;
   float fov = mouseX/float(width) * PI/2;
   float cameraZ = cameraY / tan(fov / 2.0);
