@@ -1,12 +1,12 @@
 //
-// Rotating Red Cube
+// Rotating Red Cube by Andor Salga
 //
 
 float r = 0;
 
 void setup()
 {
-  size( 100, 500, P3D );
+  size(100,500,OPENGL);
   noFill();
   strokeWeight( 3 );
 }
@@ -14,7 +14,7 @@ void setup()
 void draw()
 {
   background( 0, 0, 0 );
-  translate( 50, 100, 340);
+  translate( width/2, height/2, 340);
   rotateZ( frameCount/20 );
   rotateY( r += 0.02 );
   rotateX( r -= 0.03 );

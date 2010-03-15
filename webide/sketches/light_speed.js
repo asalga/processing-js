@@ -1,5 +1,5 @@
 //
-// Light Speed
+// Light Speed by Andor Salga
 //
 
 // o_O 
@@ -11,7 +11,7 @@ float speed = 2;
 
 void setup()
 {
-  size( 500, 500, P3D );
+  size(500,500,P3D);
   stroke( 250, 250, 250 );
   strokeWeight( 1 );
   init();
@@ -32,7 +32,7 @@ void draw()
   camera();
   perspective( 60, 1, 0.01, 1000 );
   background( 0, 0, 0 );
-  translate( 250, 250, 200 );
+  translate( width/2, height/2, 200 );
 
   for(int i = 0; i < x.length; i ++)
   {

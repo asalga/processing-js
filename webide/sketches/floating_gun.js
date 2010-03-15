@@ -1,5 +1,6 @@
 //
-// Always loved how Quake did this
+// Floating Gun by Andor Salga
+// I Always loved how Quake did this
 //
 
 float r = 0;

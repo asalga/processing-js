@@ -1,12 +1,12 @@
 //
-// Move Eye. by Simon Greenwold.
+// Move Eye by Simon Greenwold.
 // The camera lifts up (controlled by mouseY) 
 // while looking at the same point.
 //
 
 void setup() {
-  size(640, 360, P3D);
-  fill(204);
+  size(640,360,P3D);
+  fill(200);
 }
 
 void draw() {
@@ -21,7 +21,5 @@ void draw() {
   noStroke();
   box(90);
   stroke(255);
-  //line(-100, 0, 0, 100, 0, 0);
-  //line(0, -100, 0, 0, 100, 0);
-  //line(0, 0, -100, 0, 0, 100);
+  // removed lines
 }

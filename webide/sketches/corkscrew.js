@@ -1,5 +1,5 @@
 //
-// Corkscrew
+// Corkscrew by Andor Salga
 //
 
 float r = 0;

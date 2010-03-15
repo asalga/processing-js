@@ -1,12 +1,12 @@
 //
-// Sol
+// Sol by Andor Salga
 //
 
 float rotEarth = 0.0;
 float rotMoon = 0.0;
 
 void setup(){
-  size( 200, 200, P3D );
+  size(200,200,P3D);
 }
 
 void draw()
@@ -19,11 +19,11 @@ void draw()
 
   // push matrix to center of the viewport
   pushMatrix();
-  translate( width/2, height/2, 100 );
+  translate( width/2, height/2, 140 );
 
   // draw the Sun
   fill( 255, 0, 0 );
-  box( 5.0 );
+  sphere( 5.0 );
 
   // push on another matrix and rotate and trans
   pushMatrix();
