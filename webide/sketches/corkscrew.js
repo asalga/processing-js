@@ -12,9 +12,9 @@ void setup()
 void draw()
 {
   camera();
-  background(0);
-  ambientLight(32,32,32);
-  directionalLight(200, 128, 150, 0, 1, 0.5);
+  background(50);
+  ambientLight(64,64,128);
+  directionalLight(200, 200, 200, 0, 1, 0.5);
 
   translate(width/2,height/2,380);
   rotateX(-PI/4);
