@@ -2,12 +2,13 @@
 
   <head>
     <title>Processing.JS WEB IDE</title>
-    <script src="../processing.js" type="text/javascript"></script>
+    <script src="processing.js" type="text/javascript"></script>
     <link rel="stylesheet" href="style.css" />
     <script>var p = null;</script>
   </head>
   
-  <body onload="loadDefault();">
+  <body onload="loadSketch();">
+
     <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
     <h2>Processing.JS WEB IDE</h2>
 
@@ -20,18 +21,35 @@
 
     <p>
       <select id="sketchSelect">
-        <option value="1" selected="selected">Corkscrew</option>
-        <option value="2">Rotating Red Cube</option>
-        <option value="3">Light Speed</option>
-        <option value="4">Floating Gun</option>
-        <option value="5">Perspective</option>
-        <option value="6">Move Eye</option>
-        <option value="7">Sol</option>
-        <option value="8">Bouncing Box</option>
-        <option value="9">Mouse Light Direction</option>
-        <option value="10">Disco</option>
-        <option value="11">Line Lengths</option>
-        <option value="12">Poetry</option>
+      
+        <?
+          $sel = $_GET['sketchID'];
+          
+          $sketchNames = array(
+            0 => 'Corkscrew', 
+            1 => 'Rotating Red Cube',
+            2 => 'Light Speed', 
+            3 => 'Floating Gun', 
+            4 => 'Perspective',
+            5 => 'Move Eye',
+            6 => 'Sol', 
+            7 => 'Bouncing Box',
+            8 => 'Mouse Light Direction',
+            9 => 'Disco', 
+            10 => 'Line Lengths', 
+            11 => 'Poetry');
+          
+          for( $i = 0; $i < count($sketchNames); $i++ ) {
+            echo "<option value='$i'";
+            
+            if( $sel == $i ) {
+              echo " selected='selected' ";
+            }
+            
+            echo ">$sketchNames[$i]</option>\n";
+          }
+      ?>
+
       </select>
       <input type="button" value="Load Sketch" onclick="loadSketch();" />
     </p>
@@ -96,7 +114,9 @@
           return false;
         }
       };
-  
+
+      //
+      //
       function loadSketch()
       {
         // because Minefield is telling me to...
@@ -104,20 +124,20 @@
         src = document.getElementById('source');
         var fileSource = "";
 
-        switch(selection.selectedIndex+1)
+        switch(selection.selectedIndex)
         {
-          case 1:  fileSource = "sketches/corkscrew.js";break;
-          case 2:  fileSource = "sketches/rot_red_cube.js";break;
-          case 3:  fileSource = "sketches/light_speed.js";break;
-          case 4:  fileSource = "sketches/floating_gun.js";break;
-          case 5:  fileSource = "sketches/perspective.js";break;
-          case 6:  fileSource = "sketches/move_eye.js";break;
-          case 7:  fileSource = "sketches/sol.js";break;
-          case 8:  fileSource = "sketches/bouncing_box.js";break;
-          case 9:  fileSource = "sketches/mouse_light_direction.js";break;
-          case 10: fileSource = "sketches/disco.js";break;
-          case 11: fileSource = "sketches/line_lengths.js";break;
-          case 12: fileSource = "sketches/poetry.js";break;
+          case 0:  fileSource = "sketches/corkscrew.js";break;
+          case 1:  fileSource = "sketches/rot_red_cube.js";break;
+          case 2:  fileSource = "sketches/light_speed.js";break;
+          case 3:  fileSource = "sketches/floating_gun.js";break;
+          case 4:  fileSource = "sketches/perspective.js";break;
+          case 5:  fileSource = "sketches/move_eye.js";break;
+          case 6:  fileSource = "sketches/sol.js";break;
+          case 7:  fileSource = "sketches/bouncing_box.js";break;
+          case 8:  fileSource = "sketches/mouse_light_direction.js";break;
+          case 9:  fileSource = "sketches/disco.js";break;
+          case 10: fileSource = "sketches/line_lengths.js";break;
+          case 11: fileSource = "sketches/poetry.js";break;
           default:break;
         }
         
