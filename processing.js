@@ -25,12 +25,30 @@
       aElement = document.getElementById(aElement);
     }
 
+    // get the dimensions
+    // this regex needs to be cleaned up a bit
+    var r = "" + aCode.match( /size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/ );
+    var dimensions = r.match( /[0-9]+/g );
+    
+    if(dimensions)
+    {
+    var sketchWidth = parseInt( dimensions[0] );
+    var sketchHeight = parseInt( dimensions[1] );
+
+    // only adjust the attributes if they differ
+    if( aElement.width != sketchWidth || aElement.height != sketchHeight )
+    {
+      aElement.setAttribute( "width", sketchWidth );
+      aElement.setAttribute( "height", sketchHeight );
+    }
+    }
+        
     // Build an Processing functions and env. vars into 'p'  
     var p = Processing.build(aElement);
 
     // Send aCode Processing syntax to be converted to JavaScript
     if (aCode) {
-      p.init(aCode);
+      p.init(aCode,aElement);
     }
 
     return p;
@@ -54,15 +72,19 @@
 
   // Automatic Initialization Method
   var init = function () {
+
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
       // Get data-src instead of datasrc
       var datasrc = canvas[i].getAttribute('data-src');
+
       if(datasrc===null){
+
         // Temporary fallback for datasrc
         datasrc = canvas[i].getAttribute('datasrc');
       }
+      
       if ( datasrc ) {
         // The problem: if the HTML canvas dimensions differ from the
         // dimensions specified in the size() call in the sketch, for
@@ -72,6 +94,7 @@
 
         // Get the source, we'll need to find what the user has used in size()
         var sketchSource = ajax( datasrc );
+
         // get the dimensions
         // this regex needs to be cleaned up a bit
         var r = "" + sketchSource.match( /size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/ );
@@ -5698,8 +5721,15 @@
         var parsedCode = Processing.parse(code, p);
 
         if (!p.use3DContext) {
+        alert(curElement);
           // Setup default 2d canvas context. 
           curContext = curElement.getContext('2d');
+
+
+//Error: uncaught exception: [Exception... "Component returned failure code: 0x80070057 
+//(NS_ERROR_ILLEGAL_VALUE) [nsIDOMHTMLCanvasElement.getContext]"  nsresult: "0x80070057 
+//(NS_ERROR_ILLEGAL_VALUE)"  location: "JS frame :: file:///Users/andor/Documents/pjs/processing.js :
+//: init :: line 5725"  data: no]
 
           // Canvas has trouble rendering single pixel stuff on whole-pixel
           // counts, so we slightly offset it (this is super lame).
