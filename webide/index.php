@@ -58,7 +58,8 @@
       <span>
         <textarea id="source" rows="30" cols="30%"></textarea></span>&nbsp;&nbsp;&nbsp;
         <span id="d">
-          <canvas id="display" width="500" height="500"></canvas>
+          <canvas id="2d" width="500" style="" height="500"></canvas>
+          <canvas id="3d" width="500" style="" height="500"></canvas>
         </span>
       </p>
     </p>
@@ -68,41 +69,34 @@
     </p>
 
     <script type="text/javascript">
-      function recompileAndRun()
-      {
-        var newWidth;
-        var newHeight;
-
-        var r = "" + source.value.match(/size\((?:.+),(?:.+),\s*(OPENGL|P3D)\);/);
-        r = r.replace(/size\(/, "");
-        r = r.replace(/,(OPENGL|P3D)\);/, "");
-        newWidth = parseInt(r.split(",")[0]);
-        newHeight = parseInt(r.split(",")[1]);
-
-        document.getElementById('d').innerHTML = "<canvas id='display' width='" + newWidth + "' height='" + newHeight + "'></canvas>";
-
-        runIt();
-      }
-
+    
+      //
       function loadDefault()
       {
         source.value = ajax("sketches/corkscrew.js");
         runIt();
       }
       
-      function runIt()
-      {
-        if(p)
-        {
+      //
+      function runIt(is2D) {
+        if(p) {
           p.exit();
           delete p;
-        }
+        }        
 
-        // get the new reference of the added canvas
-        var newDisplayRef = document.getElementById('display');
-        p = Processing(newDisplayRef,source.value);
+        var refStrToShow = is2D ? '2d' : '3d';
+        var refStrToHide = !is2D ? '2d' : '3d';
+        
+        var toShow = document.getElementById( refStrToShow );
+        toShow.setAttribute("style", "display:inline;");
+        
+        var toHide = document.getElementById( refStrToHide );
+        toHide.setAttribute( "style", "display:none;" );
+
+        p = Processing( toShow ,source.value );
       }
       
+      //
       function ajax(url)
       {
         var AJAX = new window.XMLHttpRequest();
@@ -123,6 +117,7 @@
         selection = document.getElementById('sketchSelect');
         src = document.getElementById('source');
         var fileSource = "";
+        var is2D = false;
 
         switch(selection.selectedIndex)
         {
@@ -136,15 +131,20 @@
           case 7:  fileSource = "sketches/bouncing_box.js";break;
           case 8:  fileSource = "sketches/mouse_light_direction.js";break;
           case 9:  fileSource = "sketches/disco.js";break;
-          case 10: fileSource = "sketches/line_lengths.js";break;
-          case 11: fileSource = "sketches/poetry.js";break;
+
+          //
+          case 10:  fileSource = "sketches/line_lengths.js";
+                    is2D = true;
+                    break;
+          case 11:  fileSource = "sketches/poetry.js";
+                    is2D = true;
+                    break;
           default:break;
         }
         
-        if(fileSource.length > 0)
-        {
+        if(fileSource.length > 0) {
           source.value = ajax(fileSource);
-          recompileAndRun();
+          runIt(is2D);
         }
       }
     </script>
