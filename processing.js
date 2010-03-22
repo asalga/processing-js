@@ -63,8 +63,29 @@
         // Temporary fallback for datasrc
         datasrc = canvas[i].getAttribute('datasrc');
       }
-      if (datasrc) {
-        Processing(canvas[i], ajax(datasrc));
+      if ( datasrc ) {
+        // The problem: if the HTML canvas dimensions differ from the
+        // dimensions specified in the size() call in the sketch, for
+        // 3D sketches, browsers will either not render or render the
+        // scene incorrectly. To fix this, we need to adjust the attributes
+        // of the canvas width and height.
+
+        // Get the source, we'll need to find what the user has used in size()
+        var sketchSource = ajax( datasrc );
+        // get the dimensions
+        // this regex needs to be cleaned up a bit
+        var r = "" + sketchSource.match( /size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/ );
+        var dimensions = r.match( /[0-9]+/g );
+        var sketchWidth = parseInt( dimensions[0] );
+        var sketchHeight = parseInt( dimensions[1] );
+
+        // only adjust the attributes if they differ
+        if( canvas[i].width != sketchWidth || canvas[i].height != sketchHeight )
+        {
+          canvas[i].setAttribute( "width", sketchWidth );
+          canvas[i].setAttribute( "height", sketchHeight );
+        }
+        Processing( canvas[i], sketchSource );
       }
     }
   };
@@ -270,7 +291,10 @@
   Processing.parse = function parse(aCode, p) {
 
     // Force characters-as-bytes to work.
-    aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+    //aCode = aCode.replace(/('(.){1}')/g, "$1.charCodeAt(0)");
+    aCode = aCode.replace(/'.{1}'/g, function(all) {
+      return "(new Char(" + all + "))";
+    });
 
     // Parse out @pjs directive, if any.
     p.pjs = {imageCache: {pending: 0}}; // by default we have an empty imageCache, no more.
@@ -344,6 +368,14 @@
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
 
+    //replace  catch (IOException e) to catch (e)
+    aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g,"catch \($1\)");
+    //delete  the multiple catch block
+    var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
+    while(catchBlock.test(aCode)){
+      aCode = aCode.replace(new RegExp(catchBlock),"$1");
+    }
+    Error.prototype.printStackTrace = function() { this.toString(); };
     // Force .length() to be .length
     aCode = aCode.replace(/\.length\(\)/g, ".length");
 
@@ -369,9 +401,10 @@
         return type + " " + name + " = 0" + sep;
       });
     }
-
+		aCode = aCode.replace(/catch\s\((\w+)\1\s(\w+)\2\)\s\{.\($2\)/g, "catch ($2$1)\n{$2$1");
+		
     // float foo = 5;
-    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
+    aCode = aCode.replace(/(?:static\s+)?(?:final\s+)?(\w+)((?:\[\s*\])+|\s)\s*(\w+)\[?\]?(\s*[=,;])/g, function (all, type, arr, name, sep) {
       if (type === "return") {
         return all;
       } else {
@@ -562,7 +595,7 @@
         return returnString;
       });
     }
-
+    
     return aCode;
   };
 
@@ -781,7 +814,27 @@
     // The current animation frame
     p.frameCount = 0;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Char handling
+    ////////////////////////////////////////////////////////////////////////////    
+    var charMap = {};
 
+    function Char(chr) {
+      if ( typeof chr === 'string' && chr.length === 1 ) {
+        this.code = chr.charCodeAt(0);
+      } else {
+        this.code = NaN;
+      }
+
+      return ( typeof charMap[this.code] === 'undefined' ) ? charMap[this.code] = this : charMap[this.code];   
+    };
+
+    Char.prototype.toString = function() {
+      return String.fromCharCode(this.code);
+    };
+    Char.prototype.valueOf = function() {
+      return this.code;
+    };
 
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
@@ -1557,13 +1610,13 @@
     //Time based functions
     ////////////////////////////////////////////////////////////////////////////
     p.year = function year() {
-      return new Date().getYear() + 1900;
+      return new Date().getFullYear();
     };
     p.month = function month() {
-      return new Date().getMonth();
+      return new Date().getMonth() + 1;
     };
     p.day = function day() {
-      return new Date().getDay();
+      return new Date().getDate();
     };
     p.hour = function hour() {
       return new Date().getHours();
@@ -1665,8 +1718,13 @@
     };
 
     p.link = function (href, target) {
-      window.location = href;
+      if (typeof target !== 'undefined') {
+        window.open(href, target);
+      } else {
+        window.location = href;
+      }
     };
+
     p.beginDraw = function beginDraw() {};
     p.endDraw = function endDraw() {};
 
@@ -1778,7 +1836,6 @@
           throw "longErr";
         }
       }
-      return addUp;
     };
 
     p.nfs = function (num, left, right) {
@@ -2032,6 +2089,17 @@
     // Load a file or URL into strings     
     p.loadStrings = function loadStrings(url) {
       return ajax(url).split("\n");
+    };
+    
+    p.loadBytes = function loadBytes(url) {
+      var string = ajax(url);
+      var ret = new Array( string.length );
+      
+      for ( var i = 0; i < string.length; i++) {
+        ret[i] = string.charCodeAt(i);
+      }
+      
+      return ret;
     };
 
     // nf() should return an array when being called on an array, at the moment it only returns strings. -F1LT3R
@@ -2477,22 +2545,20 @@
       return ret;
     };
 
-    p.char = function char( key ) {
-      var ret;
-
-      if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) {
-        ret = String.fromCharCode( key );
+    p['char'] = function ( key ) {
+      if ( arguments.length === 1 && typeof key === "number" && (key + "").indexOf( '.' ) === -1 ) { // not a float
+        return new Char(String.fromCharCode(key));
       } else if ( arguments.length === 1 && typeof key === "object" && key.constructor === Array ) {
-        ret = new Array(0);
-        
+        var ret = [];
+
         for ( var i = 0; i < key.length; i++ ) {
-          ret[i] = char( key[i] );
+          ret[i] = p['char']( key[i] );
         }
+
+        return ret;
       } else {
         throw "char() may receive only one argument of type int, byte, int[], or byte[].";
       }
-      
-      return ret;
     };
 
     p.trim = function( str ) {
@@ -2519,7 +2585,7 @@
       return Math.sqrt(aNumber);
     };
 
-    p.int = function int( val ) {
+    p['int'] = function( val ) {
       var ret;
 
       if ( ( val || val === 0 ) && arguments.length === 1 ) {
@@ -2541,18 +2607,13 @@
             ret = 0;
           }
         } else if ( typeof val === 'string' ) {
-          if ( val.indexOf(' ') > -1 ) {
+          ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
+
+          if ( isNaN( ret ) ) {
             ret = 0;
-          } else if ( val.length === 1 ) {
-
-            ret = val.charCodeAt( 0 );
-          } else {
-            ret = parseInt( val, 10 ); // Force decimal radix. Don't convert hex or octal (just like p5)
-
-            if ( isNaN( ret ) ) {
-              ret = 0;
-            }
           }
+        } else if ( typeof val === 'object' && val.constructor === Char ) {
+          ret = val.code;
         } else if ( typeof val === 'object' && val.constructor === Array ) {
           ret = new Array( val.length );
 
@@ -2560,7 +2621,7 @@
             if ( typeof val[i] === 'string' && val[i].indexOf('.') > -1 ) {
               ret[i] = 0;
             } else {
-              ret[i] = p.int( val[i] );
+              ret[i] = p['int']( val[i] );
             }
           }
         }
@@ -2623,11 +2684,10 @@
     // String, int[], char[], byte[], boolean[], String[].
     // floats should not work. However, floats with only zeroes right of the
     // decimal will work because JS converts those to int.
-    p.float = function float( val ) {
+    p['float'] = function( val ) {
       var ret;
 
       if ( arguments.length === 1 ) {
-
         if ( typeof val === 'number' ) {
           // float() not allowed to handle floats.
           if ( ( val + "" ).indexOf( '.' ) > -1 ) {
@@ -2636,7 +2696,6 @@
             ret = val.toFixed(1);
           }
         } else if ( typeof val === 'boolean' ) {
-
           if ( val === true ) {
             ret = 1.0;
           } else {
@@ -2644,22 +2703,15 @@
           }
           ret = ret.toFixed(1);
         } else if ( typeof val === 'string' ) {
-
-          if ( val.indexOf(' ') > -1 ) {
-            ret = NaN;
-          } else if ( val.length === 1 ) {
-            // Need this to convert chars like @ properly.
-            ret = val.charCodeAt( 0 );
-            ret = ret.toFixed(1);
-          } else {
-            ret = parseFloat( val );
-          }
+          ret = parseFloat( val );
+        } else if ( typeof val === 'object' && val.constructor === Char ) {
+          ret = val.code.toFixed(1);  
         } else if ( typeof val === 'object' && val.constructor === Array ) {
 
           ret = new Array( val.length );
 
           for ( var i = 0; i < val.length; i++) {
-              ret[i] = p.float( val[i] );
+              ret[i] = p['float']( val[i] );
           }
         }
       }
@@ -2713,7 +2765,7 @@
       return Math.acos(aNumber);
     };
 
-    p.boolean = function (val) {
+    p['boolean'] = function( val ) {
       var ret = false;
 
       if (val && typeof val === 'number' && val !== 0) {
@@ -2726,15 +2778,25 @@
         ret = new Array(val.length);
 
         for (var i = 0; i < val.length; i++) {
-          ret[i] = p.boolean(val[i]);
+          ret[i] = p['boolean'](val[i]);
         }
       }
 
       return ret;
     };
 
-    p.dist = function dist(x1, y1, x2, y2) {
-      return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    p.dist = function() {
+      var dx, dy, dz = 0;      
+      if (arguments.length === 4) {
+        dx = arguments[0] - arguments[2];
+        dy = arguments[1] - arguments[3];
+      } 
+      else if (arguments.length === 6) {
+        dx = arguments[0] - arguments[3];
+        dy = arguments[1] - arguments[4];
+        dz = arguments[2] - arguments[5];
+      }      
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
     };
 
     p.map = function map(value, istart, istop, ostart, ostop) {
@@ -2783,9 +2845,26 @@
 
     };
 
-    //! This can't be right... right?
-    p.byte = function (aNumber) {
-      return aNumber || 0;
+    //! This can't be right... right? <corban> should be good now
+    // a byte is a number between -128 and 127
+    p['byte'] = function (aNumber) {
+      if (typeof aNumber === 'object' && aNumber.constructor === Array) {
+        var bytes = [];
+        for(var i = 0; i < aNumber.length; i++) {
+          bytes[i] = p['byte'](aNumber[i]);  
+        }
+        return bytes;
+      } else {
+        if (aNumber >= -128 && aNumber < 128) {
+          return aNumber;
+        } else {
+          if ( aNumber >= 128) {
+            return p['byte'](-256 + aNumber);
+          } else if ( aNumber < -128) {
+            return p['byte'](256 + aNumber);
+          }
+        }
+      }
     };
 
     p.norm = function norm(aNumber, low, high) {
@@ -2879,6 +2958,9 @@
         try {
           if (!curContext) {
             curContext = curElement.getContext("experimental-webgl");
+            
+             //document.getElementById('d').innerHTML = "<canvas id='display' width='" + newWidth + "' height='" + newHeight + "'></canvas>";
+
           }
         } catch(e_size) {
           Processing.debug(e_size);
@@ -4886,12 +4968,14 @@
             // if 3 component color was passed in, alpha will be 1
             // otherwise it will already be normalized.
             curContext.clearColor(c[0] / 255, c[1] / 255, c[2] / 255, c[3]);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
 
           // user passes in value which ranges from 0-255, but opengl
           // wants a normalized value.
           else if (typeof arguments[0] === "number") {
             curContext.clearColor(col[0] / 255, col[0] / 255, col[0] / 255, 1.0 );
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
         } else if (arguments.length === 2) {
           if (typeof arguments[0] === "string") {
@@ -4899,6 +4983,7 @@
             // Processing is ignoring alpha
             // var a = arguments[0]/255;
             curContext.clearColor(c[0] / 255, c[1] / 255, c[2] / 255, 1.0);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
           // first value is shade of gray, second is alpha
           // background(0,255);
@@ -4909,6 +4994,7 @@
             // var a = arguments[0]/255;
             a = 1.0;
             curContext.clearColor(c, c, c, a);
+            curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
           }
         }
 
@@ -4917,6 +5003,7 @@
           // Processing seems to ignore this value, so just use 1.0 instead.
           //var a = arguments.length === 3? 1.0: arguments[3]/255;
           curContext.clearColor(col[0] / 255, col[1] / 255, col[2] / 255, 1);
+          curContext.clear( curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT );
         }
       } else { // 2d context
         if (arguments.length) {
