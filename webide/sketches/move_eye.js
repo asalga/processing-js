@@ -21,5 +21,7 @@ void draw() {
   noStroke();
   box(90);
   stroke(255);
-  // removed lines
+  line(-100, 0, 0, 100, 0, 0);
+  line(0, -100, 0, 0, 100, 0);
+  line(0, 0, -100, 0, 0, 100);
 }

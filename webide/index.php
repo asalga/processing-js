@@ -65,7 +65,7 @@
     </p>
 
     <p>
-      <input type="button" onclick="recompileAndRun();" value= "Double Compile!"/>
+      <input type="button" onclick="runIt();" value= "Update"/>
     </p>
 
     <script type="text/javascript">

@@ -146,12 +146,13 @@ void drawMagnets()
       int i = isHoldingMagnet;
      
       // shadow
-      strokeWeight(0);
+      noStroke();
       fill(0,0,0,150);      
       rect(mouseX-clickedOffsetX, mouseY-clickedOffsetY,
           (int)widths.get(i), MAGNET_HEIGHT);
       
       strokeWeight(2);
+      stroke(0);
       fill(255,255,255);
       rect(mouseX-clickedOffsetX-5,mouseY-clickedOffsetY-5,
           (int)widths.get(i), MAGNET_HEIGHT);
