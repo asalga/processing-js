@@ -8,7 +8,7 @@ void setup() {
 }
 
 void draw() {
-  // removed lights();
+  lights();
   background( 200 );
   float cameraY = height/2.0;
   float fov = mouseX/float(width) * PI/2;

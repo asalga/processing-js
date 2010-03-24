@@ -10,7 +10,7 @@ void setup() {
 }
 
 void draw() {
-  // removed lights();
+  lights();
   background(0);
   
   // Change height of the camera with mouseY
