@@ -39,6 +39,7 @@
 
       // only adjust the attributes if they differ
       if (aElement.width !== sketchWidth || aElement.height !== sketchHeight) {
+      alert(aElement.width);
         aElement.setAttribute("width", sketchWidth);
         aElement.setAttribute("height", sketchHeight);
       }
@@ -169,6 +170,19 @@
                          0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
                         -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
 
+  // counter-clockwise
+  var rectVerts = [ 0, 0, 0, 0, 1, 0, 1, 0, 0,
+                    0, 1, 0, 1, 1, 0, 1, 0, 0];
+  
+  var rectOutlineVerts = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
+    
+  var rectNorms = [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
+                  0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+                  1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
+                  0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
+                  -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
+                  0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+
   var boxBuffer;
   var boxNormBuffer;
   var boxOutlineBuffer;
@@ -177,6 +191,10 @@
 
   var lineBuffer;
 
+  var rectBuffer;
+  var rectNormBuffer;
+  var rectOutlineBuffer;
+  
   var pointBuffer;
 
   // Vertex shader for points and lines
@@ -4156,6 +4174,19 @@
           lineBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, lineBuffer);
 
+          rectBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectVerts), curContext.STATIC_DRAW);
+
+          rectOutlineBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectOutlineBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectOutlineVerts), curContext.STATIC_DRAW);
+
+
+          rectNormBuffer = curContext.createBuffer();
+          curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
+          curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(rectNorms), curContext.STATIC_DRAW);
+
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
           curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray([0, 0, 0]), curContext.STATIC_DRAW);
@@ -5535,6 +5566,68 @@
     };
 
     p.rect = function rect(x, y, width, height) {
+    
+      if (p.use3DContext) {
+
+        // Modeling transformation
+        var model = new PMatrix3D();
+        model.translate(x,y,0);
+        model.scale(width, height, 1);
+
+        // viewing transformation needs to have Y flipped
+        // becuase that's what Processing does.
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.apply(modelView.array());
+
+        curContext.useProgram(programObject3D);
+        uniformMatrix(programObject3D, "model", true, model.array());
+        uniformMatrix(programObject3D, "view", true, view.array());
+        uniformMatrix(programObject3D, "projection", true, projection.array());
+
+        if (lineWidth > 0 && doStroke) {
+          curContext.useProgram(programObject3D);
+          uniformMatrix(programObject3D, "model", true, model.array());
+          uniformMatrix(programObject3D, "view", true, view.array());
+          uniformMatrix(programObject3D, "projection", true, projection.array());
+
+          uniformf(programObject3D, "color", strokeStyle);
+          curContext.lineWidth(lineWidth);
+          vertexAttribPointer(programObject3D, "Vertex", 3, rectOutlineBuffer);
+          curContext.drawArrays(curContext.LINE_LOOP, 0, rectOutlineVerts.length / 3);
+        }
+        
+        if (doFill === true) {
+          // fix stitching problems. (lines get occluded by triangles
+          // since they share the same depth values). This is not entirely
+          // working, but it's a start for drawing the outline. So
+          // developers can start playing around with styles. 
+          curContext.enable(curContext.POLYGON_OFFSET_FILL);
+          curContext.polygonOffset(1, 1);
+          uniformf(programObject3D, "color", fillStyle);
+
+          var v = new PMatrix3D();
+          v.set(view);
+
+          var m = new PMatrix3D();
+          m.set(model);
+
+          v.mult(m);
+
+          var normalMatrix = new PMatrix3D();
+          normalMatrix.set(v);
+          normalMatrix.invert();
+
+          uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
+
+          vertexAttribPointer(programObject3D, "Vertex", 3, rectBuffer);
+          vertexAttribPointer(programObject3D, "Normal", 3, rectNormBuffer);
+
+          curContext.drawArrays(curContext.TRIANGLES, 0, rectVerts.length / 3);
+          curContext.disable(curContext.POLYGON_OFFSET_FILL);
+        }
+      }
+else{
       if (!width && !height) {
         return;
       }
@@ -5570,6 +5663,7 @@
       }
 
       curContext.closePath();
+      }
     };
 
     p.ellipse = function ellipse(x, y, width, height) {
