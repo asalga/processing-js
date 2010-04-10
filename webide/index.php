@@ -36,8 +36,9 @@
             7 => 'Bouncing Box',
             8 => 'Mouse Light Direction',
             9 => 'Disco', 
-            10 => 'Line Lengths', 
-            11 => 'Poetry');
+10 => 'Cubic Grid',            
+11 => 'Line Lengths', 
+            12 => 'Poetry');
           
           for( $i = 0; $i < count($sketchNames); $i++ ) {
             echo "<option value='$i'";
@@ -131,12 +132,13 @@
           case 7:  fileSource = "sketches/bouncing_box.js";break;
           case 8:  fileSource = "sketches/mouse_light_direction.js";break;
           case 9:  fileSource = "sketches/disco.js";break;
+          case 10: fileSource = "sketches/cubic_grid.js";break;
 
           //
-          case 10:  fileSource = "sketches/line_lengths.js";
+          case 11:  fileSource = "sketches/line_lengths.js";
                     is2D = true;
                     break;
-          case 11:  fileSource = "sketches/poetry.js";
+          case 12:  fileSource = "sketches/poetry.js";
                     is2D = true;
                     break;
           default:break;
