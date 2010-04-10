@@ -39,7 +39,6 @@
 
       // only adjust the attributes if they differ
       if (aElement.width !== sketchWidth || aElement.height !== sketchHeight) {
-      alert(aElement.width);
         aElement.setAttribute("width", sketchWidth);
         aElement.setAttribute("height", sketchHeight);
       }

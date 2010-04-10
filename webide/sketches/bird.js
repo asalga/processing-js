@@ -10,7 +10,7 @@ void setup(){
 void draw(){
   background(0);
   camera();
- // lights();
+  lights();
 
   // Flight
   px = sin(radians(ang3)) * 170;
@@ -30,13 +30,13 @@ void draw(){
   fill(204);
   pushMatrix();
   rotateY(sin(radians(ang)) * -20);
- // rect(-75, -50, 75, 100);
+  rect(-75, -50, 75, 100);
   popMatrix();
 
   // Right wing
   pushMatrix();
   rotateY(sin(radians(ang)) * 20);
-  //rect(0, -50, 75, 100);
+  rect(0, -50, 75, 100);
   popMatrix();
 
   // Wing flap
