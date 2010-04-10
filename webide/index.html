@@ -33,6 +33,7 @@
         <option value='Disco'>Disco</option>
         <option value='Line Lengths' selected="selected">Line Lengths</option>
         <option value='Poetry'>Poetry</option>
+        <option value='Cubic Grid'>Cubic Grid</option>
       </select>
       <input type="button" value="Load Sketch" onclick="loadSketch();" />
     </p>
@@ -108,6 +109,7 @@
           case 8:  fileSource = "sketches/mouse_light_direction.js";break;
           case 9:  fileSource = "sketches/disco.js";break;
           
+          case 12:  fileSource = "sketches/cubic_grid.js";break;          
           //
           case 10:  fileSource = "sketches/line_lengths.js";
                     is2D = true;
@@ -115,6 +117,7 @@
           case 11:  fileSource = "sketches/poetry.js";
                     is2D = true;
                     break;
+
           default:break;
         }
         
