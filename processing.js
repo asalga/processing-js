@@ -5627,10 +5627,10 @@
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
         }
       }
-else{
-      if (!width && !height) {
-        return;
-      }
+      else{
+        if (!width && !height) {
+          return;
+        }
 
       curContext.beginPath();
 
