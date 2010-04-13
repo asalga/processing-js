@@ -212,7 +212,7 @@
 
   var fragmentShaderSource2D = 
   "void main(void){" + 
-  "  gl_FragColor = gl_Color;" + 
+"  gl_FragColor = gl_Color;" + 
   "}";
 
   // Vertex shader for boxes and spheres
@@ -353,7 +353,7 @@
   "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
 
   // If there were no lights this draw call, just use the 
-  // assigned fill color of the shape and the specular value
+  // assigned fill color of the sha.e and the specular value
   "  if( lightCount == 0 ) {" + 
   "    gl_FrontColor = color + vec4(mat_specular,1.0);" + 
   "  }" +
@@ -389,11 +389,13 @@
   "       color[3] );" + 
   "    }" + 
   "  }" + 
+  "  gl_FrontColor = vec4(vec3(gl_FrontColor), color[3]);" +
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" + 
   "}";
 
   var fragmentShaderSource3D = 
   "void main(void){" + 
+//  "  gl_FragColor = vec4(1.0, 0.0, 0.0, gl_Color[3]);" + 
   "  gl_FragColor = gl_Color;" + 
   "}";
 
@@ -4134,7 +4136,7 @@
           // Set defaults
           curContext.viewport(0, 0, curElement.width, curElement.height);
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-          curContext.enable(curContext.DEPTH_TEST);
+//          curContext.enable(curContext.DEPTH_TEST);
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
@@ -4633,6 +4635,7 @@
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
         }
+
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject3D);
@@ -5578,25 +5581,26 @@
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
-
-        curContext.useProgram(programObject3D);
-        uniformMatrix(programObject3D, "model", true, model.array());
-        uniformMatrix(programObject3D, "view", true, view.array());
-        uniformMatrix(programObject3D, "projection", true, projection.array());
-
+        
         if (lineWidth > 0 && doStroke) {
+          curContext.useProgram(programObject2D);
+          uniformMatrix(programObject2D, "model", true, model.array());
+          uniformMatrix(programObject2D, "view", true, view.array());
+          uniformMatrix(programObject2D, "projection", true, projection.array());
+
+          uniformf(programObject2D, "color", strokeStyle);
+          curContext.lineWidth(lineWidth);
+          vertexAttribPointer(programObject2D, "Vertex", 3, rectOutlineBuffer);
+          curContext.drawArrays(curContext.LINE_LOOP, 0, rectOutlineVerts.length / 3);
+        }
+        
+        if (doFill === true) {
+        
           curContext.useProgram(programObject3D);
           uniformMatrix(programObject3D, "model", true, model.array());
           uniformMatrix(programObject3D, "view", true, view.array());
           uniformMatrix(programObject3D, "projection", true, projection.array());
 
-          uniformf(programObject3D, "color", strokeStyle);
-          curContext.lineWidth(lineWidth);
-          vertexAttribPointer(programObject3D, "Vertex", 3, rectOutlineBuffer);
-          curContext.drawArrays(curContext.LINE_LOOP, 0, rectOutlineVerts.length / 3);
-        }
-        
-        if (doFill === true) {
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
           // working, but it's a start for drawing the outline. So
@@ -5616,6 +5620,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+
 
           uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
 

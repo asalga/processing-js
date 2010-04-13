@@ -1,10 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for <a href="'">rect() 3D</a> in Pjs</h2>
+
+
+    <p>
+      <canvas datasrc="rect.pjs"> </canvas>
+      <img src="ref_test.jpg" style="margin: 10px 0;"/>
+    </p>
+    
+    <pre><b>// Test by Andor Salga</b>
+    
 import processing.opengl.*;
 
 void setup()
 {
   size(400,400, OPENGL);
 
-background(204);
+  background(204);
   rect(10, 10, 50, 50);
 
   noStroke();
@@ -77,4 +96,7 @@ background(204);
   fill(255,255,255);
   stroke(0, 0, 0);
   rect(width-50, height-50, 30,30);
-}
+}</pre>
+
+  </body>
+</html>
