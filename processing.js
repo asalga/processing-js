@@ -283,7 +283,7 @@
 
   "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
 
-  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
+  "  float nDotVP = abs( dot( vertNormal, VP ));" + 
   "  vec3 halfVector = normalize( VP + eye );" + 
   "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 

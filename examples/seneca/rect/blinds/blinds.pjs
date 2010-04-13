@@ -27,6 +27,9 @@ void r(){
 void draw(){
 
   background(240);
+
+
+
   translate(10, 20, 0);
 
 pushMatrix();
@@ -66,9 +69,17 @@ fill(0,0,255,30);
 
 popMatrix();
 
+
+pushMatrix();
+translate(width/2, 30+height/2, 90);
+pointLight(50,150,0, 0,0,0);
+popMatrix();
+
 stroke(0);
 strokeWeight(1);
-  directionalLight(255,0,0, 0,1, -1);
+
+
+  directionalLight(200,50,0, 0,5, -1);
 
   for(int i = 0; i < 20; i++){
 
@@ -77,7 +88,7 @@ rotateX(sin(frameCount/50)/windStr);
 pushMatrix();
 
   rotateX(sin((frameCount+ list[i])/20)/30);
-  fill(128,120,128,50);
+  fill(128,120,128,150);
   rect(i*10, 10, 10, 190);
   popMatrix();
   }
