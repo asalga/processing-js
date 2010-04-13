@@ -258,8 +258,8 @@
 
   "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" + 
   "  float powerfactor = 0.0;" + 
-  "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" + 
-  "  float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
+  "  float nDotVP = abs(dot( vertNormal, light.position ));" + 
+  "  float nDotVH = dot( vertNormal, normalize( light.position-ecPos ));" +
 
   "  if( nDotVP != 0.0 ){" + 
   "    powerfactor = pow( nDotVH, shininess );" + 
@@ -4136,7 +4136,7 @@
           // Set defaults
           curContext.viewport(0, 0, curElement.width, curElement.height);
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
-//          curContext.enable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.DEPTH_TEST);
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 

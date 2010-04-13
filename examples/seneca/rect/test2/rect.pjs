@@ -1,0 +1,33 @@
+import processing.opengl.*;
+
+float r = 0.0;
+
+void setup()
+{
+  size(400,400, OPENGL);
+}
+
+void draw(){
+  
+  
+background(33,66,99);
+
+directionalLight(255,0,0,0,0,-1);
+
+fill(255);  
+translate(width/2, height/2, 0);
+
+translate(150,0,0);
+rotateX(r+=0.001);
+box(30);
+
+translate(-150,0,0);
+rotateX(r+=0.001);
+
+//emissive(255,128,129);
+
+//fill(128,128,128);
+rect(0,0,100,100);
+
+
+}
