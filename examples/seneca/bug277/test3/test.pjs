@@ -9,5 +9,5 @@ void setup() {
 void draw() {
   background(33,66,99);
   translate(width/2, height/2, 0);
-  sphere(10);
+  sphere(30);
 }
