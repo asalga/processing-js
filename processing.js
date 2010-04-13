@@ -169,9 +169,13 @@
                          0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
                         -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5];
 
+// !!!
   // counter-clockwise
   var rectVerts = [ 0, 0, 0, 0, 1, 0, 1, 0, 0,
-                    0, 1, 0, 1, 1, 0, 1, 0, 0];
+                    0, 1, 0, 1, 1, 0, 1, 0, 0,
+      //!!!
+      // 0, 0, 0, 0, 1, 0, 1, 0, 0,
+                    ];
   
   var rectOutlineVerts = [0,0,0, 0,1,0, 1,1,0, 1,0,0];
     
@@ -239,9 +243,9 @@
 
   "struct Light {" + 
   "  bool dummy;" + 
-  "   int type;" + 
-  "   vec3 color;" + 
-  "   vec3 position;" + 
+  "  int type;" + 
+  "  vec3 color;" + 
+  "  vec3 position;" + 
   "  vec3 direction;" + 
   "  float angle;" + 
   "  vec3 halfVector;" + 
@@ -249,14 +253,15 @@
   "};" + 
   "uniform Light lights[8];" +
 
-  "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
+  "void AmbientLight( inout vec4 totalAmbient, in vec3 ecPos, in Light light ) {" +
   // Get the vector from the light to the vertex
   // Get the distance from the current vector to the light position
   "  float d = length( light.position - ecPos );" +
-  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + "  totalAmbient += light.color * attenuation;" + 
+  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + 
+  "  totalAmbient += vec4(light.color, 0.0) * attenuation;" + 
   "}" +
 
-  "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" + 
+  "void DirectionalLight( inout vec4 col, in vec3 ecPos, inout vec4 spec, in vec3 vertNormal, in Light light ) {" + 
   "  float powerfactor = 0.0;" + 
   "  float nDotVP = abs(dot( vertNormal, light.position ));" + 
   "  float nDotVH = dot( vertNormal, normalize( light.position-ecPos ));" +
@@ -265,11 +270,11 @@
   "    powerfactor = pow( nDotVH, shininess );" + 
   "  }" +
 
-  "  col += light.color * nDotVP;" + 
-  "  spec += specular * powerfactor;" + 
+  "  col += vec4(light.color, 1.0) * nDotVP;" + 
+  "  spec += vec4(specular, 0.0) * powerfactor;" + 
   "}" +
 
-  "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
+  "void PointLight( inout vec4 col, inout vec4 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
   "  float powerfactor;" +
 
   // Get the vector from the light to the vertex
@@ -294,8 +299,8 @@
   "    powerfactor = pow( nDotHV, shininess );" + 
   "  }" +
 
-  "  spec += specular * powerfactor * attenuation;" + 
-  "  col += light.color * nDotVP * attenuation;" + 
+  "  spec += vec4(specular, 0.0) * powerfactor * attenuation;" + 
+  "  col += vec4(light.color, 1.0) * nDotVP * attenuation;" + 
   "}" +
 
   /*
@@ -337,14 +342,14 @@
   "    powerfactor = pow( nDotHV, shininess );" + 
   "  }" +
 
-  "  spec += specular * powerfactor * attenuation;" + 
+ // "  spec += specular * powerfactor * attenuation;" + 
   "  col += light.color * nDotVP * attenuation;" + 
   "}" +
 
   "void main(void) {" + 
-  "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" + 
-  "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" + 
-  "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
+  "  vec4 finalAmbient = vec4( 0.0, 0.0, 0.0, 0.0 );" + 
+  "  vec4 finalDiffuse = vec4( 0.0, 0.0, 0.0, 0.0 );" + 
+  "  vec4 finalSpecular = vec4( 0.0, 0.0, 0.0, 0.0);" +
 
   "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
 
@@ -355,7 +360,7 @@
   // If there were no lights this draw call, just use the 
   // assigned fill color of the sha.e and the specular value
   "  if( lightCount == 0 ) {" + 
-  "    gl_FrontColor = color + vec4(mat_specular,1.0);" + 
+  "    gl_FrontColor = color + vec4( mat_specular, 0.0 );" + 
   "  }" +
   "  else {" + 
   "    for( int i = 0; i < lightCount; i++ ) {" + 
@@ -363,39 +368,37 @@
   "        AmbientLight( finalAmbient, ecPos, lights[i] );" + 
   "      }" + 
   "      else if( lights[i].type == 1 ) {" + 
-  "        DirectionalLight( finalDiffuse,ecPos, finalSpecular, norm, lights[i] );" + 
+  "        DirectionalLight( finalDiffuse, ecPos, finalSpecular, norm, lights[i] );" + 
   "      }" + 
   "      else if( lights[i].type == 2 ) {" + 
   "        PointLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
   "      }" + 
   "      else if( lights[i].type == 3 ) {" + 
-  "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
+//  "        SpotLight( finalDiffuse, finalSpecular, norm, ecPos, eye, lights[i] );" + 
   "      }" + 
   "    }" +
 
   "   if( usingMat == false ) {" + 
+// "finalDiffuse = vec4(1.0,0.0, 1.0, 1.0);" +
   "    gl_FrontColor = vec4(  " + 
-  "      vec3(color) * finalAmbient +" + 
-  "      vec3(color) * finalDiffuse +" + 
-  "      vec3(color) * finalSpecular," + 
-  "      color[3] );" + 
+  "      color * finalAmbient +" + 
+  "      color * finalDiffuse +" + 
+  "      color * finalSpecular);" + 
   "   }" + 
   "   else{" + 
   "     gl_FrontColor = vec4( " + 
-  "       mat_emissive + " + 
-  "       (vec3(color) * mat_ambient * finalAmbient) + " + 
-  "       (vec3(color) * finalDiffuse) + " + 
-  "       (mat_specular * finalSpecular), " + 
-  "       color[3] );" + 
+  "       vec4(mat_emissive, 0.0) + " + 
+  "       (color * vec4(mat_ambient, 1.0) * finalAmbient) + " + 
+  "       color * finalDiffuse);  " + 
+//  "       (vec4(mat_specular, 1.0) * finalSpecular)); " + 
   "    }" + 
   "  }" + 
-  "  gl_FrontColor = vec4(vec3(gl_FrontColor), color[3]);" +
+  "  gl_FrontColor = gl_FrontColor;" +
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" + 
   "}";
 
   var fragmentShaderSource3D = 
   "void main(void){" + 
-//  "  gl_FragColor = vec4(1.0, 0.0, 0.0, gl_Color[3]);" + 
   "  gl_FragColor = gl_Color;" + 
   "}";
 
@@ -4137,7 +4140,7 @@
           curContext.viewport(0, 0, curElement.width, curElement.height);
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
-          curContext.enable(curContext.BLEND);
+       //   curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
           // Create the program objects to render 2D (points, lines) and 
@@ -4614,6 +4617,13 @@
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
           uniformf(programObject3D, "color", fillStyle);
+
+          if(fillStyle[3] == 1.0){
+          curContext.disable(curContext.BLEND);
+          }
+          else{
+          curContext.enable(curContext.BLEND);
+          }
 
           var v = new PMatrix3D();
           v.set(view);
@@ -5608,6 +5618,16 @@
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
           uniformf(programObject3D, "color", fillStyle);
+          
+          
+          if(fillStyle[3] == 1.0){
+          curContext.disable(curContext.BLEND);
+          curContext.enable(curContext.DEPTH_TEST);
+          }
+          else{
+          curContext.enable(curContext.BLEND);
+          curContext.disable(curContext.DEPTH_TEST);
+          }
 
           var v = new PMatrix3D();
           v.set(view);

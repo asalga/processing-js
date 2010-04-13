@@ -12,6 +12,9 @@ void draw(){
   
 background(33,66,99);
 
+
+directionalLight(0,255,0,0,0,1);
+
 directionalLight(255,0,0,0,0,-1);
 
 fill(255);  

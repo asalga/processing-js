@@ -1,0 +1,39 @@
+import processing.opengl.*;
+
+int counter = 0;
+
+void setup()
+{
+  size(400,400, OPENGL); 
+  noLights();
+
+  fill(0);
+  drawRect();
+
+  fill(255,0,0);
+  drawRect();
+
+  fill(255,0,0,128);
+  drawRect();
+
+  fill(255,0,0,64);
+  drawRect();
+
+
+  directionalLight(0,128,0, 0, 0, -1);
+
+  fill(0);
+  drawRect();
+
+  fill(255,0,0);
+  drawRect();
+
+  fill(255,0,0,128);
+  drawRect();
+
+}
+
+void drawRect(){
+  rect(counter * 60, 10, 50, 50);
+  counter++;
+}
