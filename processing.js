@@ -691,6 +691,18 @@
     p.CMYK = 5;
     p.OPENGL = 'OPENGL';
     p.P3D = 'P3D';
+    // hints
+    p.DISABLE_OPENGL_2X_SMOOTH = 1;
+    p.ENABLE_OPENGL_2X_SMOOTH = -1;
+    p.ENABLE_OPENGL_4X_SMOOTH = 2;
+    p.ENABLE_NATIVE_FONTS = 3;
+    p.DISABLE_DEPTH_TEST = 4;
+    p.ENABLE_DEPTH_TEST = -4;
+    p.ENABLE_DEPTH_SORT = 5;
+    p.DISABLE_DEPTH_SORT = -5;
+    //p.DISABLE_OPENGL_ERROR_REPORT = 6;
+    //p.ENABLE_OPENGL_ERROR_REPORT = -6;
+    
     p.FRAME_RATE = 0;
     p.focused = true;
     p.ARROW = 'default';
@@ -5842,6 +5854,11 @@
       }
     };
 
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Rendering 
+    ////////////////////////////////////////////////////////////////////////////
+
     // Creates a new Processing instance and passes it back for... processing
     p.createGraphics = function createGraphics(w, h) {
       var canvas = document.createElement("canvas");
@@ -5850,6 +5867,10 @@
       ret.canvas = canvas;
       return ret;
     };
+    
+    // WebGL hints
+    p.hint = function hint(){
+    }
 
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
