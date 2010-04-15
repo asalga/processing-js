@@ -816,7 +816,8 @@
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0,
       lastTextPos = [0, 0, 0],
-      curveBasisMatrix, curveToBezierMatrix, curveDrawMatrix, bezierBasisInverse, bezierBasisMatrix;
+      curveBasisMatrix, curveToBezierMatrix, curveDrawMatrix, bezierBasisInverse, bezierBasisMatrix,
+      hints = [];
 
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
@@ -5869,7 +5870,12 @@
     };
     
     // WebGL hints
-    p.hint = function hint(){
+    p.hint = function hint(which){
+      if (which > 0) {
+        hints[which] = true;
+      } else {
+        hints[-which] = false;
+      }
     }
 
     // Paints a pixel array into the canvas
