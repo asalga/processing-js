@@ -1,39 +1,196 @@
 import processing.opengl.*;
 
+int START_X = 10;
+
 int counter = 0;
+int currX = START_X;
+int currY = 10;
+
+int RECTS_PER_ROW = 10;
+int RECT_SIZE = 30;
+
+int Y_OFFSET = 50;
+int X_OFFSET = 50;
 
 void setup()
 {
-  size(400,400, OPENGL); 
-  noLights();
+  size(500,500, OPENGL);
+  
+ // background(55,77, 10);
+//    background(150);
 
+    background(0);
+
+strokeWeight(6);
+
+  // default
+  drawRect();
+  
   fill(0);
   drawRect();
-
-  fill(255,0,0);
+  
+  fill(0, 255);
+  drawRect();
+  
+  fill(0, 128);
+  drawRect();
+  
+  fill(0, 32);
   drawRect();
 
-  fill(255,0,0,128);
+  fill(0, 0);  
   drawRect();
 
-  fill(255,0,0,64);
+  fill(128,0,0,255);  
   drawRect();
 
-
-  directionalLight(0,128,0, 0, 0, -1);
-
-  fill(0);
+  fill(128,0,0,128);
   drawRect();
 
-  fill(255,0,0);
+  fill(128,0,0,64);
   drawRect();
 
-  fill(255,0,0,128);
+  fill(128,0,0,32);
   drawRect();
 
+  fill(128,0,0,0);
+  drawRect();
+
+  fill(128,0,0,0);
+  drawRect();
+  
+  fill(128,128,0,255);
+  drawRect();
+
+  noStroke();
+  fill(0,128,0,255);
+  drawRect();  
+
+  stroke(0);
+  fill(0,128,0,255);
+  drawRect();    
+
+  stroke(255,0,0,128);
+  fill(0,128,0,255);
+  drawRect();    
+
+  stroke(255,0,0,0);
+  fill(0,128,0,255);
+  drawRect();
+
+  stroke(255,128,0,0);
+  fill(128,128,128, 128);
+  drawRect(); 
+ 
+  stroke(255,0,0,255);
+  fill(128,128,128,128);
+  drawRect();
+  
+  stroke(255,0,0,128);
+  fill(128,128,198, 160);
+  drawRect();
+  
+  stroke(255,0,0,32);
+  fill(128,128,128,128);
+  drawRect();
+  
+  
+  ///////////////
+  
+
+  
+  fill(255);
+  drawRect();
+
+  fill(0 );
+  drawRect();
+  
+  fill(0, 255 );
+  drawRect();
+  
+  fill(0, 128);
+  drawRect();
+  
+  fill(0, 64);
+  drawRect();
+
+  fill(0, 0);  
+  drawRect();
+
+  fill(128,0,0,255);  
+  drawRect();
+
+  fill(128,0,0,128);
+  drawRect();
+
+  fill(128,0,0,64);
+  drawRect();
+
+  fill(128,0,0,32);
+  drawRect();
+
+  fill(128,0,0,0);
+  drawRect();
+
+  fill(128,0,0,0);
+  drawRect();
+  
+  fill(128,128,0,255);
+  drawRect();
+
+  noStroke();
+  fill(0,128,0,255);
+  drawRect();  
+
+  stroke(0);
+  fill(0,128,0,255);
+  drawRect();    
+
+  stroke(255,0,0,128);
+  fill(0,128,0,255);
+  drawRect();    
+
+  stroke(255,0,0,0);
+  fill(0,128,0,255);
+  drawRect();
+
+  stroke(255,128,0,0);
+  fill(128,128,128,128);
+  drawRect(); 
+ 
+  stroke(255,0,0,255);
+  fill(128,128,128,128);
+  drawRect();
+  
+  stroke(255,0,0,128);
+  fill(128,128,128,128);
+  drawRect();
+  
+  stroke(255,0,0,32);
+  fill(0,32,128,64);
+  drawRect();
+  
+  pushMatrix();
+  translate(0,0,5);
+  fill(32, 60, 74, 128);
+  rect(10, 110, 480, 100);
+  popMatrix();
+  
+  
+  
 }
 
 void drawRect(){
-  rect(counter * 60, 10, 50, 50);
+  
+  rect(currX, currY, RECT_SIZE, RECT_SIZE);
+
+  if(counter % RECTS_PER_ROW == 0 && counter > 0){
+    currX = START_X;
+    currY += Y_OFFSET;
+  }else{
+    currX += X_OFFSET;
+  }
+    
+
   counter++;
 }

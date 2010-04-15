@@ -210,7 +210,7 @@
   "uniform mat4 projection;" +
 
   "void main(void) {" + 
-  "  gl_FrontColor = color;" + 
+  "  gl_FrontColor = vec4(vec3(color), color[3]* 2.0);" + 
   "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" + 
   "}";
 
@@ -358,9 +358,11 @@
   "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
 
   // If there were no lights this draw call, just use the 
-  // assigned fill color of the sha.e and the specular value
+  // assigned fill color of the shade and the specular value
   "  if( lightCount == 0 ) {" + 
-  "    gl_FrontColor = color + vec4( mat_specular, 0.0 );" + 
+ // "    gl_FrontColor = vec4(vec3(color) * 1.0, color[3] * 1.0);" + 
+"gl_FrontColor = color;" +
+  //vec4(color[0] * 0.8, color[1] * 0.8, color[2]* 0.8, color[3] * 0.8) ;" +//+ vec4( mat_specular, 0.0 );" + 
   "  }" +
   "  else {" + 
   "    for( int i = 0; i < lightCount; i++ ) {" + 
@@ -380,20 +382,22 @@
 
   "   if( usingMat == false ) {" + 
 // "finalDiffuse = vec4(1.0,0.0, 1.0, 1.0);" +
-  "    gl_FrontColor = vec4(  " + 
-  "      color * finalAmbient +" + 
-  "      color * finalDiffuse +" + 
-  "      color * finalSpecular);" + 
+ // "    gl_FrontColor = vec4(  " + 
+ // "      vec3(color * finalAmbient) +" + 
+ // "      color * finalDiffuse); " + 
+ // "      vec3(color * finalSpecular), color[3]+0.9);" + 
+ //"gl_FrontColor =vec4(1.0, 0.0, 0.0, 1.0);"+
+// "gl_FrontColor = vec4(1.0);" +
   "   }" + 
   "   else{" + 
-  "     gl_FrontColor = vec4( " + 
-  "       vec4(mat_emissive, 0.0) + " + 
-  "       (color * vec4(mat_ambient, 1.0) * finalAmbient) + " + 
-  "       color * finalDiffuse);  " + 
-//  "       (vec4(mat_specular, 1.0) * finalSpecular)); " + 
+//  "     gl_FrontColor = vec4( " + 
+//  "       vec4(mat_emissive, 0.0) + " + 
+ // "       (color * vec4(mat_ambient, 1.0) * finalAmbient) + " + 
+ // "       color * finalDiffuse);  " + 
+  //"       (vec4(mat_specular, 1.0) * finalSpecular)); " + 
+  "gl_FrontColor = vec4(1.0);" +
   "    }" + 
   "  }" + 
-  "  gl_FrontColor = gl_FrontColor;" +
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" + 
   "}";
 
@@ -4140,7 +4144,7 @@
           curContext.viewport(0, 0, curElement.width, curElement.height);
           curContext.clearColor(204 / 255, 204 / 255, 204 / 255, 1.0);
           curContext.enable(curContext.DEPTH_TEST);
-       //   curContext.enable(curContext.BLEND);
+         // curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
           // Create the program objects to render 2D (points, lines) and 
@@ -5007,6 +5011,7 @@
 
       if (p.use3DContext) {
         fillStyle = p.color.toGLArray(color);
+        tinylogLite.log(fillStyle);
       } else {
         curContext.fillStyle = p.color.toString(color);
       }
@@ -5594,6 +5599,16 @@
         
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
+          
+          if(strokeStyle[3] == 1.0){
+            curContext.disable(curContext.BLEND);
+            curContext.enable(curContext.DEPTH_TEST);
+          }
+          else{
+            curContext.enable(curContext.BLEND);
+            curContext.disable(curContext.DEPTH_TEST);
+          }
+          
           uniformMatrix(programObject2D, "model", true, model.array());
           uniformMatrix(programObject2D, "view", true, view.array());
           uniformMatrix(programObject2D, "projection", true, projection.array());
@@ -5617,6 +5632,7 @@
           // developers can start playing around with styles. 
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
+
           uniformf(programObject3D, "color", fillStyle);
           
           
@@ -6188,6 +6204,7 @@
       if (p.use3DContext) {
         if (typeof color !== 'undefined') {
           var c = p.color.toGLArray(color);
+          alert(c);
           curContext.clearColor(c[0], c[1], c[2], c[3]);
           curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         } else {
