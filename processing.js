@@ -4119,7 +4119,7 @@
         // get the 3D rendering context
         try {
           if (!curContext) {
-            curContext = curElement.getContext("experimental-webgl",{antialias:true});
+            curContext = curElement.getContext("experimental-webgl", {antialias:false});
           }
         } catch(e_size) {
           Processing.debug(e_size);
@@ -4139,8 +4139,9 @@
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
           
-          curContext.enable(curContext.SAMPLE_COVERAGE);
-curContext.sampleCoverage(	0.0, true);
+//          curContext.enable(curContext.SAMPLE_COVERAGE);
+//curContext.sampleCoverage(	0.0, true);
+//alert(curContext.getParameter(curContext.SAMPLE_BUFFERS));
 
           // Create the program objects to render 2D (points, lines) and 
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit, 
