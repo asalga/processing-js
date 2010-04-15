@@ -41,7 +41,9 @@
 11 => 'Bird',
 12 => 'Brids',
             13 => 'Line Lengths', 
-            14 => 'Poetry');
+            14 => 'Poetry',
+15 => 'Blinds'
+);
           
           for( $i = 0; $i < count($sketchNames); $i++ ) {
             echo "<option value='$i'";
@@ -146,6 +148,7 @@
           case 14:  fileSource = "sketches/poetry.js";
                     is2D = true;
                     break;
+          case 15: fileSource = "sketches/blinds.js";break;
           default:break;
         }
         

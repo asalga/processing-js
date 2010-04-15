@@ -5,7 +5,6 @@ float[] list = new float[20];
 float g = 0;
 float w = 10;
 
-// larger is higher
 float windSpeed = 1;
 float windStr = 190;
 float varyance = 1.5;
@@ -23,76 +22,75 @@ void r(){
 
 void draw(){
 
-background(240);
-translate(10, 20, 0);
+  background(240);
+  translate(10, 20, 0);
 
-pushMatrix();
-fill(140,120,0);
-
-translate(50,90,-90);
-scale(4,4,4);
-rotateX(-0.4);
-
-box(20,1,20);// seat
-
-pushMatrix();
-translate(8,10,8);
-box(2,20,2); 
-popMatrix();
-
-pushMatrix();
-translate(-8,10,-8);
-box(2,20,2); 
-popMatrix();
-
-pushMatrix();
-translate(8,10,-8);
-box(2,20,2); 
-popMatrix();
-
-pushMatrix();
-translate(-8,10,8);
-box(2,20,2); 
-popMatrix();
-
-popMatrix();
-
-pushMatrix();
-translate(50,20,-40);
-fill(0,0,255,30);
-
-popMatrix();
-
-pushMatrix();
-translate(width/2, 30+height/2, 90);
-pointLight(50, 150, 0, 0, 0 ,0);
-popMatrix();
-
-stroke(0);
-strokeWeight(1);
-
-
-directionalLight(200,50,0, 0,0, -1);
-
-for(int i = 0; i < 20; i++){
-  rotateX(sin(frameCount/50)/windStr);
   pushMatrix();
+  fill(140,120,0);
 
-  int li = (int)list[i];
+  translate(50,90,-90);
+  scale(4,4,4);
+  rotateX(-0.4);
 
-  rotateX(sin((frameCount + li)/20)/30);
-  fill(128,120,128,150);
-  rect(i*10, 10, 10, 190);
+  box(20,1,20);// seat
+
+  pushMatrix();
+  translate(8,10,8);
+  box(2,20,2); 
   popMatrix();
-}
 
-if(frame%2000 == 0){
-  r();
-  g+=random(-1,1);
-  w +=random(-2,2);
-}
+  pushMatrix();
+  translate(-8,10,-8);
+  box(2,20,2); 
+  popMatrix();
 
-if(frame%300 == 0){
-  windStr += random(-1,1);
-}
+  pushMatrix();
+  translate(8,10,-8);
+  box(2,20,2); 
+  popMatrix();
+
+  pushMatrix();
+  translate(-8,10,8);
+  box(2,20,2); 
+  popMatrix();
+
+  popMatrix();
+
+  pushMatrix();
+  translate(50,20,-40);
+  fill(0,0,255,30);
+
+  popMatrix();
+
+  pushMatrix();
+  translate(width/2, 30+height/2, 90);
+  pointLight(50, 150, 0, 0, 0 ,0);
+  popMatrix();
+
+  stroke(0);
+  strokeWeight(1);
+
+  directionalLight(200,50,0, 0,0, -1);
+
+  for(int i = 0; i < 20; i++){
+    rotateX(sin(frameCount/50)/windStr);
+    pushMatrix();
+
+    int li = (int)list[i];
+
+    rotateX(sin((frameCount + li)/20)/30);
+    fill(i*15,255-i*10,128,150);
+    rect(i*10, 10, 10, 190);
+    popMatrix();
+  }
+
+  if(frame%2000 == 0){
+    r();
+    g+=random(-1,1);
+    w +=random(-2,2);
+  }
+
+  if(frame%300 == 0){
+    windStr += random(-1,1);
+  }
 }

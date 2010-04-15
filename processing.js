@@ -389,6 +389,7 @@
   "       color[3] );" + 
   "    }" + 
   "  }" + 
+  "  gl_FrontColor = vec4(vec3(gl_FrontColor), gl_FrontColor[3]);" +
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" + 
   "}";
 
