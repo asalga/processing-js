@@ -4119,10 +4119,9 @@
         // get the 3D rendering context
         try {
           if (!curContext) {
-            curContext = curElement.getContext("experimental-webgl", {antialias: false});
-//   var attribs = curContext.getContextAttributes();
-  // alert("d");
-
+            curContext = curElement.getContext("experimental-webgl", {antialias:false});
+var a = curContext.getContextAttributes();
+alert(a);
           }
         } catch(e_size) {
         alert(e_size);
