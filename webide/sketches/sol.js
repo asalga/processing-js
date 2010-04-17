@@ -7,13 +7,28 @@ float rotEarth = 0.0;
 float rotMoon = 0.0;
 float zoom = 0;
 PFont infoFont;
-PFont starFont;
 
 /*
 */
 void setup(){
   size(400,400,OPENGL);
   noStroke();
+  infoFont = loadFont("Arial");
+  
+  // for Processing... (add quoatations around Arial)
+  // infoFont = createFont(Arial,24);
+}
+
+void displayText()
+{
+  fill(25,70,20);
+  textFont(infoFont); 
+  text( "FPS: " + int(frameRate), 15, 30); 
+  text( "LOD: " + int(zoom + 16.0) , 15, 50);
+ 
+  text( "Keys:", 15, 100);
+  text( "a - move forward" , 15, 120);
+  text( "z - move backward",  15, 140);
 }
 
 /*
@@ -22,6 +37,7 @@ void draw()
 {
   // clear the color buffer
   background(0);
+  displayText();
   
   lightSpecular(255,255,255);
   pointLight(200,200,200,0,100,400);

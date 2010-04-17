@@ -4139,11 +4139,8 @@
         try {
           if (!curContext) {
             curContext = curElement.getContext("experimental-webgl", {antialias:false});
-var a = curContext.getContextAttributes();
-alert(a);
           }
         } catch(e_size) {
-        alert(e_size);
           Processing.debug(e_size);
         }
 
@@ -6970,7 +6967,7 @@ else{
             view.scale(1, -1, 1);
             view.apply(modelView.array());
 
-            curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE);
+            //curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE);
 
             curContext.useProgram(programObject2D);
 
