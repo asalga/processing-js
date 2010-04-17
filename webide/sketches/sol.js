@@ -14,7 +14,7 @@ void setup(){
   size(400,400,OPENGL);
   noStroke();
   infoFont = loadFont("Arial");
-  
+  textFont(infoFont, 24);
   // for Processing... (add quoatations around Arial)
   // infoFont = createFont(Arial,24);
 }
@@ -23,12 +23,12 @@ void displayText()
 {
   fill(25,70,20);
   textFont(infoFont); 
-  text( "FPS: " + int(frameRate), 15, 30); 
-  text( "LOD: " + int(zoom + 16.0) , 15, 50);
+  text( "FPS: " + int(frameRate), 0, 30); 
+  text( "LOD: " + int(zoom + 16.0) , 0, 50);
  
   text( "Keys:", 15, 100);
-  text( "a - move forward" , 15, 120);
-  text( "z - move backward",  15, 140);
+  text( "a - move forward" , 0, 120);
+  text( "z - move backward",  0, 140);
 }
 
 /*
