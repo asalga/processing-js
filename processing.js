@@ -2754,6 +2754,8 @@
         p.shininess(1);
         p.ambient(255, 255, 255);
         p.specular(0, 0, 0);
+        
+        //hint(DISABLE_DEPTH_TEST);
 
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.camera();
@@ -5870,11 +5872,20 @@
     };
     
     // WebGL hints
-    p.hint = function hint(which){
-      if (which > 0) {
+    p.hint = function hint( which ) {
+      if ( which > 0 ) {
         hints[which] = true;
-      } else {
+      }
+      else {
         hints[-which] = false;
+      }
+
+      if ( which === p.DISABLE_DEPTH_TEST ) {
+        curContext.disable( curContext.DEPTH_TEST );
+        curContext.clear( curContext.DEPTH_BUFFER_BIT );
+      }
+      else if (which === p.ENABLE_DEPTH_TEST ) {
+        curContext.enable(curContext.DEPTH_TEST );
       }
     }
 
