@@ -3,13 +3,13 @@
     P R O C E S S I N G . J S - @VERSION@
     a port of the Processing visualization language
     
-    License       : MIT 
-    Developer     : John Resig: http://ejohn.org
-    Web Site      : http://processingjs.org  
-    Java Version  : http://processing.org
-    Github Repo.  : http://github.com/jeresig/processing-js
-    Bug Tracking  : http://processing-js.lighthouseapp.com
-    Mozilla POW!  : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
+    License : MIT
+    Developer : John Resig: http://ejohn.org
+    Web Site : http://processingjs.org
+    Java Version : http://processing.org
+    Github Repo. : http://github.com/jeresig/processing-js
+    Bug Tracking : http://processing-js.lighthouseapp.com
+    Mozilla POW! : http://wiki.Mozilla.org/Education/Projects/ProcessingForTheWeb
     Maintained by : Seneca: http://zenit.senecac.on.ca/wiki/index.php/Processing.js
                     Hyper-Metrix: http://hyper-metrix.com/#Processing
                     BuildingSky: http://weare.buildingsky.net/pages/processing-js
@@ -44,7 +44,7 @@
       }
     }
 
-    // Build an Processing functions and env. vars into 'p'  
+    // Build an Processing functions and env. vars into 'p'
     var p = Processing.build(aElement);
 
     // Send aCode Processing syntax to be converted to JavaScript
@@ -75,23 +75,32 @@
     var canvas = document.getElementsByTagName('canvas');
 
     for (var i = 0, l = canvas.length; i < l; i++) {
-      // Get data-src instead of datasrc
-      var datasrc = canvas[i].getAttribute('data-src');
-      if (datasrc === null) {
-        // Temporary fallback for datasrc
-        datasrc = canvas[i].getAttribute('datasrc');
+      // datasrc and data-src are deprecated.
+      var processingSources = canvas[i].getAttribute('data-processing-sources');
+      if (processingSources === null) {
+        // Temporary fallback for datasrc and data-src
+        processingSources = canvas[i].getAttribute('data-src');
+        if (processingSources === null) {
+          processingSources = canvas[i].getAttribute('datasrc');
+        }
       }
-      if (datasrc) {
+      if (processingSources) {
         // The problem: if the HTML canvas dimensions differ from the
         // dimensions specified in the size() call in the sketch, for
         // 3D sketches, browsers will either not render or render the
         // scene incorrectly. To fix this, we need to adjust the attributes
         // of the canvas width and height.
         // Get the source, we'll need to find what the user has used in size()
-        var sketchSource = ajax(datasrc);
+        var filenames = processingSources.split(' ');
+        var code;
+        for (var j=0, fl=filenames.length; j<fl; j++) {
+          if (filenames[j]) {
+            code += ajax(filenames[j]) + ";\n"; // deal with files that don't end with newline
+          }
+        }
         // get the dimensions
         // this regex needs to be cleaned up a bit
-        var r = "" + sketchSource.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
+        var r = "" + code.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
         var dimensions = r.match(/[0-9]+/g);
 
         if (dimensions) {
@@ -104,7 +113,7 @@
             canvas[i].setAttribute("height", sketchHeight);
           }
         }
-        Processing(canvas[i], sketchSource);
+        Processing(canvas[i], code);
       }
     }
   };
@@ -202,21 +211,21 @@
   var indexBuffer;
   
   // Vertex shader for points and lines
-  var vertexShaderSource2D = 
+  var vertexShaderSource2D =
   "attribute vec3 Vertex;" +
   "attribute vec2 aTextureCoord;" +
   "uniform vec4 color;" +
 
-  "uniform mat4 model;" + 
-  "uniform mat4 view;" + 
+  "uniform mat4 model;" +
+  "uniform mat4 view;" +
   "uniform mat4 projection;" +
 
   "varying vec2 vTextureCoord;"+
   
   "void main(void) {" +
-  "  gl_FrontColor = color;" +
-  "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
-  "  vTextureCoord = aTextureCoord;"+
+  " gl_FrontColor = color;" +
+  " gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
+  " vTextureCoord = aTextureCoord;"+
   "}";
 
   var fragmentShaderSource2D =
@@ -226,152 +235,152 @@
   "uniform int picktype;"+
   
   "void main(void){" +
-  "  if(picktype==0){"+
-  "    gl_FragColor = color;" +
-  "  }else if(picktype==1){"+
-  "    float alpha = texture2D(uSampler,vTextureCoord).a;"+
-  "    gl_FragColor = vec4(color.rgb*alpha,alpha);\n"+
-  "  }"+
+  " if(picktype==0){"+
+  " gl_FragColor = color;" +
+  " }else if(picktype==1){"+
+  " float alpha = texture2D(uSampler,vTextureCoord).a;"+
+  " gl_FragColor = vec4(color.rgb*alpha,alpha);\n"+
+  " }"+
   "}";
 
   // Vertex shader for boxes and spheres
-  var vertexShaderSource3D = 
-  "attribute vec3 Vertex;" + 
+  var vertexShaderSource3D =
+  "attribute vec3 Vertex;" +
   "attribute vec3 Normal;" +
 
   "uniform vec4 color;" +
 
-  "uniform bool usingMat;" + 
-  "uniform vec3 specular;" + 
-  "uniform vec3 mat_emissive;" + 
-  "uniform vec3 mat_ambient;" + 
-  "uniform vec3 mat_specular;" + 
+  "uniform bool usingMat;" +
+  "uniform vec3 specular;" +
+  "uniform vec3 mat_emissive;" +
+  "uniform vec3 mat_ambient;" +
+  "uniform vec3 mat_specular;" +
   "uniform float shininess;" +
 
-  "uniform mat4 model;" + 
-  "uniform mat4 view;" + 
-  "uniform mat4 projection;" + 
+  "uniform mat4 model;" +
+  "uniform mat4 view;" +
+  "uniform mat4 projection;" +
   "uniform mat4 normalTransform;" +
 
-  "uniform int lightCount;" + 
+  "uniform int lightCount;" +
   "uniform vec3 falloff;" +
 
-  "struct Light {" + 
-  "  bool dummy;" + 
-  "   int type;" + 
-  "   vec3 color;" + 
-  "   vec3 position;" + 
-  "  vec3 direction;" + 
-  "  float angle;" + 
-  "  vec3 halfVector;" + 
-  "  float concentration;" + 
-  "};" + 
+  "struct Light {" +
+  " bool dummy;" +
+  " int type;" +
+  " vec3 color;" +
+  " vec3 position;" +
+  " vec3 direction;" +
+  " float angle;" +
+  " vec3 halfVector;" +
+  " float concentration;" +
+  "};" +
   "uniform Light lights[8];" +
 
   "void AmbientLight( inout vec3 totalAmbient, in vec3 ecPos, in Light light ) {" +
   // Get the vector from the light to the vertex
   // Get the distance from the current vector to the light position
-  "  float d = length( light.position - ecPos );" +
-  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + "  totalAmbient += light.color * attenuation;" + 
+  " float d = length( light.position - ecPos );" +
+  " float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" + " totalAmbient += light.color * attenuation;" +
   "}" +
 
-  "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" + 
-  "  float powerfactor = 0.0;" + 
-  "  float nDotVP = max(0.0, dot( vertNormal, light.position ));" + 
-  "  float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
+  "void DirectionalLight( inout vec3 col, in vec3 ecPos, inout vec3 spec, in vec3 vertNormal, in Light light ) {" +
+  " float powerfactor = 0.0;" +
+  " float nDotVP = max(0.0, dot( vertNormal, light.position ));" +
+  " float nDotVH = max(0.0, dot( vertNormal, normalize( light.position-ecPos )));" +
 
-  "  if( nDotVP != 0.0 ){" + 
-  "    powerfactor = pow( nDotVH, shininess );" + 
-  "  }" +
+  " if( nDotVP != 0.0 ){" +
+  " powerfactor = pow( nDotVH, shininess );" +
+  " }" +
 
-  "  col += light.color * nDotVP;" + 
-  "  spec += specular * powerfactor;" + 
+  " col += light.color * nDotVP;" +
+  " spec += specular * powerfactor;" +
   "}" +
 
-  "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
-  "  float powerfactor;" +
+  "void PointLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  " float powerfactor;" +
 
   // Get the vector from the light to the vertex
-  "   vec3 VP = light.position - ecPos;" +
+  " vec3 VP = light.position - ecPos;" +
 
   // Get the distance from the current vector to the light position
-  "  float d = length( VP ); " +
+  " float d = length( VP ); " +
 
   // Normalize the light ray so it can be used in the dot product operation.
-  "  VP = normalize( VP );" +
+  " VP = normalize( VP );" +
 
-  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
+  " float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ));" +
 
-  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
-  "  vec3 halfVector = normalize( VP + eye );" + 
-  "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+  " float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
+  " vec3 halfVector = normalize( VP + eye );" +
+  " float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
-  "  if( nDotVP == 0.0) {" + 
-  "    powerfactor = 0.0;" + 
-  "  }" + 
-  "  else{" + 
-  "    powerfactor = pow( nDotHV, shininess );" + 
-  "  }" +
+  " if( nDotVP == 0.0) {" +
+  " powerfactor = 0.0;" +
+  " }" +
+  " else{" +
+  " powerfactor = pow( nDotHV, shininess );" +
+  " }" +
 
-  "  spec += specular * powerfactor * attenuation;" + 
-  "  col += light.color * nDotVP * attenuation;" + 
+  " spec += specular * powerfactor * attenuation;" +
+  " col += light.color * nDotVP * attenuation;" +
   "}" +
 
   /*
   */
-  "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" + 
-  "  float spotAttenuation;" + 
-  "  float powerfactor;" +
+  "void SpotLight( inout vec3 col, inout vec3 spec, in vec3 vertNormal, in vec3 ecPos, in vec3 eye, in Light light ) {" +
+  " float spotAttenuation;" +
+  " float powerfactor;" +
 
   // calculate the vector from the current vertex to the light.
-  "  vec3 VP = light.position - ecPos; " + 
-  "  vec3 ldir = normalize( light.direction );" +
+  " vec3 VP = light.position - ecPos; " +
+  " vec3 ldir = normalize( light.direction );" +
 
   // get the distance from the spotlight and the vertex
-  "  float d = length( VP );" + 
-  "  VP = normalize( VP );" +
+  " float d = length( VP );" +
+  " VP = normalize( VP );" +
 
-  "  float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
+  " float attenuation = 1.0 / ( falloff[0] + ( falloff[1] * d ) + ( falloff[2] * d * d ) );" +
 
   // dot product of the vector from vertex to light and light direction.
-  "  float spotDot = dot( VP, ldir );" +
+  " float spotDot = dot( VP, ldir );" +
 
   // if the vertex falls inside the cone
-  "  if( spotDot < cos( light.angle ) ) {" + 
-  "    spotAttenuation = pow( spotDot, light.concentration );" + 
-  "  }" + 
-  "  else{" + 
-  "    spotAttenuation = 1.0;" + 
-  "  }" + 
-  "  attenuation *= spotAttenuation;" +
+  " if( spotDot < cos( light.angle ) ) {" +
+  " spotAttenuation = pow( spotDot, light.concentration );" +
+  " }" +
+  " else{" +
+  " spotAttenuation = 1.0;" +
+  " }" +
+  " attenuation *= spotAttenuation;" +
 
-  "  float nDotVP = max( 0.0, dot( vertNormal, VP ));" + 
-  "  vec3 halfVector = normalize( VP + eye );" + 
-  "  float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
+  " float nDotVP = max( 0.0, dot( vertNormal, VP ));" +
+  " vec3 halfVector = normalize( VP + eye );" +
+  " float nDotHV = max( 0.0, dot( vertNormal, halfVector ));" +
 
-  "  if( nDotVP == 0.0 ) {" + 
-  "    powerfactor = 0.0;" + 
-  "  }" + 
-  "  else {" + 
-  "    powerfactor = pow( nDotHV, shininess );" + 
-  "  }" +
+  " if( nDotVP == 0.0 ) {" +
+  " powerfactor = 0.0;" +
+  " }" +
+  " else {" +
+  " powerfactor = pow( nDotHV, shininess );" +
+  " }" +
 
-  "  spec += specular * powerfactor * attenuation;" + 
-  "  col += light.color * nDotVP * attenuation;" + 
+  " spec += specular * powerfactor * attenuation;" +
+  " col += light.color * nDotVP * attenuation;" +
   "}" +
 
-  "void main(void) {" + 
-  "  vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" + 
-  "  vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" + 
-  "  vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
+  "void main(void) {" +
+  " vec3 finalAmbient = vec3( 0.0, 0.0, 0.0 );" +
+  " vec3 finalDiffuse = vec3( 0.0, 0.0, 0.0 );" +
+  " vec3 finalSpecular = vec3( 0.0, 0.0, 0.0 );" +
 
-  "  vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
+  " vec3 norm = vec3( normalTransform * vec4( Normal, 0.0 ) );" +
 
-  "  vec4 ecPos4 = view * model * vec4(Vertex,1.0);" + 
-  "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" + 
-  "  vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
+  " vec4 ecPos4 = view * model * vec4(Vertex,1.0);" +
+  " vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
+  " vec3 eye = vec3( 0.0, 0.0, 1.0 );" +
 
-  // If there were no lights this draw call, just use the 
+  // If there were no lights this draw call, just use the
   // assigned fill color of the shape and the specular value
   "  if( lightCount == 0 ) {" + 
   "    gl_FrontColor = color + vec4(mat_specular,1.0);" + 
@@ -412,9 +421,9 @@
   "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" + 
   "}";
 
-  var fragmentShaderSource3D = 
-  "void main(void){" + 
-  "  gl_FragColor = gl_Color;" + 
+  var fragmentShaderSource3D =
+  "void main(void){" +
+  " gl_FragColor = gl_Color;" +
   "}";
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -489,7 +498,7 @@
       return "<STRING " + (strings.length - 1) + ">";
     });
 
-    // Windows newlines cause problems: 
+    // Windows newlines cause problems:
     aCode = aCode.replace(/\r\n?/g, "\n");
 
     // Remove end-of-line comments
@@ -519,10 +528,10 @@
     // https://processing-js.lighthouseapp.com/projects/41284/tickets/235-fix-parsing-of-java-import-statement
     aCode = aCode.replace(/import\s+(.+);/g, "");
 
-    //replace  catch (IOException e) to catch (e)
+    //replace catch (IOException e) to catch (e)
     aCode = aCode.replace(/catch\s*\(\W*\w*\s+(\w*)\W*\)/g, "catch ($1)");
 
-    //delete  the multiple catch block
+    //delete the multiple catch block
     var catchBlock = /(catch[^\}]*\})\W*catch[^\}]*\}/;
 
     while (catchBlock.test(aCode)) {
@@ -581,7 +590,7 @@
     // super() is a reserved word
     aCode = aCode.replace(/super\(/g, "superMethod(");
 
-    // implements Int1, Int2 
+    // implements Int1, Int2
     aCode = aCode.replace(/implements\s+(\w+\s*(,\s*\w+\s*)*) \{/g, function(all, interfaces) {
       var names = interfaces.replace(/\s+/g, "").split(",");
       return "{ var __psj_interfaces = new ArrayList([\"" + names.join("\", \"") + "\"]);";
@@ -602,13 +611,13 @@
 
       // Move arguments up from constructor and wrap contents with
       // a with(this), and unwrap constructor
-      return "function " + name + "() {with(this){\n " + 
+      return "function " + name + "() {with(this){\n " +
               (extend ? "var __self=this;function superMethod(){extendClass(__self,arguments," + extend + ");}\n" : "") +
               // Replace var foo = 0; with this.foo = 0;
               // and force var foo; to become this.foo = null;
-              vars.replace(/\s*,\s*/g, ";\n  this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/this\.(\w+);/g, "this.$1 = null;") + 
-              (extend ? "extendClass(this, " + extend + ");\n" : "") + 
-              "<CLASS " + name + " " + staticVar + ">" + 
+              vars.replace(/\s*,\s*/g, ";\n this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/\b(var |final |public )+\s*/g, "this.").replace(/this\.(\w+);/g, "this.$1 = null;") +
+              (extend ? "extendClass(this, " + extend + ");\n" : "") +
+              "<CLASS " + name + " " + staticVar + ">" +
               (typeof last === "string" ? last : name + "(");
     };
 
@@ -812,48 +821,50 @@
 
     // Set Processing defaults / environment variables
     p.name = 'Processing.js Instance';
-    p.PI = Math.PI;
-    p.TWO_PI = 2 * p.PI;
-    p.HALF_PI = p.PI / 2;
-    p.SINCOS_LENGTH = parseInt(360 / 0.5, 10);
-    p.MAX_FLOAT = 3.4028235e+38;
-    p.MIN_FLOAT = -3.4028235e+38;
-    p.MAX_INT = 2147483647;
-    p.MIN_INT = -2147483648;
-    p.CORNER = 0;
-    p.RADIUS = 1;
-    p.CENTER_RADIUS = 1;
-    p.CENTER = 2;
-    p.POLYGON = 2;
-    p.QUADS = 5;
-    p.TRIANGLES = 6;
-    p.POINTS = 7;
-    p.LINES = 8;
-    p.TRIANGLE_STRIP = 9;
-    p.TRIANGLE_FAN = 4;
-    p.QUAD_STRIP = 3;
-    p.CORNERS = 10;
-    p.CLOSE = true;
+
+    // Color modes
     p.RGB = 1;
     p.ARGB = 2;
     p.HSB = 3;
     p.ALPHA = 4;
     p.CMYK = 5;
-    p.OPENGL = 'OPENGL';
-    p.P3D = 'P3D';
-    p.FRAME_RATE = 0;
-    p.focused = true;
-    p.ARROW = 'default';
-    p.CROSS = 'crosshair';
-    p.HAND = 'pointer';
-    p.MOVE = 'move';
-    p.TEXT = 'text';
-    p.WAIT = 'wait';
-    p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
-    p.ALPHA_MASK = 0xff000000;
-    p.RED_MASK = 0x00ff0000;
-    p.GREEN_MASK = 0x0000ff00;
-    p.BLUE_MASK = 0x000000ff;
+    
+    // Renderers
+    p.P2D = 1;
+    p.JAVA2D = 1;
+    p.WEBGL = 2;
+    p.P3D = 2;
+    p.OPENGL = 2;
+
+    p.EPSILON = 0.0001;
+
+    p.MAX_FLOAT = 3.4028235e+38;
+    p.MIN_FLOAT = -3.4028235e+38;
+    p.MAX_INT = 2147483647;
+    p.MIN_INT = -2147483648;
+
+    p.PI = Math.PI;
+    p.TWO_PI = 2 * p.PI;
+    p.HALF_PI = p.PI / 2;
+    p.THIRD_PI = p.PI / 3;
+    p.QUARTER_PI = p.PI / 4;
+
+    p.DEG_TO_RAD = p.PI / 180;
+    p.RAD_TO_DEG = 180 / p.PI;
+
+    p.WHITESPACE = " \t\n\r\f\u00A0";
+    
+    // Filter/convert types
+    p.BLUR = 11;
+    p.GRAY = 12;
+    p.INVERT = 13;
+    p.OPAQUE = 14;
+    p.POSTERIZE = 15;
+    p.THRESHOLD = 16;
+    p.ERODE = 17;
+    p.DILATE = 18;
+
+    // Blend modes
     p.REPLACE = 0;
     p.BLEND = 1 << 0;
     p.ADD = 1 << 1;
@@ -869,24 +880,87 @@
     p.SOFT_LIGHT = 1 << 11;
     p.DODGE = 1 << 12;
     p.BURN = 1 << 13;
-    p.PRECISIONB = 15; // fixed point precision is limited to 15 bits!! 
-    p.PRECISIONF = 1 << p.PRECISIONB;
-    p.PREC_MAXVAL = p.PRECISIONF - 1;
-    p.PREC_ALPHA_SHIFT = 24 - p.PRECISIONB;
-    p.PREC_RED_SHIFT = 16 - p.PRECISIONB;
-    p.ROUND = 'round'; // Used by both cap and join.
-    p.SQUARE = 'butt'; // Used by cap.
-    p.PROJECT = 'square'; // Used by cap.
-    p.MITER = 'miter'; // Used by join.
-    p.BEVEL = 'bevel'; // Used by join.
-    p.CENTER = 88888880;
-    p.NORMAL_MODE_AUTO = 0;
-    p.NORMAL_MODE_SHAPE = 1;
-    p.NORMAL_MODE_VERTEX = 2;
-    p.MAX_LIGHTS = 8;
 
-    // Key Constants
-    // both key and keyCode will be equal to these values
+    // Color component bit masks
+    p.ALPHA_MASK = 0xff000000;
+    p.RED_MASK = 0x00ff0000;
+    p.GREEN_MASK = 0x0000ff00;
+    p.BLUE_MASK = 0x000000ff;
+
+    // Projection matrices
+    p.CUSTOM = 0;
+    p.ORTHOGRAPHIC = 2;
+    p.PERSPECTIVE = 3;
+
+    // Shapes
+    p.POINT = 2;
+    p.POINTS = 2;
+
+    p.LINE = 4;
+    p.LINES = 4;
+
+    p.TRIANGLE = 8;
+    p.TRIANGLES = 9;
+    p.TRIANGLE_STRIP = 10;
+    p.TRIANGLE_FAN = 11;
+
+    p.QUAD = 16;
+    p.QUADS = 16;
+    p.QUAD_STRIP = 17;
+
+    p.POLYGON = 20;
+    p.PATH = 21;
+
+    p.RECT = 30;
+    p.ELLIPSE = 31;
+    p.ARC = 32;
+
+    p.SPHERE = 40;
+    p.BOX = 41;
+
+    // Shape closing modes
+    p.OPEN = 1;
+    p.CLOSE = 2;
+
+    // Shape drawing modes
+    p.CORNER = 0; // Draw mode convention to use (x, y) to (width, height)
+    p.CORNERS = 1; // Draw mode convention to use (x1, y1) to (x2, y2) coordinates
+    p.RADIUS = 2; // Draw mode from the center, and using the radius
+    p.CENTER_RADIUS = 2; // Deprecated! Use RADIUS instead
+    p.CENTER = 3; // Draw from the center, using second pair of values as the diameter
+    p.DIAMETER = 3; // Synonym for the CENTER constant. Draw from the center
+    p.CENTER_DIAMETER = 3; // Deprecated! Use DIAMETER instead
+
+    // Text vertical alignment modes
+    p.BASELINE = 0; // Default vertical alignment for text placement
+    p.TOP = 101; // Align text to the top
+    p.BOTTOM = 102; // Align text from the bottom, using the baseline
+
+    // UV Texture coordinate modes
+    p.NORMAL = 1;
+    p.NORMALIZE = 1;
+    p.IMAGE = 2;
+
+    // Text placement modes
+    p.MODEL = 4;
+    p.SHAPE = 5;
+
+    // Stroke modes
+    p.SQUARE = 'butt';
+    p.ROUND = 'round';
+    p.PROJECT = 'square';
+    p.MITER = 'miter';
+    p.BEVEL = 'bevel';
+
+    // Lighting modes
+    p.AMBIENT = 0;
+    p.DIRECTIONAL = 1;
+    //POINT = 2; Shared with Shape constant
+    p.SPOT = 3;
+
+    // Key constants
+
+    // Both key and keyCode will be equal to these values
     p.BACKSPACE = 8;
     p.TAB = 9;
     p.ENTER = 10;
@@ -895,7 +969,8 @@
     p.DELETE = 127;
 
     p.CODED = 0xffff;
-    // key will be CODED and keyCode will be this value
+
+    // p.key will be CODED and p.keyCode will be this value
     p.SHIFT = 16;
     p.CONTROL = 17;
     p.ALT = 18;
@@ -905,6 +980,51 @@
     p.LEFT = 37;
 
     var codedKeys = [p.SHIFT, p.CONTROL, p.ALT, p.UP, p.RIGHT, p.DOWN, p.LEFT];
+
+    // Cursor types
+    p.ARROW = 'default';
+    p.CROSS = 'crosshair';
+    p.HAND = 'pointer';
+    p.MOVE = 'move';
+    p.TEXT = 'text';
+    p.WAIT = 'wait';
+    p.NOCURSOR = "url('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='), auto";
+
+    // Hints
+    p.DISABLE_OPENGL_2X_SMOOTH = 1;
+    p.ENABLE_OPENGL_2X_SMOOTH = -1;
+    p.ENABLE_OPENGL_4X_SMOOTH = 2;
+
+    p.ENABLE_NATIVE_FONTS = 3;
+
+    p.DISABLE_DEPTH_TEST = 4;
+    p.ENABLE_DEPTH_TEST = -4;
+
+    p.ENABLE_DEPTH_SORT = 5;
+    p.DISABLE_DEPTH_SORT = -5;
+
+    p.DISABLE_OPENGL_ERROR_REPORT = 6;
+    p.ENABLE_OPENGL_ERROR_REPORT = -6;
+
+    p.ENABLE_ACCURATE_TEXTURES = 7;
+    p.DISABLE_ACCURATE_TEXTURES = -7;
+
+    p.HINT_COUNT = 10;
+
+    // PJS defined constants
+    p.SINCOS_LENGTH = parseInt(360 / 0.5, 10);
+    p.FRAME_RATE = 0;
+    p.focused = true;
+    p.PRECISIONB = 15; // fixed point precision is limited to 15 bits!!
+    p.PRECISIONF = 1 << p.PRECISIONB;
+    p.PREC_MAXVAL = p.PRECISIONF - 1;
+    p.PREC_ALPHA_SHIFT = 24 - p.PRECISIONB;
+    p.PREC_RED_SHIFT = 16 - p.PRECISIONB;
+    p.NORMAL_MODE_AUTO = 0;
+    p.NORMAL_MODE_SHAPE = 1;
+    p.NORMAL_MODE_VERTEX = 2;
+    p.MAX_LIGHTS = 8;
+
 
     // "Private" variables used to maintain state
     var online = true,
@@ -937,10 +1057,10 @@
       curTightness = 0,
       curveDetail = 20,
       curveInited = false,
-      opacityRange = 255,
-      redRange = 255,
-      greenRange = 255,
-      blueRange = 255,
+      colorModeA = 255,
+      colorModeX = 255,
+      colorModeY = 255,
+      colorModeZ = 255,
       pathOpen = false,
       mousePressed = false,
       mouseDragging = false,
@@ -954,10 +1074,10 @@
       timeSinceLastFPS = start,
       framesSinceLastFPS = 0,
       lastTextPos = [0, 0, 0],
-      curveBasisMatrix, 
-      curveToBezierMatrix, 
-      curveDrawMatrix, 
-      bezierBasisInverse, 
+      curveBasisMatrix,
+      curveToBezierMatrix,
+      curveDrawMatrix,
+      bezierBasisInverse,
       bezierBasisMatrix;
 
     // User can only have MAX_LIGHTS lights
@@ -971,19 +1091,19 @@
       sphereZ = [],
       sinLUT = new Array(p.SINCOS_LENGTH),
       cosLUT = new Array(p.SINCOS_LENGTH),
-      sphereVerts, 
+      sphereVerts,
       sphereNorms;
 
     // Camera defaults and settings
-    var cam, 
-      cameraInv, 
-      forwardTransform, 
-      reverseTransform, 
-      modelView, 
-      modelViewInv, 
-      userMatrixStack, 
-      inverseCopy, 
-      projection, 
+    var cam,
+      cameraInv,
+      forwardTransform,
+      reverseTransform,
+      modelView,
+      modelViewInv,
+      userMatrixStack,
+      inverseCopy,
+      projection,
       manipulatingCamera = false,
       frustumMode = false,
       cameraFOV = 60 * (Math.PI / 180),
@@ -1020,6 +1140,7 @@
     p.mouseScrolled = undefined;
     p.keyPressed = undefined;
     p.keyReleased = undefined;
+    p.keyTyped = undefined;
     p.draw = undefined;
     p.setup = undefined;
 
@@ -1032,7 +1153,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Char handling
-    ////////////////////////////////////////////////////////////////////////////    
+    ////////////////////////////////////////////////////////////////////////////
     var charMap = {};
 
     var Char = function Char(chr) {
@@ -1343,7 +1464,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // PMatrix3D
-    ////////////////////////////////////////////////////////////////////////////    
+    ////////////////////////////////////////////////////////////////////////////
     var PMatrix3D = function PMatrix3D() {
       //When a matrix is created, it is set to an identity matrix
       this.reset();
@@ -1757,7 +1878,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Array handling
-    ////////////////////////////////////////////////////////////////////////////    
+    ////////////////////////////////////////////////////////////////////////////
     p.split = function(str, delim) {
       return str.split(delim);
     };
@@ -2498,6 +2619,8 @@
 
     p.color = function color(aValue1, aValue2, aValue3, aValue4) {
       var r, g, b, a, rgb, aColor;
+
+      // 4 arguments: (R, G, B, A) or (H, S, B, A)
       if (aValue1 != null && aValue2 != null && aValue3 != null && aValue4 != null) {
         if (curColorMode === p.HSB) {
           rgb = p.color.toRGB(aValue1, aValue2, aValue3);
@@ -2505,47 +2628,66 @@
           g = rgb[1];
           b = rgb[2];
         } else {
-          r = Math.round(255 * (aValue1 / redRange));
-          g = Math.round(255 * (aValue2 / greenRange));
-          b = Math.round(255 * (aValue3 / blueRange));
+          r = Math.round(255 * (aValue1 / colorModeX));
+          g = Math.round(255 * (aValue2 / colorModeY));
+          b = Math.round(255 * (aValue3 / colorModeZ));
         }
 
-        a = Math.round(255 * (aValue4 / opacityRange));
+        a = Math.round(255 * (aValue4 / colorModeA));
 
-        // Normalize values: values greater than range == range 
+        // Limit values greater than 255
         r = (r > 255) ? 255 : r;
         g = (g > 255) ? 255 : g;
         b = (b > 255) ? 255 : b;
         a = (a > 255) ? 255 : a;
 
+        // Create color int
         aColor = (a << 24) & p.ALPHA_MASK | (r << 16) & p.RED_MASK | (g << 8) & p.GREEN_MASK | b & p.BLUE_MASK;
-      } else if (aValue1 != null && aValue2 != null && aValue3 != null) {
-        aColor = p.color(aValue1, aValue2, aValue3, opacityRange);
-      } else if (aValue1 != null && aValue2 != null) {
-        if ((aValue1 & p.ALPHA_MASK)) { // colorInt and opacity
-          aColor = p.color(p.red(aValue1), p.green(aValue1), p.blue(aValue1), aValue2);
-        } else { // grayscale and alpha
-          aColor = p.color(aValue1, aValue1, aValue1, aValue2);
-        }
-      } else if (typeof aValue1 === "number") {
-        if (aValue1 < 256 && aValue1 >= 0) {
-          aColor = p.color(aValue1, aValue1, aValue1, opacityRange);
-        } else {
-          var intcolor = 0;
-          if (aValue1 < 0) {
-            intcolor = 4294967296 - (aValue1 * -1);
-          } else {
-            intcolor = aValue1;
-          }
-          var ac = Math.floor((intcolor % 4294967296) / 16777216);
-          var rc = Math.floor((intcolor % 16777216) / 65536);
-          var gc = Math.floor((intcolor % 65536) / 256);
-          var bc = intcolor % 256;
-          aColor = p.color(rc, gc, bc, ac);
-        }
-      } else {
-        aColor = p.color(redRange, greenRange, blueRange, opacityRange);
       }
+      
+      // 3 arguments: (R, G, B) or (H, S, B)
+      else if (aValue1 != null && aValue2 != null && aValue3 != null) {
+        aColor = p.color(aValue1, aValue2, aValue3, colorModeA);
+      }
+      
+      // 2 arguments: (Color, A) or (Grayscale, A)
+      else if (aValue1 != null && aValue2 != null) {
+        // Color int and alpha
+        if (aValue1 & p.ALPHA_MASK) {
+          a = Math.round(255 * (aValue2 / colorModeA));
+          a = (a > 255) ? 255 : a;
+          
+          aColor = aValue1 - (aValue1 & p.ALPHA_MASK) + ((a << 24) & p.ALPHA_MASK);
+        }
+        // Grayscale and alpha
+        else {
+          switch(curColorMode) {
+            case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, aValue2); break;
+            case p.HSB: aColor = p.color(0, 0, (aValue1 / colorModeX) * colorModeZ, aValue2); break;
+          }
+        }
+      }
+      
+      // 1 argument: (Grayscale) or (Color)
+      else if (typeof aValue1 === "number") {
+        // Grayscale
+        if (aValue1 <= colorModeX && aValue1 >= 0) {
+          switch(curColorMode) {
+            case p.RGB: aColor = p.color(aValue1, aValue1, aValue1, colorModeA); break;
+            case p.HSB: aColor = p.color(0, 0, (aValue1 / colorModeX) * colorModeZ, colorModeA); break;
+          }
+        }
+        // Color int
+        else if (aValue1) {
+          aColor = aValue1;
+        }
+      }
+      
+      // Default
+      else {
+        aColor = p.color(colorModeX, colorModeY, colorModeZ, colorModeA);
+      }
+
       return aColor;
     };
 
@@ -2571,11 +2713,18 @@
 
     // HSB conversion function from Mootools, MIT Licensed
     p.color.toRGB = function(h, s, b) {
-      h = (h / redRange) * 360;
-      s = (s / greenRange) * 100;
-      b = (b / blueRange) * 100;
+      // Limit values greater than range
+      h = (h > colorModeX) ? colorModeX : h;
+      s = (s > colorModeY) ? colorModeY : s;
+      b = (b > colorModeZ) ? colorModeZ : b;
+
+      h = (h / colorModeX) * 360;
+      s = (s / colorModeY) * 100;
+      b = (b / colorModeZ) * 100;
+
       var br = Math.round(b / 100 * 255);
-      if (s === 0) {
+
+      if (s === 0) { // Grayscale
         return [br, br, br];
       } else {
         var hue = h % 360;
@@ -2609,19 +2758,19 @@
     };
 
     p.red = function(aColor) {
-      return ((aColor & p.RED_MASK) >>> 16) / 255 * redRange;
+      return ((aColor & p.RED_MASK) >>> 16) / 255 * colorModeX;
     };
 
     p.green = function(aColor) {
-      return ((aColor & p.GREEN_MASK) >>> 8) / 255 * greenRange;
+      return ((aColor & p.GREEN_MASK) >>> 8) / 255 * colorModeY;
     };
 
     p.blue = function(aColor) {
-      return (aColor & p.BLUE_MASK) / 255 * blueRange;
+      return (aColor & p.BLUE_MASK) / 255 * colorModeZ;
     };
 
     p.alpha = function(aColor) {
-      return ((aColor & p.ALPHA_MASK) >>> 24) / 255 * opacityRange;
+      return ((aColor & p.ALPHA_MASK) >>> 24) / 255 * colorModeA;
     };
 
     p.lerpColor = function lerpColor(c1, c2, amt) {
@@ -2630,14 +2779,14 @@
       var r1 = (colorBits1 & p.RED_MASK) >>> 16;
       var g1 = (colorBits1 & p.GREEN_MASK) >>> 8;
       var b1 = (colorBits1 & p.BLUE_MASK);
-      var a1 = ((colorBits1 & p.ALPHA_MASK) >>> 24) / opacityRange;
+      var a1 = ((colorBits1 & p.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Get RGBA values for Color 2 to floats
       var colorBits2 = p.color(c2);
       var r2 = (colorBits2 & p.RED_MASK) >>> 16;
       var g2 = (colorBits2 & p.GREEN_MASK) >>> 8;
       var b2 = (colorBits2 & p.BLUE_MASK);
-      var a2 = ((colorBits2 & p.ALPHA_MASK) >>> 24) / opacityRange;
+      var a2 = ((colorBits2 & p.ALPHA_MASK) >>> 24) / colorModeA;
 
       // Return lerp value for each channel, INT for color, Float for Alpha-range
       var r = parseInt(p.lerp(r1, r2, amt), 10);
@@ -2652,7 +2801,7 @@
     p.defaultColor = function(aValue1, aValue2, aValue3) {
       var tmpColorMode = curColorMode;
       curColorMode = p.RGB;
-      var c = p.color(aValue1 / 255 * redRange, aValue2 / 255 * greenRange, aValue3 / 255 * blueRange);
+      var c = p.color(aValue1 / 255 * colorModeX, aValue2 / 255 * colorModeY, aValue3 / 255 * colorModeZ);
       curColorMode = tmpColorMode;
       return c;
     };
@@ -2660,12 +2809,12 @@
     p.colorMode = function colorMode(mode, range1, range2, range3, range4) {
       curColorMode = mode;
       if (arguments.length >= 4) {
-        redRange = range1;
-        greenRange = range2;
-        blueRange = range3;
+        colorModeX = range1;
+        colorModeY = range2;
+        colorModeZ = range3;
       }
       if (arguments.length === 5) {
-        opacityRange = range4;
+        colorModeA = range4;
       }
       if (arguments.length === 2) {
         p.colorMode(mode, range1, range1, range1, range1);
@@ -2820,10 +2969,10 @@
         'curTint': curTint,
         'curRectMode': curRectMode,
         'curColorMode': curColorMode,
-        'redRange': redRange,
-        'blueRange': blueRange,
-        'greenRange': greenRange,
-        'opacityRange': opacityRange,
+        'colorModeX': colorModeX,
+        'colorModeZ': colorModeZ,
+        'colorModeY': colorModeY,
+        'colorModeA': colorModeA,
         'curTextFont': curTextFont,
         'curTextSize': curTextSize
       };
@@ -2844,10 +2993,10 @@
         curTint = oldState.curTint;
         curRectMode = oldState.curRectmode;
         curColorMode = oldState.curColorMode;
-        redRange = oldState.redRange;
-        blueRange = oldState.blueRange;
-        greenRange = oldState.greenRange;
-        opacityRange = oldState.opacityRange;
+        colorModeX = oldState.colorModeX;
+        colorModeZ = oldState.colorModeZ;
+        colorModeY = oldState.colorModeY;
+        colorModeA = oldState.colorModeA;
         curTextFont = oldState.curTextFont;
         curTextSize = oldState.curTextSize;
       } else {
@@ -2952,6 +3101,18 @@
 
     p.exit = function exit() {
       window.clearInterval(looping);
+
+      for (var i=0, ehl=p.pjs.eventHandlers.length; i<ehl; i++) {
+        var elem = p.pjs.eventHandlers[i][0],
+            type = p.pjs.eventHandlers[i][1],
+            fn = p.pjs.eventHandlers[i][2];
+
+        if (elem.removeEventListener) {
+          elem.removeEventListener(type, fn, false);
+        } else if (elem.detachEvent) {
+          elem.detachEvent("on" + type, fn);
+        }
+      }
     };
 
 
@@ -2999,8 +3160,8 @@
     };
 
     // PGraphics methods
-    // TODO: These functions are suppose to be called before any operations are called on the 
-    //       PGraphics object. They currently do nothing.
+    // TODO: These functions are suppose to be called before any operations are called on the
+    // PGraphics object. They currently do nothing.
     p.beginDraw = function beginDraw() {};
     p.endDraw = function endDraw() {};
 
@@ -3008,7 +3169,7 @@
     p.Import = function Import(lib) {
       // Replace evil-eval method with a DOM <script> tag insert method that
       // binds new lib code to the Processing.lib names-space and the current
-      // p context. -F1LT3R 
+      // p context. -F1LT3R
     };
 
     var contextMenu = function(e) {
@@ -3266,7 +3427,7 @@
     };
 
     // note: since we cannot keep track of byte, int types by default the returned string is 8 chars long
-    // if no 2nd argument is passed.  closest compromise we can use to match java implementation Feb 5 2010
+    // if no 2nd argument is passed. closest compromise we can use to match java implementation Feb 5 2010
     // also the char parser has issues with chars that are not digits or letters IE: !@#$%^&*
     p.hex = function hex(value, len) {
       var hexstring = "";
@@ -3360,7 +3521,7 @@
     };
 
 
-    // Load a file or URL into strings     
+    // Load a file or URL into strings
     p.loadStrings = function loadStrings(url) {
       return ajax(url).split("\n");
     };
@@ -3639,7 +3800,7 @@
 
           createLog = tinylogLite[log] = function(message) {
             // don't show output log until called once
-            var uninit, 
+            var uninit,
               originalPadding = docElemStyle.paddingBottom,
               container = createElement($div),
               containerStyle = container[$style],
@@ -3784,7 +3945,7 @@
     };
 
     // Alphanumeric chars arguments automatically converted to numbers when
-    // passed in, and will come out as numbers. 
+    // passed in, and will come out as numbers.
     p.str = function str(val) {
       var ret;
 
@@ -4015,7 +4176,7 @@
     
     p.sqrt = Math.sqrt;
 
-    // Trigonometry 
+    // Trigonometry
     p.acos = Math.acos;
 
     p.asin = Math.asin;
@@ -4134,7 +4295,7 @@
 
     // Changes the size of the Canvas ( this resets context properties like 'lineCap', etc.
     p.size = function size(aWidth, aHeight, aMode) {
-      if (aMode && (aMode === "OPENGL" || aMode === "P3D")) {
+      if (aMode && (aMode === p.WEBGL)) {
         // get the 3D rendering context
         try {
           if (!curContext) {
@@ -4162,8 +4323,8 @@
 //curContext.sampleCoverage(	0.0, true);
 //alert(curContext.getParameter(curContext.SAMPLE_BUFFERS));
 
-          // Create the program objects to render 2D (points, lines) and 
-          // 3D (spheres, boxes) shapes. Because 2D shapes are not lit, 
+          // Create the program objects to render 2D (points, lines) and
+          // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
           // lighting calculations could be ommitted from that program object.
           programObject2D = createProgramObject(curContext, vertexShaderSource2D, fragmentShaderSource2D);
           programObject3D = createProgramObject(curContext, vertexShaderSource3D, fragmentShaderSource3D);
@@ -4258,8 +4419,8 @@
         }
       }
 
-      // The default 2d context has already been created in the p.init() stage if 
-      // a 3d context was not specified. This is so that a 2d context will be 
+      // The default 2d context has already been created in the p.init() stage if
+      // a 3d context was not specified. This is so that a 2d context will be
       // available if size() was not called.
       var props = {
         fillStyle: curContext.fillStyle,
@@ -4293,7 +4454,7 @@
 
     /*
       Sets the uniform variable 'varName' to the value specified by 'value'.
-      Before calling this function, make sure the correct program object 
+      Before calling this function, make sure the correct program object
       has been installed as part of the current rendering state.
 
       On some systems, if the variable exists in the shader but isn't used,
@@ -4467,7 +4628,7 @@
       x,y,z - position of the light in modeling space
       nx,ny,nz - direction of the spotlight
       angle - in radians
-      concentration - 
+      concentration -
     */
     p.spotLight = function spotLight(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
       if (p.use3DContext) {
@@ -4619,7 +4780,7 @@
 
     p.box = function(w, h, d) {
       if (p.use3DContext) {
-        // user can uniformly scale the box by  
+        // user can uniformly scale the box by
         // passing in only one argument.
         if (!h || !d) {
           h = d = w;
@@ -4644,7 +4805,7 @@
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
           // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles. 
+          // developers can start playing around with styles.
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
           uniformf(programObject3D, "color", fillStyle);
@@ -4860,7 +5021,7 @@
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
           // working, but it's a start for drawing the outline. So
-          // developers can start playing around with styles. 
+          // developers can start playing around with styles.
           curContext.enable(curContext.POLYGON_OFFSET_FILL);
           curContext.polygonOffset(1, 1);
 
@@ -4959,7 +5120,7 @@
             uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[0] / 255, a[0] / 255]);
           }
         }
-        // Otherwise three values were provided (r,g,b)        
+        // Otherwise three values were provided (r,g,b)
         else {
           uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
         }
@@ -4974,7 +5135,7 @@
         curContext.useProgram(programObject3D);
         uniformi(programObject3D, "usingMat", true);
 
-        // If only one argument was provided, the user either gave us a 
+        // If only one argument was provided, the user either gave us a
         // shade of gray or a 'color' object.
         if (a.length === 1) {
           // color object was passed in
@@ -5086,7 +5247,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Vector drawing functions
-    ////////////////////////////////////////////////////////////////////////////    
+    ////////////////////////////////////////////////////////////////////////////
 
     p.Point = function Point(x, y) {
       this.x = x;
@@ -5136,7 +5297,7 @@
 
     p.endShape = function endShape(close) {
       if (curShapeCount !== 0) {
-        if (close && doFill) {
+        if (close === p.CLOSE && doFill) {
           curContext.lineTo(firstX, firstY);
         }
         if (doFill) {
@@ -5317,10 +5478,10 @@
           /*
           * Matrix to convert from Catmull-Rom to cubic Bezier
           * where t = curTightness
-          * |0         1          0         0       |
-          * |(t-1)/6   1          (1-t)/6   0       |
-          * |0         (1-t)/6    1         (t-1)/6 |
-          * |0         0          0         0       |
+          * |0 1 0 0 |
+          * |(t-1)/6 1 (1-t)/6 0 |
+          * |0 (1-t)/6 1 (t-1)/6 |
+          * |0 0 0 0 |
           */
 
           curvePoints.push([x, y]);
@@ -5782,49 +5943,6 @@ else{
     // TODO: function incomplete
     p.save = function save(file) {};
 
-    var buildImageObject = function(obj) {
-      var pixels = obj.data,
-        data = p.createImage(obj.width, obj.height),
-        len = pixels.length;
-
-      if (( // ECMAScript 5
-      Object.defineProperty && Object.getOwnPropertyDescriptor && !Object.getOwnPropertyDescriptor(data, "pixels").get) || ( // Legacy JavaScript
-      data.__defineGetter__ && data.__lookupGetter__ && !data.__lookupGetter__("pixels"))) {
-        var pixelsDone, pixelsGetter = function() {
-          if (pixelsDone) {
-            return pixelsDone;
-          }
-
-          pixelsDone = [];
-
-          for (var i = 0; i < len; i += 4) {
-            pixelsDone.push(
-            p.color(
-            pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]));
-          }
-
-          return pixelsDone;
-        };
-
-        if (Object.defineProperty) {
-          Object.defineProperty(data, "pixels", {
-            get: pixelsGetter
-          });
-        } else if (data.__defineGetter__) {
-          data.__defineGetter__("pixels", pixelsGetter);
-        }
-      } else {
-        data.pixels = [];
-
-        for (var i = 0; i < len; i += 4) {
-          data.pixels.push(
-          p.color(
-          pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]));
-        }
-      }
-      return data;
-    };
-
     var Temporary2DContext = document.createElement('canvas').getContext('2d');
 
     var PImage = function PImage(aWidth, aHeight, aFormat) {
@@ -5913,25 +6031,25 @@ else{
         var imgData = Temporary2DContext.createImageData(this.width, this.height);
         var i, len;
         var dest = imgData.data;
-        // this check breaks things once we start changing pimages if we dont 
+        // this check breaks things once we start changing pimages if we dont
         //update the ImageData object as well as the pixel array all the time
-        //        if (this.ImageData && this.ImageData.width > 0) {
-        //          // image is based on ImageData. Copying...
-        //          var src = this.ImageData.data;
-        //          for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
-        //            dest[i] = src[i];
-        //          }
-        //        } else {
+        // if (this.ImageData && this.ImageData.width > 0) {
+        // // image is based on ImageData. Copying...
+        // var src = this.ImageData.data;
+        // for (i = 0, len = this.width * this.height * 4; i < len; ++i) {
+        // dest[i] = src[i];
+        // }
+        // } else {
         for (i = 0, len = this.pixels.length; i < len; ++i) {
           // convert each this.pixels[i] int to array of 4 ints of each color
           var c = this.pixels[i];
           var pos = i * 4;
-          // pjs uses argb, canvas stores rgba        
+          // pjs uses argb, canvas stores rgba
           dest[pos + 3] = (c >>> 24) & 0xFF;
           dest[pos + 0] = (c >>> 16) & 0xFF;
           dest[pos + 1] = (c >>> 8) & 0xFF;
           dest[pos + 2] = c & 0xFF;
-          //          }
+          // }
         }
         // return a canvas ImageData object with pixel array in canvas format
         return imgData;
@@ -5947,7 +6065,7 @@ else{
           // convert each this.pixels[i] int to array of 4 ints of each color
           var c = this.pixels[i];
           var pos = i * 4;
-          // pjs uses argb, canvas stores rgba        
+          // pjs uses argb, canvas stores rgba
           imgData.data[pos + 3] = Math.floor((c % 4294967296) / 16777216);
           imgData.data[pos + 0] = Math.floor((c % 16777216) / 65536);
           imgData.data[pos + 1] = Math.floor((c % 65536) / 256);
@@ -5979,7 +6097,7 @@ else{
         var context = canvas.getContext("2d");
         context.drawImage(htmlImg, 0, 0);
         var imageData = context.getImageData(0, 0, htmlImg.width, htmlImg.height);
-        // we should no longer use this it is dangerous and 
+        // we should no longer use this it is dangerous and
         // causes sync issues with pixel array
         //this.ImageData = imageData;
         this.fromImageData(imageData);
@@ -6144,7 +6262,6 @@ else{
     // Gets a 1-Dimensional pixel array from Canvas
     p.loadPixels = function() {
       p.pixels = p.get(0, 0, p.width, p.height).pixels;
-      //p.pixels = buildImageObject(curContext.getImageData(0, 0, p.width, p.height)).pixels;
     };
 
     // Draws a 1-Dimensional pixel array to Canvas
@@ -6217,43 +6334,6 @@ else{
       hasBackground = true;
     };
 
-    function getImage(img) {
-      if (typeof img === "string") {
-        return document.getElementById(img);
-      }
-
-      if (img.img) {
-        return img.img;
-      } else if (img.getContext || img.canvas) {
-        if (img.getContext('2d').createImageData) {
-          img.pixels = img.getContext('2d').createImageData(img.width, img.height);
-        } else {
-          img.pixels = img.getContext('2d').getImageData(0, 0, img.width, img.height);
-        }
-      }
-
-      for (var i = 0, l = img.pixels.length; i < l; i++) {
-        var pos = i * 4;
-        var c = img.pixels[i] || [0, 0, 0, 255];
-
-        img.data[pos + 0] = parseInt(c[0], 10);
-        img.data[pos + 1] = parseInt(c[1], 10);
-        img.data[pos + 2] = parseInt(c[2], 10);
-        img.data[pos + 3] = parseFloat(c[3]) * 100;
-      }
-
-      var canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      var context = canvas.getContext("2d");
-      context.putImageData(img.pixels, 0, 0);
-
-      img.canvas = canvas;
-
-      return img;
-    }
-
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
@@ -6301,10 +6381,10 @@ else{
 
     p.tint = function tint() {
       var tintColor = p.color.apply(this, arguments);
-      var r = p.red(tintColor) / redRange;
-      var g = p.green(tintColor) / greenRange;
-      var b = p.blue(tintColor) / blueRange;
-      var a = p.alpha(tintColor) / opacityRange;
+      var r = p.red(tintColor) / colorModeX;
+      var g = p.green(tintColor) / colorModeY;
+      var b = p.blue(tintColor) / colorModeZ;
+      var a = p.alpha(tintColor) / colorModeA;
 
       curTint = function(obj) {
         var data = obj.data,
@@ -6364,7 +6444,7 @@ else{
     };
 
     // shared variables for blit_resize(), filter_new_scanline(), filter_bilinear()
-    // change this in the future
+    // change this in the future to not be exposed to p
     p.shared = {
       fracU: 0,
       ifU: 0,
@@ -6691,7 +6771,7 @@ else{
           }
         };
       } else {
-        // If the font is a glyph, calculate by SVG table     
+        // If the font is a glyph, calculate by SVG table
         var font = p.loadGlyphs(name);
 
         return {
@@ -6735,7 +6815,7 @@ else{
 
     p.textAlign = function textAlign() {};
 
-    // A lookup table for characters that can not be referenced by Object 
+    // A lookup table for characters that can not be referenced by Object
     p.glyphLook = function glyphLook(font, chr) {
       try {
         switch (chr) {
@@ -6834,8 +6914,8 @@ else{
       }
     };
 
-    var textcanvas;
     // Print some text to the Canvas
+    var textcanvas, oldContext, tempy = 0;
     p.text = function text() {
       if (typeof arguments[0] !== 'undefined') {
         var str = arguments[0],
@@ -6851,16 +6931,10 @@ else{
 
         str = str.toString();
 
-        if ( arguments.length === 1 ){ // for text( str )
-          p.text( str, lastTextPos[0], lastTextPos[1], lastTextPos[2] );
-          return ;
-        } else if ( arguments.length === 3 ) { // for text( str, x, y)
-          text( str, arguments[1], arguments[2], 0 );
-          return ;
-        } else if ( arguments.length === 4 ){ // for text( str, x, y, z)
-          x = arguments[1];
-          y = arguments[2];
-          z = arguments[3];
+        if ( arguments.length <= 4 ){ // for text( str )
+          x = arguments.length < 3?lastTextPos[0]:arguments[1];
+          y = tempy = arguments.length < 3?lastTextPos[1]:arguments[2];
+          z = arguments.length < 4?0:arguments[3];
 
           do {
             pos = str.indexOf("\n");
@@ -6868,31 +6942,26 @@ else{
               if (pos !== 0) {
                 text(str.substring(0, pos),x,y,z);
               }
-              y = arguments[2] = y + curTextSize;
+              y = tempy = y + curTextSize;
               str = str.substring(pos+1, str.length);
             }
           } while (pos !== -1);
 
-          var canvas,oldContext;
           if(p.use3DContext){
-            var canvas, texture;
-            if(!textcanvas){
-              canvas = document.createElement("canvas");
-              textcanvas=canvas;
-            }else{
-              canvas=textcanvas;
+            if(typeof textcanvas === 'undefined'){
+              textcanvas = document.createElement("canvas");
+              oldContext = curContext;
             }
-            oldContext = curContext;
 
-            curContext = canvas.getContext("2d");
+            curContext = textcanvas.getContext("2d");
             curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
             if (curContext.fillText) {
-              canvas.width = curContext.measureText( str ).width;
+              textcanvas.width = curContext.measureText( str ).width;
             } else if (curContext.mozDrawText) {
-              canvas.width = curContext.mozMeasureText( str );
+              textcanvas.width = curContext.mozMeasureText( str );
             }
-            canvas.height=curTextSize*1.2;
-            curContext = canvas.getContext("2d");
+            textcanvas.height=curTextSize*1.2;
+            curContext = textcanvas.getContext("2d");
             curContext.font = curContext.mozTextStyle = curTextSize + "px " + curTextFont.name;
             curContext.textBaseline="top";
             x = 0;
@@ -6942,21 +7011,18 @@ else{
           }
 
           if(p.use3DContext){
-            x = arguments[1]; 
-            y = arguments[2]; 
+            x = arguments[1];
+            y = tempy;
 
-            aspect=canvas.width/canvas.height;
+            var aspect=textcanvas.width/textcanvas.height;
             curContext = oldContext;
 
-            curContext.bindTexture(curContext.TEXTURE_2D, texture);
-            try{curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,false,true);}
-            catch(e){
-              //curContext.texImage2D(curContext.TEXTURE_2D, 0, canvas,null);
-            }
+            //curContext.bindTexture(curContext.TEXTURE_2D, texture);
+            curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas,false,true);
             curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
             curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
             curContext.generateMipmap(curContext.TEXTURE_2D);
-            curContext.bindTexture(curContext.TEXTURE_2D, null);
+            //curContext.bindTexture(curContext.TEXTURE_2D, null);
 
             var model = new PMatrix3D();
             var scalefactor=curTextSize*0.5;
@@ -6967,8 +7033,6 @@ else{
             view.scale(1, -1, 1);
             view.apply(modelView.array());
 
-            //curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE);
-
             curContext.useProgram(programObject2D);
 
             vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
@@ -6977,7 +7041,7 @@ else{
             uniformi(programObject2D, "uSampler", [0]);
             uniformi(programObject2D, "picktype", 1);
 
-            uniformMatrix( programObject2D, "model", true,  model.array() );
+            uniformMatrix( programObject2D, "model", true, model.array() );
             uniformMatrix( programObject2D, "view", true, view.array() );
             uniformMatrix( programObject2D, "projection", true, projection.array() );
 
@@ -6986,21 +7050,17 @@ else{
             curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
             curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
 
-            curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
             width=aspect*scalefactor;
           }
           lastTextPos[0] = x + width;
           lastTextPos[1] = y;
           lastTextPos[2] = z;
-        } else if (arguments.length === 5) { // for text( str, x, y , width, height)
-          text(str, arguments[1], arguments[2], arguments[3], arguments[4], 0);
-          return ;
-        } else if (arguments.length === 6) { // for text( stringdata, x, y , width, height, z)
+        } else if (arguments.length <= 6) { // for text( stringdata, x, y , width, height, z)
           x = arguments[1];
           y = arguments[2];
           width = arguments[3];
           height = arguments[4];
-          z = arguments[5];
+          z = arguments.length === 6?arguments[5]:0;
 
           if (str.length > 0) {
             if (curTextSize > height) {
@@ -7065,7 +7125,7 @@ else{
       }
     };
 
-    // Load Batik SVG Fonts and parse to pre-def objects for quick rendering 
+    // Load Batik SVG Fonts and parse to pre-def objects for quick rendering
     p.loadGlyphs = function loadGlyph(url) {
       var x, y, cx, cy, nx, ny, d, a, lastCom, lenC, horiz_adv_x, getXY = '[0-9\\-]+', path;
 
@@ -7086,7 +7146,7 @@ else{
       var buildPath = function buildPath(d) {
         var c = regex("[A-Za-z][0-9\\- ]+|Z", d);
 
-        // Begin storing path object 
+        // Begin storing path object
         path = "var path={draw:function(){curContext.beginPath();curContext.save();";
 
         x = 0;
@@ -7204,7 +7264,7 @@ else{
             horiz_adv_x = p.glyphTable[url].horiz_adv_x;
           }
           d = glyph[i].getAttribute("d");
-          // Split path commands in glpyh 
+          // Split path commands in glpyh
           if (d !== undefined) {
             path = buildPath(d);
             eval(path);
@@ -7216,7 +7276,7 @@ else{
               draw: path.draw
             };
           }
-        } // finished adding glyphs to table            
+        } // finished adding glyphs to table
       };
 
       // Load and parse Batik SVG font as XML into a Processing Glyph object
@@ -7254,7 +7314,7 @@ else{
       // Create a new object in glyphTable to store this font
       p.glyphTable[url] = {};
 
-      // Begin loading the Batik SVG font... 
+      // Begin loading the Batik SVG font...
       loadXML(url);
 
       // Return the loaded font for attribute grabbing
@@ -7301,7 +7361,7 @@ else{
         var parsedCode = Processing.parse(code, p);
 
         if (!p.use3DContext) {
-          // Setup default 2d canvas context. 
+          // Setup default 2d canvas context.
           curContext = curElement.getContext('2d');
 
           modelView = new PMatrix2D();
@@ -7363,12 +7423,15 @@ else{
       // Event handling
       //////////////////////////////////////////////////////////////////////////
 
+      p.pjs.eventHandlers = [];
+
       function attach(elem, type, fn) {
         if (elem.addEventListener) {
           elem.addEventListener(type, fn, false);
         } else {
           elem.attachEvent("on" + type, fn);
         }
+        p.pjs.eventHandlers.push([elem, type, fn]);
       }
 
       attach(curElement, "mousemove", function(e) {
@@ -7472,7 +7535,7 @@ else{
           }
         }
 
-        // Numbers and their shift-symbols 
+        // Numbers and their shift-symbols
         else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0-9
           if (e.shiftKey) {
             switch (e.keyCode) {
@@ -7525,10 +7588,10 @@ else{
               break; // +
             case 219:
               p.key = 123;
-              break; // { 
+              break; // {
             case 221:
               p.key = 125;
-              break; // } 
+              break; // }
             case 222:
               p.key = 34;
               break; // "
@@ -7537,28 +7600,28 @@ else{
             switch (e.keyCode) {
             case 188:
               p.key = 44;
-              break; // , 
+              break; // ,
             case 109:
               p.key = 45;
-              break; // - 
+              break; // -
             case 190:
               p.key = 46;
-              break; // . 
+              break; // .
             case 191:
               p.key = 47;
-              break; // / 
+              break; // /
             case 192:
               p.key = 96;
-              break; // ~ 
+              break; // ~
             case 219:
               p.key = 91;
-              break; // [ 
+              break; // [
             case 220:
               p.key = 92;
               break; // \
             case 221:
               p.key = 93;
-              break; // ] 
+              break; // ]
             case 222:
               p.key = 39;
               break; // '
@@ -7582,9 +7645,16 @@ else{
           p.keyReleased();
         }
       });
+
+      attach(document, "keypress", function (e) {
+        if (p.keyTyped) {
+          p.keyTyped();
+        }
+      });
     };
 
     return p;
   };
 
 }());
+
