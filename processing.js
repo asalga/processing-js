@@ -5885,9 +5885,9 @@
         curContext.clear( curContext.DEPTH_BUFFER_BIT );
       }
       else if (which === p.ENABLE_DEPTH_TEST ) {
-        curContext.enable(curContext.DEPTH_TEST );
+        curContext.enable( curContext.DEPTH_TEST );
       }
-    }
+    };
 
     // Paints a pixel array into the canvas
     p.set = function set(x, y, obj, img) {
