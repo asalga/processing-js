@@ -1,5 +1,7 @@
+
 # Make sure $JSSHELL points to your js shell binary in .profile or .bashrc
 TOOLSDIR=./tools
+
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
