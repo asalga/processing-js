@@ -5988,7 +5988,7 @@
         curContext.disable( curContext.DEPTH_TEST );
         curContext.clear( curContext.DEPTH_BUFFER_BIT );
       }
-      else if (which === p.ENABLE_DEPTH_TEST ) {
+      else if ( which === p.ENABLE_DEPTH_TEST ) {
         curContext.enable( curContext.DEPTH_TEST );
       }
     };
