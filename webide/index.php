@@ -35,15 +35,14 @@
             6 => 'Sol', 
             7 => 'Bouncing Box',
             8 => 'Mouse Light Direction',
-            9 => 'Disco', 
-            
-10 => 'Cubic Grid',            
-11 => 'Bird',
-12 => 'Brids',
+            9 => 'Disco',             
+            10 => 'Cubic Grid',            
+            11 => 'Bird',
+            12 => 'Brids',
             13 => 'Line Lengths', 
             14 => 'Poetry',
-15 => 'Blinds'
-);
+            15 => 'Blinds',
+            16 => 'Type');
           
           for( $i = 0; $i < count($sketchNames); $i++ ) {
             echo "<option value='$i'";
@@ -149,6 +148,7 @@
                     is2D = true;
                     break;
           case 15: fileSource = "sketches/blinds.js";break;
+case 16: fileSource = "sketches/type.js";break;
           default:break;
         }
         

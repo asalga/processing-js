@@ -6818,7 +6818,22 @@ else{
 
     p.textAlign = function textAlign() {};    
     
+    var ttx;
     p.textWidth = function textWidth(str) {
+    if(p.use3DContext)
+    {
+      if(typeof ttx === 'undefined'){
+        ttx = document.createElement("canvas");
+      }
+    
+    ttx.font = curTextSize + "px " + curTextFont.name;
+    var ctx = ttx.getContext("2d");
+    ctx.font = curTextSize + "px " + curTextFont.name;
+
+var textW = ctx.measureText(str).width;
+    
+    return textW;      
+    }
       curContext.font = curTextSize + "px " + curTextFont.name;
       if (curContext.fillText) {
 	return curContext.measureText(str).width;
