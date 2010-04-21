@@ -2891,8 +2891,6 @@
         p.shininess(1);
         p.ambient(255, 255, 255);
         p.specular(0, 0, 0);
-        
-        //hint(DISABLE_DEPTH_TEST);
 
         curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
         p.camera();
