@@ -13,8 +13,8 @@ PFont infoFont;
 void setup(){
   size(400,400,OPENGL);
   noStroke();
-  infoFont = loadFont("Arial");
-  textFont(infoFont, 24);
+  //infoFont = loadFont("Arial");
+  //textFont(infoFont, 24);
   // for Processing... (add quoatations around Arial)
   // infoFont = createFont(Arial,24);
 }
@@ -22,13 +22,13 @@ void setup(){
 void displayText()
 {
   fill(25,70,20);
-  textFont(infoFont); 
-  text( "FPS: " + int(frameRate), 0, 30); 
-  text( "LOD: " + int(zoom + 16.0) , 0, 50);
+  //textFont(infoFont); 
+  //text( "FPS: " + int(frameRate), 0, 30); 
+  //text( "LOD: " + int(zoom + 16.0) , 0, 50);
  
-  text( "Keys:", 15, 100);
-  text( "a - move forward" , 0, 120);
-  text( "z - move backward",  0, 140);
+  //text( "Keys:", 15, 100);
+  //text( "a - move forward" , 0, 120);
+  //text( "z - move backward",  0, 140);
 }
 
 /*

@@ -42,7 +42,9 @@
             13 => 'Line Lengths', 
             14 => 'Poetry',
             15 => 'Blinds',
-            16 => 'Type');
+            16 => 'Type',
+            17 => 'Chem'
+);
           
           for( $i = 0; $i < count($sketchNames); $i++ ) {
             echo "<option value='$i'";
@@ -149,6 +151,8 @@
                     break;
           case 15: fileSource = "sketches/blinds.js";break;
 case 16: fileSource = "sketches/type.js";break;
+case 17: fileSource = "sketches/chem.js";break;
+
           default:break;
         }
         
