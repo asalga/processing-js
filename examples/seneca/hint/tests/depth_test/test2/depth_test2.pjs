@@ -1,0 +1,15 @@
+import processing.opengl.*;
+
+void setup(){
+  size(100,100, OPENGL);
+  box(80,80,2);
+  hint(DISABLE_DEPTH_TEST);
+}
+
+void draw(){
+  fill(100,0,0);
+  box(60,60,5);
+
+  fill(0,100,0);
+  box(50,50,7);  
+}
