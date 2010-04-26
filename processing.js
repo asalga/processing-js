@@ -6826,13 +6826,12 @@ else{
         ttx = document.createElement("canvas");
       }
     
-    ttx.font = curTextSize + "px " + curTextFont.name;
-    var ctx = ttx.getContext("2d");
-    ctx.font = curTextSize + "px " + curTextFont.name;
+      //ttx.font = curTextSize + "px " + curTextFont.name;
+      var ctx = ttx.getContext("2d");
+      ctx.font = curTextSize + "px " + curTextFont.name;
 
-var textW = ctx.measureText(str).width;
-    
-    return textW;      
+      var textW = ctx.measureText(str).width;
+      return textW;      
     }
       curContext.font = curTextSize + "px " + curTextFont.name;
       if (curContext.fillText) {
