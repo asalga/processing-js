@@ -44,7 +44,9 @@
             15 => 'Blinds',
             16 => 'Type',
             17 => 'Chem',
-            18 => 'Paint Code'
+            18 => 'Paint Code',
+19 => 'Wave',
+20 => 'Robot Arm'
 );
           
           for( $i = 0; $i < count($sketchNames); $i++ ) {
@@ -154,7 +156,8 @@
 case 16: fileSource = "sketches/type.js";break;
 case 17: fileSource = "sketches/chem.js";break;
 case 18: fileSource = "sketches/paint_code.js";is2D = true; break;
-
+case 19: fileSource = "sketches/wave.js";break;
+case 20: fileSource = "sketches/robot_arm.js";break;
           default:break;
         }
         
