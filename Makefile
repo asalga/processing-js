@@ -1,6 +1,6 @@
 # Make sure $JSSHELL points to your js shell binary in .profile or .bashrc
 TOOLSDIR=./tools
-JS=/Users/andor/mozilla-central/obj-ff-dbg/dist/MinefieldDebug.app/Contents/MacOS/./js
+#JS=$(TOOLSDIR)/js/src/js
 
 # Rule for making pure JS code from a .pde (runs through parser + beautify)
 %.js : %.pde
