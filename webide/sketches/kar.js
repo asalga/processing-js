@@ -1,5 +1,5 @@
 //
-// Kar
+// Kar by Andor Salga
 //
 
 float f = 0;
