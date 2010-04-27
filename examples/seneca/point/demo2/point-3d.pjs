@@ -1,0 +1,93 @@
+ArrayList pointColors;
+ArrayList pointPositions;
+ArrayList pointVelocities;
+ArrayList pointLifeTimes;
+ArrayList pointAges;
+
+float MIN_Y_VEL = 0.4;
+float MAX_Y_VEL = 0.9;
+
+float MIN_X_VEL = 0.5;
+float MAX_X_VEL = 0.9;
+
+float GRAVITY_X = 0;
+float GRAVITY_Y = 2;
+
+float MIN_LIFETIME = 1;
+float MAX_LIFETIME = 5;
+
+float NUM_PARTICLES = 100;
+
+float f = 0;
+
+void setup(){
+  size(400,400, OPENGL);
+
+  pointColors = new ArrayList();
+  pointPositions = new ArrayList();
+  pointVelocities = new ArrayList();
+  pointLifeTimes = new ArrayList();
+  pointAges = new ArrayList();
+
+  for(int i = 0; i < NUM_PARTICLES; i++){
+    pointColors.push(255);
+
+    pointPositions.push(90);
+    pointPositions.push(90);
+
+    pointVelocities.push(random(MIN_X_VEL, MAX_X_VEL));
+    pointVelocities.push(random(MIN_Y_VEL, MAX_Y_VEL));
+
+    pointLifeTimes.push(random(MIN_LIFETIME, MAX_LIFETIME));
+    pointAges.push(0);
+  }
+}
+
+void resetParticle(int i){
+  pointPositions[i*2] = mouseX;
+  pointPositions[i*2+1] = mouseY;
+
+  pointVelocities[i*2] = random(MIN_X_VEL, MAX_X_VEL);
+  pointVelocities[i*2+1] = random(MIN_Y_VEL, MAX_Y_VEL);
+
+  pointColors[i] = 255;
+
+  pointAges[i] = 0;
+  pointLifeTimes[i] = random(MIN_LIFETIME, MAX_LIFETIME);
+}
+
+void update(){
+  f = 0.05;
+
+  for(int i = 0; i < NUM_PARTICLES; i++){
+    pointVelocities[i*2] += f * GRAVITY_X;
+    pointVelocities[i*2+1] += f * GRAVITY_Y;
+
+    pointPositions[i*2] +=  pointVelocities[i*2];
+    pointPositions[i*2+1] += pointVelocities[i*2+1];
+
+
+    if(pointColors[i] > 5){
+      pointColors[i] -= 9;
+    }
+
+    pointAges[i] += f;
+
+    if(pointAges[i] >= pointLifeTimes[i]){
+      resetParticle(i);
+    }
+  }
+}
+
+void draw(){
+  background(0);
+
+  for(int i = 0; i < NUM_PARTICLES; i+=2){
+    stroke(255,pointColors[i]);
+    if(pointAges[i] < pointLifeTimes[i]){
+      point( pointPositions[i], pointPositions[i*2+1], 0 );
+    }
+  }
+
+  update();
+}
