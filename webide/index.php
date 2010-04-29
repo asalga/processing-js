@@ -170,6 +170,7 @@ case 20: fileSource = "sketches/robot_arm.js";break;
 
     <!-- Don't force the recompile button to be right near the bottom of the page -->
     <br />
+    <span id='debug'></span>
     <br />
     <br />
   </body>
