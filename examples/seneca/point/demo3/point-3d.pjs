@@ -1,0 +1,161 @@
+int NUM_PARTICLES = 100;
+
+
+class PVector2D
+{
+  public float x, y;
+
+  public PVector2D()
+  {
+    set(0,0);
+  }
+
+  public PVector2D(float x,float y)
+  {
+    set(x,y);
+  }
+
+  public void set(float x, float y)
+  {
+    this.x = x;
+    this.y = y;
+  }
+  
+  public String toString()
+  {
+    return "[" + x + "," + y + "]";
+  }
+}
+
+PVector2D add(PVector2D v1, PVector2D v2)
+{
+  return new PVector2D(v1.x + v2.x, v1.y + v2.y);
+}
+
+PVector2D sub(PVector2D initialPoint, PVector2D terminalPoint)
+{
+  return new PVector2D( terminalPoint.x - initialPoint.x,  terminalPoint.y - initialPoint.y);
+}
+
+float len(PVector2D v)
+{
+  return sqrt(v.x * v.x + v.y * v.y);
+}
+
+PVector2D scale(PVector2D v, float s)
+{
+  return new PVector2D(v.x * s, v.y * s);
+}
+
+
+//
+//
+//
+class Particle{
+  float x, y;
+  float age;
+  float lifeTime;
+  boolean isAlive;
+
+  Particle(){
+    x = 100;
+    y = 100;
+    age = 0.0;
+    lifeTime = 0.0;
+    isAlive = false;
+  }
+
+  void update(){
+    y += 1;
+  }
+
+  void setCoords(int px, int py){
+    this.x = px;
+    this.y = py;
+  }
+
+  float getX(){
+    return x;
+  }
+
+  float getY(){
+    return y;
+  }
+
+  void draw(){
+    stroke(255,0,0);
+    point(x,y,0);
+  }
+}
+
+//
+//
+//
+class ParticleSystem{
+  ArrayList particles;
+
+  PVector2D minPos;
+  PVector2D maxPos;
+
+  float minLifeTime;
+  float maxLifeTime;
+
+  ParticleSystem(){
+    particles = new ArrayList(100);
+
+    for(int i = 0; i < NUM_PARTICLES; i++){
+//      particles.push();
+      particles[i] = new Particle();
+    }
+
+    minPos = new PVector2D();
+    maxPos = new PVector2D();
+    minLifeTime = 0;
+    maxLifeTime = 0;
+  }
+
+  void resetParticle(){
+  }
+
+  void setColorRange(Color cmin, Color cmax){
+  }
+
+  void setPositionRange(PVector2D min, PVector2D max){
+   minPos = min;
+   maxPos = max; 
+  }
+
+  void setLifeTimeRange(float min, float max){
+    
+  }
+
+  void updateSys(){
+    particles[0].update();
+    particles[1].update();
+  }
+
+  void draw(){
+    //var ps = particles;
+    for( i in particles){
+    }
+  }
+}
+
+ParticleSystem psys;
+Particle p;
+
+
+void setup(){
+  size(400,400,OPENGL);
+
+  psys = new ParticleSystem();
+  psys.setPositionRange(new PVector2D(0,0), new PVector2D(50,50));
+  psys.setLifeTimeRange(2,2);
+}
+
+void draw(){
+  psys.updateSys();
+
+  background(0);
+  psys.draw();
+}
