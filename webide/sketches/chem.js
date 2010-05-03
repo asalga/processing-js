@@ -15,6 +15,7 @@ void draw(){
   noStroke();
   
   text("van der Waals Spheres", 10, 30);
+  textSize(30);
   fill(255);
 
   lightSpecular(255,255,255);
