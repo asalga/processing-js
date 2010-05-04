@@ -1,6 +1,6 @@
 ArrayList points;
 ArrayList vels;
-
+PFont font;
 boolean on;
 
 void setup(){
@@ -8,6 +8,7 @@ void setup(){
   on = true;
   points = new ArrayList();
   vels = new ArrayList();
+  font = createFont("arial", 1);
 
   for(int i = 0; i < 100; i+=2){
     points[i] = random(0,width);
@@ -34,7 +35,7 @@ void draw(){
     rect(-10,20,10,4);
     rect(-7,-0,5,20);
     
-stroke(255,0,0);
+    stroke(100,0,0);
     line(-7,5,-1,2);
     line(-7,8,-1,5);
     line(-7,11,-1,8);
@@ -43,6 +44,44 @@ stroke(255,0,0);
   popMatrix();
 
 
+  for(int i=0; i <= 30; i++){
+    pushMatrix();
+
+    translate(width/2, height);
+
+    if(frameCount < 1000){
+      translate(sin(frameCount/100) + 
+                sin(i/5)*3,sin(frameCount/1000) * i* -2);
+
+      if(i == 30){
+        fill(255,0,0);
+        text("L",0,0);
+      }
+    }
+    else
+    {
+      translate( sin(i/5)*3, i* -2);
+      if(i == 30){
+        fill(255,0,0);
+        text("L",0,0);
+      }
+    }
+
+    stroke(0,90,0);
+    fill(00,90,0);
+    
+    ellipse(0, 0, 2, 2);
+    popMatrix();
+  }
+
+  // snow on the ground
+  fill(255);
+  noStroke();
+  for(int i = 0 ; i < 20; i++){
+    ellipse(i*17, height, 25, 25);
+  }
+
+  // update and draw snowflakes
   stroke(255);
   for(int i=0; i<100; i+=2){
     point(points[i],points[i+1]);
@@ -66,14 +105,15 @@ stroke(255,0,0);
     stroke(200,10);
   }
 
+  // wire
   line(0,-height/2,0,-25);
 
+  // bulb halo
   noStroke();
-
-  for(int i=0; i < 25; i++){
+  for(int i=0; i < 15; i++){
     if(on){
       fill(255,0,0,2);
-      ellipse(0,0, i*8, i*8);
+      ellipse(0,0, i*10, i*10);
     }
   }
 
@@ -89,6 +129,8 @@ stroke(255,0,0);
 
   rect(-5,-25,10,15);
 
+
+  // bulb
   if(on){
     fill(190,190,50,120);
     stroke(0);

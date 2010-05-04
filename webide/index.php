@@ -2,21 +2,23 @@
 
   <head>
     <title>Processing.JS WEB IDE</title>
-    <script src="processing.js" type="text/javascript"></script>
+
+   <!-- link to my experiments branch so I don't have to keep ftping the pjs lib -->
+    <script src="http://github.com/asalga/processing-js/raw/experiments/processing.js" type="text/javascript"></script>
     <link rel="stylesheet" href="style.css" />
     <script>var p = null;</script>
   </head>
   
   <body onload="loadSketch();">
 
-    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
-    <h2>Processing.JS WEB IDE</h2>
-
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a>'s Processing.JS Web IDE</h1>
     <p>
-      This seems to work with <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Minefield</a> and <a href="http://nightly.webkit.org/">Webkit</a>, but not <a href="http://build.chromium.org/buildbot/snapshots/">Chromium</a><br />
+      3D sketches require a WebGL-enabled browser. Get either  <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/">Minefield</a>, <a href="http://nightly.webkit.org/">Webkit</a> or <a href="http://build.chromium.org/buildbot/snapshots/">Chromium</a>.<br />
       <br />
-      Make changes to the sketch source on the left and click the button on the bottom<br />
-      to update the canvas. Keep in mind not all Processing functionality has been implemented.
+      To load an existing sketch: Select one from the drop down and hit "Load Sketch".<br />
+      Then change the sketch and hit "Update".<br />
+      <br />
+      Not all Processing functionality has been implemented (vertex, triangle, quad, etc are still missing).<br />
     </p>
 
     <p>
@@ -45,10 +47,15 @@
             16 => 'Type',
             17 => 'Chem',
             18 => 'Paint Code',
-19 => 'Wave',
-20 => 'Robot Arm'
-);
-          
+            19 => 'Wave',
+            20 => 'Robot Arm',
+            21 => 'Skyroads',
+            22 => 'Kar',
+            23 => 'Precipice',
+            24 => 'Create Cube',
+            25 => 'Flickering Seeds'
+          );
+
           for( $i = 0; $i < count($sketchNames); $i++ ) {
             echo "<option value='$i'";
             
@@ -87,12 +94,25 @@
         runIt();
       }
       
+      function isSketch2D(src)
+      {
+        var r = "" + src.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/);
+        var is2D = true;
+        if(src.match(/size\s*\((?:.+),(?:.+),\s*(OPENGL|P3D)\s*\)\s*;/))
+        {
+         is2D = false;
+        }
+        return is2D;
+      }
+
       //
-      function runIt(is2D) {
+      function runIt() {
         if(p) {
           p.exit();
           delete p;
         }        
+
+        var is2D = isSketch2D(source.value);
 
         var refStrToShow = is2D ? '2d' : '3d';
         var refStrToHide = !is2D ? '2d' : '3d';
@@ -103,7 +123,7 @@
         var toHide = document.getElementById( refStrToHide );
         toHide.setAttribute( "style", "display:none;" );
 
-        p = Processing( toShow ,source.value );
+        p = Processing( toShow, source.value );
       }
       
       //
@@ -127,7 +147,6 @@
         selection = document.getElementById('sketchSelect');
         src = document.getElementById('source');
         var fileSource = "";
-        var is2D = false;
 
         switch(selection.selectedIndex)
         {
@@ -144,33 +163,32 @@
           case 10: fileSource = "sketches/cubic_grid.js";break;
           case 11: fileSource = "sketches/bird.js";break;
           case 12: fileSource = "sketches/birds.js";break;
-
-          //
-          case 13:  fileSource = "sketches/line_lengths.js";
-                    is2D = true;
-                    break;
-          case 14:  fileSource = "sketches/poetry.js";
-                    is2D = true;
-                    break;
+          case 13:  fileSource = "sketches/line_lengths.js";break;
+          case 14:  fileSource = "sketches/poetry.js";break;
           case 15: fileSource = "sketches/blinds.js";break;
-case 16: fileSource = "sketches/type.js";break;
-case 17: fileSource = "sketches/chem.js";break;
-case 18: fileSource = "sketches/paint_code.js";is2D = true; break;
-case 19: fileSource = "sketches/wave.js";break;
-case 20: fileSource = "sketches/robot_arm.js";break;
+          case 16: fileSource = "sketches/type.js";break;
+          case 17: fileSource = "sketches/chem.js";break;
+          case 18: fileSource = "sketches/paint_code.js"; break;
+          case 19: fileSource = "sketches/wave.js";break;
+          case 20: fileSource = "sketches/robot_arm.js";break;
+          case 21: fileSource = "sketches/skyroads.js";break;
+          case 22: fileSource = "sketches/kar.js";break;
+          case 23: fileSource = "sketches/precipice.js";break;
+          case 24: fileSource = "sketches/create_cube.js";break;
+          case 25: fileSource = "sketches/flickering_seeds.js";break;
           default:break;
         }
-        
+
         if(fileSource.length > 0) {
           source.value = ajax(fileSource);
-          runIt(is2D);
+          runIt();
         }
       }
     </script>
 
     <!-- Don't force the recompile button to be right near the bottom of the page -->
     <br />
-    <span id='debug'></span>
+    <span id="debug"></span>
     <br />
     <br />
   </body>
