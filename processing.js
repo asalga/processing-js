@@ -388,7 +388,7 @@
     // Vertex shader for points and lines
     var vertexShaderSource2D =
       "attribute vec3 Vertex;" +
-     // "uniform vec4 color;" +
+      "uniform vec4 color;" +
 
       "uniform mat4 model;" +
       "uniform mat4 view;" +
@@ -397,10 +397,8 @@
 
       "void main(void) {" +
       "  gl_PointSize = pointSize;" +
-      
-      "  vec4 v = vec4(model * vec4(Vertex, 1.0));" + 
-      "  gl_FrontColor = vec4( vec3(normalize(vec3(-v))), 1.0);" +
-      "  gl_Position =  projection * view * v;" +
+      "  gl_FrontColor = color;" +
+      "  gl_Position =  projection * view * model * vec4(Vertex, 1.0);" +
       "}";
 
     var fragmentShaderSource2D =
@@ -5011,7 +5009,7 @@
       var model = new PMatrix3D();
       model.translate(x, y, z || 0);
       uniformMatrix(programObject2D, "model", true, model.array());
-    //  uniformf(programObject2D, "color", strokeStyle);
+      uniformf(programObject2D, "color", strokeStyle);
       vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
       curContext.drawArrays(curContext.POINTS, 0, 1);
     };

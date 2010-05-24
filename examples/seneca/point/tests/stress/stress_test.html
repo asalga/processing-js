@@ -8,18 +8,29 @@
 <script type="application/processing">
 // 	Processing.js Example
 
-ArrayList arr = new ArrayList();
 
-int NUM_POINTS = 50000;
+ArrayList results = new ArrayList();
+
+int numPoints = 100000;
 
 void setup() {
   size(500, 500, OPENGL);
-
   strokeWeight(15);
-  
   translate(width/2, height/2, 0);
+  
+  for(int i=0; i < 5; i++){
+    runTest(numPoints);
+    numPoints = numPoints + numPoints;
+  }
+  
+  alert(results);
+}
 
-  for(int i = 0; i < NUM_POINTS; i++)
+void runTest(numPoints){
+
+  ArrayList arr = new ArrayList();
+
+  for(int i = 0; i < numPoints; i++)
   {
     PVector p = new PVector();
     p.set(random(-1,1), random(-1,1), random(-1,1));
@@ -29,14 +40,14 @@ void setup() {
     arr.push(p.array()[1]);
     arr.push(p.array()[2]);
   }
-
-  int t = millis();
-  for(int i=0; i < NUM_POINTS; i+=3){
+  
+  int timer = millis();
+  for(int i=0; i < numPoints; i+=3){
     point(arr[i], arr[i+1], arr[i+2]);
   }
-  alert(millis() - t);
-  alert(millis() - t);
+  results.push(millis()-timer);
 }
+
 </script>
 <canvas></canvas>
 
