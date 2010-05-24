@@ -388,7 +388,7 @@
     // Vertex shader for points and lines
     var vertexShaderSource2D =
       "attribute vec3 Vertex;" +
-      "uniform vec4 color;" +
+     // "uniform vec4 color;" +
 
       "uniform mat4 model;" +
       "uniform mat4 view;" +
@@ -397,8 +397,10 @@
 
       "void main(void) {" +
       "  gl_PointSize = pointSize;" +
-      "  gl_FrontColor = color;" +
-      "  gl_Position = projection * view * model * vec4(Vertex, 1.0);" +
+      
+      "  vec4 v = vec4(model * vec4(Vertex, 1.0));" + 
+      "  gl_FrontColor = vec4( vec3(normalize(vec3(-v))), 1.0);" +
+      "  gl_Position =  projection * view * v;" +
       "}";
 
     var fragmentShaderSource2D =
@@ -4059,6 +4061,34 @@
           bezierBasisInverse = new PMatrix3D();
           bezierBasisMatrix = new PMatrix3D();
           bezierBasisMatrix.set(-1, 3, -3, 1, 3, -6, 3, 0, -3, 3, 0, 0, 1, 0, 0, 0);
+          
+        curContext.useProgram(programObject2D);
+        
+        
+        
+        // var model = new PMatrix3D();
+
+        // move point to position
+       // model.translate(x, y, z || 0);
+
+        var view = new PMatrix3D();
+        view.scale(1, -1, 1);
+        view.translate(250,250,0);
+        view.apply(modelView.array());
+
+        //model.transpose();
+        
+       // uniformMatrix(programObject2D, "model", false, model.array());
+       // view.transpose();
+//       alert(view.array());
+       uniformMatrix(programObject2D, "view", true, view.array());
+        
+        var proj = new PMatrix3D();
+        proj.set(projection);
+
+        uniformMatrix(programObject2D, "projection", true, proj.array());
+
+
         }
         p.stroke(0);
         p.fill(255);
@@ -4978,43 +5008,12 @@
     };
 
     p.point = function point(x, y, z) {
-      if (p.use3DContext) {
-        var model = new PMatrix3D();
-
-        // move point to position
-        model.translate(x, y, z || 0);
-
-        var view = new PMatrix3D();
-        view.scale(1, -1, 1);
-        view.apply(modelView.array());
-
-        curContext.useProgram(programObject2D);
-        
-        model.transpose();
-        uniformMatrix(programObject2D, "model", false, model.array());
-        view.transpose();
-        uniformMatrix(programObject2D, "view", false, view.array());
-        
-        var proj = new PMatrix3D();
-        proj.set(projection);
-        proj.transpose();
-        uniformMatrix(programObject2D, "projection", false, proj.array());
-
-        if (lineWidth > 0 && doStroke) {
-          // this will be replaced with the new bit shifting color code
-          uniformf(programObject2D, "color", strokeStyle);
-
-          vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
-          curContext.drawArrays(curContext.POINTS, 0, 1);
-        }
-      } else {
-        if (doStroke) {
-          var oldFill = curContext.fillStyle;
-          curContext.fillStyle = curContext.strokeStyle;
-          curContext.fillRect(Math.round(x), Math.round(y), 1, 1);
-          curContext.fillStyle = oldFill;
-        }
-      }
+      var model = new PMatrix3D();
+      model.translate(x, y, z || 0);
+      uniformMatrix(programObject2D, "model", true, model.array());
+    //  uniformf(programObject2D, "color", strokeStyle);
+      vertexAttribPointer(programObject2D, "Vertex", 3, pointBuffer);
+      curContext.drawArrays(curContext.POINTS, 0, 1);
     };
 
     p.beginShape = function beginShape(type) {
