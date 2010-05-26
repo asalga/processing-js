@@ -1,0 +1,19 @@
+float fframeRate = 40;
+
+int _frameRate(){
+  return 42;
+}
+
+void setup()
+{
+  size(400,400);
+  PFont fontA = loadFont("courier");
+  textFont(fontA, 14);
+}
+
+void draw(){
+  background(0);
+  text("frameRate = " + frameRate, 30, 30);
+  text("fframeRate = " + fframeRate, 30, 50);
+  text("_frameRate = " + _frameRate(), 30, 70);
+}

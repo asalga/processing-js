@@ -1,17 +1,28 @@
+int __frameRate = 50;
+int __FRAME_RATE = 100;
+
 void setup() {
   size(100, 100);
+  background(0);
 
   int i = frameRate;
+  int frameRate_ = 5;
+  String s = "\"frameRate\"";
+  float _frameRate = 10;
 
-  tinylogLite.log(frameRate);
-  tinylogLite.log("FPS:" + frameRate);
-  tinylogLite.log((frameRate));
-  tinylogLite.log((frameRate*2));
-  tinylogLite.log(frameRate + func());
-  tinylogLite.log(frameRate+(42));
-  tinylogLite.log(i);
-  tinylogLite.log(FR());
-  tinylogLite.log(">" + frameRate + "<");  
+  println("should be 50->" + __frameRate);
+  println(s);
+  println(frameRate);
+  println(_frameRate);
+  println(frameRate_);
+  println("frameRate:" + frameRate);
+  println((frameRate));
+  println((frameRate*2));
+  println(frameRate + func());
+  println(frameRate+(42));
+  println(i);
+  println(FR());
+  println(">" + frameRate + "<");
 }
 
 int func(){
@@ -21,3 +32,4 @@ int func(){
 int FR(){
   return frameRate;
 }
+
