@@ -3961,6 +3961,7 @@
             curElement.setAttribute("height", aHeight);
           }
           curContext = curElement.getContext("experimental-webgl");
+          p.use3DContext = true;
         } catch(e_size) {
           p.debug(e_size);
         }
@@ -4049,6 +4050,7 @@
         if (typeof curContext === "undefined") {
           // size() was called without p.init() default context, ie. p.createGraphics()
           curContext = curElement.getContext("2d");
+          p.use3DContext = false;
           userMatrixStack = new PMatrixStack();
           modelView = new PMatrix2D();
         }
@@ -4077,7 +4079,11 @@
 
       p.context = curContext; // added for createGraphics
       p.toImageData = function() {
-        return curContext.getImageData(0, 0, this.width, this.height);
+        if(!p.use3DContext){
+          return curContext.getImageData(0, 0, this.width, this.height);
+        } else {
+          return curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
+        }        
       };
     };
 
@@ -6160,10 +6166,14 @@
     };
 
     // Creates a new Processing instance and passes it back for... processing
-    p.createGraphics = function createGraphics(w, h) {
+    p.createGraphics = function createGraphics(w, h, render) {
       var canvas = document.createElement("canvas");
       var ret = new Processing(canvas);
-      ret.size(w, h);
+      if(render){
+        ret.size(w, h, render);
+      } else {
+        ret.size(w, h);
+      }
       ret.canvas = canvas;
       return ret;
     };
