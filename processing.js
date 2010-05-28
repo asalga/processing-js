@@ -4083,8 +4083,31 @@
         if(!p.use3DContext){
           return curContext.getImageData(0, 0, this.width, this.height);
         } else {
-          return curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
-        }        
+
+          var c = document.createElement('canvas');
+          var ctx = c.getContext("2d");
+          var obj = ctx.createImageData(this.width, this.height);
+          
+          var agent = navigator.userAgent;
+          var isSafari = agent.match(/safari/i);
+
+          // Safari returns undefined if format RGB is requested
+          var buff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
+          var pixels = [];
+
+          if(isSafari) {
+            for(var i = 0; i < buff.length; i++){
+              pixels[i] = buff[i];
+            }
+          }
+          // Minefield
+          else if(!isSafari) {
+            pixels = buff['data'];
+          }
+          
+          obj.data = pixels
+          return obj;
+        }
       };
     };
 
@@ -6316,7 +6339,7 @@
         // draw the image
         //curContext.putImageData(obj, x, y); // this causes error if data overflows the canvas dimensions
         curTint(obj);
-
+        
         var c = document.createElement('canvas');
         c.width = obj.width;
         c.height = obj.height;
