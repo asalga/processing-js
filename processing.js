@@ -4092,20 +4092,26 @@
           var isSafari = agent.match(/safari/i);
 
           // Safari returns undefined if format RGB is requested
-          var buff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
-          var pixels = [];
+          var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
+          /*var data;
 
           if(isSafari) {
-            for(var i = 0; i < buff.length; i++){
-              pixels[i] = buff[i];
+            data = new Array (uBuff.length);
+            for(var i = 0, ubl = uBuff.length; i < ubl; i++){
+              obj.data[i] = buff[i];
             }
           }
           // Minefield
-          else if(!isSafari) {
-            pixels = buff['data'];
+          else {
+            data = uBuff;
           }
-          
-          obj.data = pixels
+          for(var i in uBuff){
+            obj.data[i] = data[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
+          }*/
+          uBuff = curContext.readPixels(0,0, this.width, this.height, curContext.RGBA, curContext.UNSIGNED_BYTE);
+          for(var i in uBuff){
+            obj.data[i] = uBuff[i];
+          }
           return obj;
         }
       };
