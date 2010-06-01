@@ -4041,31 +4041,13 @@
           var c = document.createElement('canvas');
           var ctx = c.getContext("2d");
           var obj = ctx.createImageData(this.width, this.height);
-          
-          var agent = navigator.userAgent;
-          var isSafari = agent.match(/safari/i);
 
-          // Safari returns undefined if format RGB is requested
           var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
-          /*var data;
 
-          if(isSafari) {
-            data = new Array (uBuff.length);
-            for(var i = 0, ubl = uBuff.length; i < ubl; i++){
-              obj.data[i] = buff[i];
-            }
-          }
-          // Minefield
-          else {
-            data = uBuff;
-          }
           for(var i in uBuff){
-            obj.data[i] = data[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
-          }*/
-          uBuff = curContext.readPixels(0,0, this.width, this.height, curContext.RGBA, curContext.UNSIGNED_BYTE);
-          for(var i in uBuff){
-            obj.data[i] = uBuff[i];
+            obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
           }
+
           return obj;
         }
       };
