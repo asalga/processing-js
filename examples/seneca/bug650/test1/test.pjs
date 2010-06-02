@@ -1,0 +1,40 @@
+PImage tex;
+float r = 0;
+void cb(){
+  println('f');
+  println(hex(tex.get(10,10)));
+}
+
+void setup(){
+  size(640, 360,OPENGL);
+  tex = loadImage("crate.jpg","",cb);
+
+//  var o = tex.get(10,30);
+  
+   //textureMode(NORMALIZED);
+}
+
+void draw(){
+background(0);
+translate(width/2, height/2, 0);
+fill(128,128,0);
+rotateY(r+=0.01);
+box(70);
+}
+
+/*
+  background(0);
+  noStroke();
+  translate(width/2.0, height/2.0, -100);
+  scale(90);
+
+  beginShape(QUADS);
+  texture(tex);
+
+  vertex(-1, -1,  0, 0, 0);
+  vertex( 1, -1,  0, 1, 0);
+  vertex( 1,  1,  0, 1, 1);
+  vertex(-1,  1,  0, 0, 1);
+
+  endShape();*/
+//}

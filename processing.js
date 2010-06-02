@@ -15,7 +15,7 @@
                     BuildingSky: http://weare.buildingsky.net/pages/processing-js
 
  */
-
+var texture;    var llimage = new Image();
 (function() {
 
   var Processing = this.Processing = function Processing(curElement, aCode) {
@@ -313,7 +313,9 @@
         sphereBuffer,
         lineBuffer,
         fillBuffer,
-        pointBuffer;
+        pointBuffer,
+        shapeTexVBO,
+        shapeTexture = null;
 
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
@@ -406,6 +408,8 @@
     var vertexShaderSource3D =
       "attribute vec3 Vertex;" +
       "attribute vec3 Normal;" +
+      "attribute vec2 Texture;" + 
+      "varying vec2 tex;" +
 
       "uniform vec4 color;" +
 
@@ -576,12 +580,22 @@
       "       color[3] );" +
       "    }" +
       "  }" +
+      "  tex.xy = Texture.xy;" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
       "}";
 
     var fragmentShaderSource3D =
+    "uniform sampler2D sampler;" +
+    "uniform bool usingTexture;" +
+    "varying vec2 tex;" +
+    
       "void main(void){" +
-      "  gl_FragColor = gl_Color;" +
+      "  if(usingTexture){" +
+      "    gl_FragColor = vec4(texture2D(sampler, tex.xy));" +
+      "  }"+
+      "  else{" + 
+      "    gl_FragColor = vec4(gl_Color);" +
+      "  }" +
       "}";
 
     // Wrapper to easily deal with array names changes.
@@ -3935,6 +3949,21 @@
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
 
+
+
+texture = curContext.createTexture();
+curContext.bindTexture(curContext.TEXTURE_2D, texture);
+curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+
+llimage.onload = function() {
+  curContext.bindTexture(curContext.TEXTURE_2D, texture);
+  curContext.texImage2D(curContext.TEXTURE_2D, 0, llimage, true);
+  tinylogLite.log('loaded');
+};
+llimage.src = "crate.jpg";
+
+
           // Create the program objects to render 2D (points, lines) and
           // 3D (spheres, boxes) shapes. Because 2D shapes are not lit,
           // lighting calculations could be ommitted from that program object.
@@ -3944,10 +3973,14 @@
           // Now that the programs have been compiled, we can set the default
           // states for the lights.
           curContext.useProgram(programObject3D);
+          
+          uniformi(programObject3D, "usingTexture", false);
           p.lightFalloff(1, 0, 0);
           p.shininess(1);
           p.ambient(255, 255, 255);
           p.specular(0, 0, 0);
+          
+          
 
           // Create buffers for 3D primitives
           boxBuffer = curContext.createBuffer();
@@ -3972,6 +4005,8 @@
 
           fillBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, fillBuffer);
+
+          shapeTexVBO = curContext.createBuffer();
 
           pointBuffer = curContext.createBuffer();
           curContext.bindBuffer(curContext.ARRAY_BUFFER, pointBuffer);
@@ -4365,7 +4400,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Shapes
     ////////////////////////////////////////////////////////////////////////////
-
+    
     p.box = function(w, h, d) {
       if (p.use3DContext) {
         // user can uniformly scale the box by
@@ -4414,6 +4449,9 @@
 
           vertexAttribPointer(programObject3D, "Vertex", 3, boxBuffer);
           vertexAttribPointer(programObject3D, "Normal", 3, boxNormBuffer);
+
+          var loc = curContext.getAttribLocation(programObject3D, "Texture");
+          curContext.disableVertexAttribArray(loc);
 
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
@@ -5025,7 +5063,7 @@
       curContext.drawArrays(ctxMode, 0, vArray.length/3);
     };
 
-    var fill2D = function fill2D(vArray, mode){
+    var fill2D = function fill2D(vArray, mode, tArray){
       var ctxMode;
       if(mode === "TRIANGLES"){
         ctxMode = curContext.TRIANGLES;
@@ -5042,20 +5080,29 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
 
-      curContext.useProgram( programObject2D );
-      uniformMatrix( programObject2D, "model", true,  model.array() );
-      uniformMatrix( programObject2D, "view", true, view.array() );
-      uniformMatrix( programObject2D, "projection", true, projection.array() );
+      curContext.useProgram( programObject3D );
+      uniformMatrix( programObject3D, "model", true,  model.array() );
+      uniformMatrix( programObject3D, "view", true, view.array() );
+      uniformMatrix( programObject3D, "projection", true, projection.array() );
 
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
-      uniformf( programObject2D, "color", fillStyle);
+      uniformf( programObject3D, "color", fillStyle);
 
-      vertexAttribPointer(programObject2D, "Vertex", 3, fillBuffer);
+//p.println(tArray);
+      uniformi(programObject3D, "usingTexture", true);
+      vertexAttribPointer(programObject3D, "Texture", 2, shapeTexVBO);
+      curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
+      
+    //  curContext.bindTexture(curContext.TEXTURE_2D, texture);
+      //curContext.texImage2D(curContext.TEXTURE_2D, 0, llimage, true);
+
+      vertexAttribPointer(programObject3D, "Vertex", 3, fillBuffer);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(vArray), curContext.STREAM_DRAW);
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
+      uniformi(programObject3D, "usingTexture", false);
     };
 
     p.endShape = function endShape(close){
@@ -5229,6 +5276,8 @@
 
               if(doFill){
                 fillVertArray = [];
+                texVertArray = [];
+                
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i][j]);
                 }
@@ -5241,7 +5290,17 @@
                 for(j = 0; j < 3; j++){
                   fillVertArray.push(vertArray[i+2][j]);
                 }
-                fill2D(fillVertArray, "TRIANGLE_STRIP");
+                
+                  texVertArray.push(vertArray[i+0][3]);
+                  texVertArray.push(vertArray[i+0][4]);
+                  texVertArray.push(vertArray[i+1][3]);
+                  texVertArray.push(vertArray[i+1][4]);
+                  texVertArray.push(vertArray[i+3][3]);
+                  texVertArray.push(vertArray[i+3][4]);
+                  texVertArray.push(vertArray[i+2][3]);
+                  texVertArray.push(vertArray[i+2][4]);
+
+                fill2D(fillVertArray, "TRIANGLE_STRIP",texVertArray);
               }
             }
           }
@@ -5451,6 +5510,16 @@
         vertArray.push(vert);
       }
     };
+    
+    p.texture = function(){
+      shapeTexture = arguments[0];
+      curContext.useProgram(programObject3D);
+      uniformi(programObject3D, "usingTexture", true);
+    };
+    
+    p.textureMode = function(){
+      //p.println('textureMode');
+    }
 
     p.curveVertex = function(x, y, z) {
       isCurve = true;
@@ -5967,6 +6036,7 @@
         canvas.height = this.height;
         canvas.width = this.width;
         var ctx = canvas.getContext('2d');
+        tinylogLite.log(ctx);
         var imgData = ctx.createImageData(this.width, this.height);
         // changed for 0.9
         ctx.putImageData(this.imageData, 0, 0);
@@ -6090,7 +6160,7 @@
         }
         return c;
       } else if (arguments.length === 4) {
-        // return a PImage of w and h from cood x,y of curContext
+        // return a PImage of w and h from coord x,y of curContext
         c = new PImage(w, h, p.RGB);
         c.fromImageData(curContext.getImageData(x, y, w, h));
         return c;
