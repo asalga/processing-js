@@ -1,0 +1,82 @@
+import processing.opengl.*;
+/* @pjs preload="crate.jpg" */
+
+float r = 0.0;
+float s = 1.0;
+PImage tex;
+
+void setup() 
+{
+  size(640, 360, OPENGL);
+  tex = loadImage("crate.jpg");
+  textureMode(NORMALIZED);
+  println(tex.get(55,66));
+}
+
+void drawBox(){
+  beginShape(QUADS);
+  texture(tex);
+
+  // -Z "back" face
+  vertex( 1, -1, -1, -s, -s);
+  vertex(-1, -1, -1, s, -s);
+  vertex(-1,  1, -1, s, s);
+  vertex( 1,  1, -1, -s, s);
+
+  vertex(-1, -1,  1, -s, -s);
+  vertex( 1, -1,  1, s, -s);
+  vertex( 1,  1,  1, s, s);
+  vertex(-1,  1,  1, -s, s);
+
+  // +Y "bottom" face
+  vertex(-1,  1,  1, -s, -s);
+  vertex( 1,  1,  1, s, -s);
+  vertex( 1,  1, -1, s, s);
+  vertex(-1,  1, -1, -s, s);
+
+  // -Y "top" face
+  vertex(-1, -1, -1, -s, -s);
+  vertex( 1, -1, -1, s, -s);
+  vertex( 1, -1,  1, s, s);
+  vertex(-1, -1,  1, -s, s);
+
+  // +X "right" face
+  vertex( 1, -1,  1, -s, -s);
+  vertex( 1, -1, -1, s, -s);
+  vertex( 1,  1, -1, s, s);
+  vertex( 1,  1,  1, -s, s);
+
+  // -X "left" face
+  vertex(-1, -1, -1, -s, -s);
+  vertex(-1, -1,  1, s, -s);
+  vertex(-1,  1,  1, s, s);
+  vertex(-1,  1, -1, -s, s);
+
+  endShape();
+}
+
+void draw() 
+{
+  background(0);
+
+  s = sin(frameCount/70)* 3.0;
+
+  pushMatrix();
+  translate(width/2.0, height/2.0, 250);
+
+  pushMatrix();
+  rotateY(r+= 0.02);
+  rotateZ(r);
+  scale(10 + sin(frameCount/10) );
+  drawBox();
+  popMatrix();
+
+  pushMatrix();
+  rotateY(r);
+  rotateZ(r);
+  scale(100 + 20*sin((frameCount+ 390)/10) );
+  drawBox();
+  popMatrix();
+
+  popMatrix();
+}

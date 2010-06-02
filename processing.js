@@ -174,9 +174,9 @@ var texture;    var llimage = new Image();
     p.BOTTOM   = 102; // Align text from the bottom, using the baseline
 
     // UV Texture coordinate modes
-    p.NORMAL    = 1;
-    p.NORMALIZE = 1;
-    p.IMAGE     = 2;
+    p.NORMAL     = 1;
+    p.NORMALIZED = 1;
+    p.IMAGE      = 2;
 
     // Text placement modes
     p.MODEL = 4;
