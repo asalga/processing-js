@@ -65,15 +65,19 @@ void draw()
   translate(width/2.0, height/2.0, 250);
 
   pushMatrix();
-  rotateY(r+= 0.02);
-  rotateZ(r);
+ // rotateY(r+= 0.02);
+ // rotateZ(r);
   scale(10 + sin(frameCount/10) );
   drawBox();
   popMatrix();
 
+
+fill(255,0,0);
+box(4,80,2);
+
   pushMatrix();
-  rotateY(r);
-  rotateZ(r);
+ // rotateY(r);
+  rotateZ(r+=0.02);
   scale(100 + 20*sin((frameCount+ 390)/10) );
   drawBox();
   popMatrix();

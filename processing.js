@@ -315,7 +315,8 @@ var texture;    var llimage = new Image();
         fillBuffer,
         pointBuffer,
         shapeTexVBO,
-        shapeTexture = null;
+        shapeTexture = null,
+        usingTexture = false;
 
     // User can only have MAX_LIGHTS lights
     var lightCount = 0;
@@ -3974,7 +3975,7 @@ llimage.src = "crate.jpg";
           // states for the lights.
           curContext.useProgram(programObject3D);
           
-          uniformi(programObject3D, "usingTexture", false);
+          uniformi(programObject3D, "usingTexture", usingTexture);
           p.lightFalloff(1, 0, 0);
           p.shininess(1);
           p.ambient(255, 255, 255);
@@ -5064,6 +5065,7 @@ llimage.src = "crate.jpg";
     };
 
     var fill2D = function fill2D(vArray, mode, tArray){
+    //p.println(tArray);
       var ctxMode;
       if(mode === "TRIANGLES"){
         ctxMode = curContext.TRIANGLES;
@@ -5088,12 +5090,13 @@ llimage.src = "crate.jpg";
       curContext.enable( curContext.POLYGON_OFFSET_FILL );
       curContext.polygonOffset( 1, 1 );
       uniformf( programObject3D, "color", fillStyle);
-
-//p.println(tArray);
-      uniformi(programObject3D, "usingTexture", true);
+//p.println(fillBuffer);
+//p.println(vArray);
+if(usingTexture){
+      uniformi(programObject3D, "usingTexture", usingTexture);
       vertexAttribPointer(programObject3D, "Texture", 2, shapeTexVBO);
       curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
-      
+}      
     //  curContext.bindTexture(curContext.TEXTURE_2D, texture);
       //curContext.texImage2D(curContext.TEXTURE_2D, 0, llimage, true);
 
@@ -5102,7 +5105,6 @@ llimage.src = "crate.jpg";
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
-      uniformi(programObject3D, "usingTexture", false);
     };
 
     p.endShape = function endShape(close){
@@ -5291,6 +5293,7 @@ llimage.src = "crate.jpg";
                   fillVertArray.push(vertArray[i+2][j]);
                 }
                 
+                if(usingTexture){
                   texVertArray.push(vertArray[i+0][3]);
                   texVertArray.push(vertArray[i+0][4]);
                   texVertArray.push(vertArray[i+1][3]);
@@ -5299,8 +5302,9 @@ llimage.src = "crate.jpg";
                   texVertArray.push(vertArray[i+3][4]);
                   texVertArray.push(vertArray[i+2][3]);
                   texVertArray.push(vertArray[i+2][4]);
+                }
 
-                fill2D(fillVertArray, "TRIANGLE_STRIP",texVertArray);
+                fill2D(fillVertArray, "TRIANGLE_STRIP", texVertArray);
               }
             }
           }
@@ -5362,6 +5366,9 @@ llimage.src = "crate.jpg";
               }
             }
           }
+          
+      usingTexture = false;
+      uniformi(programObject3D, "usingTexture", usingTexture);
         }
         // 2D context
         else{
@@ -5513,8 +5520,9 @@ llimage.src = "crate.jpg";
     
     p.texture = function(){
       shapeTexture = arguments[0];
+      usingTexture = true;
       curContext.useProgram(programObject3D);
-      uniformi(programObject3D, "usingTexture", true);
+      uniformi(programObject3D, "usingTexture", usingTexture);
     };
     
     p.textureMode = function(){
