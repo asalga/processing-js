@@ -316,7 +316,6 @@ var texture;    var llimage = new Image();
         pointBuffer,
         shapeTexVBO,
         shapeTexture = null,
-        textures = [],
         usingTexture = false;
 
     // User can only have MAX_LIGHTS lights
@@ -5519,37 +5518,46 @@ if(usingTexture){
       }
     };
     
-    p.texture = function(){
+    p.texture = function(pimage){
 
       shapeTexture = arguments[0];
       a = arguments[0];
+      
+      
 
       // First check to see if we have already created the texture
       // If it isn't there, we need to create it
-      var cvs = document.createElement('canvas');
-      cvs.width = a.width;
-      cvs.height = a.height;
-      var ctx = cvs.getContext('2d');
-      var textureImage = ctx.createImageData(cvs.width, cvs.height);
+      
+      if(!pimage.__texture)
+      {
+        var texture = curContext.createTexture();
+        pimage.__texture = texture;
+        
+        var cvs = document.createElement('canvas');
+        cvs.width = a.width;
+        cvs.height = a.height;
+        var ctx = cvs.getContext('2d');
+        var textureImage = ctx.createImageData(cvs.width, cvs.height);
 
-      var r = a.toImageData();
+        var r = a.toImageData();
 
-      for (var i = 0; i < cvs.width; i += 1) {
-        for (var j = 0; j < cvs.height; j += 1) {
-          var index = (j * cvs.width + i) * 4;
-          textureImage.data[index + 0] = r.data[index + 0];
-          textureImage.data[index + 1] = r.data[index + 1];
-          textureImage.data[index + 2] = r.data[index + 2];
-          textureImage.data[index + 3] = 255;
+        for (var i = 0; i < cvs.width; i += 1) {
+          for (var j = 0; j < cvs.height; j += 1) {
+            var index = (j * cvs.width + i) * 4;
+            textureImage.data[index + 0] = r.data[index + 0];
+            textureImage.data[index + 1] = r.data[index + 1];
+            textureImage.data[index + 2] = r.data[index + 2];
+            textureImage.data[index + 3] = 255;
+          }
         }
+        ctx.putImageData(textureImage, 0, 0);
+        pimage.__cvs = cvs;
       }
-      ctx.putImageData(textureImage, 0, 0);
 
-      var texture = curContext.createTexture();
-      curContext.bindTexture(curContext.TEXTURE_2D, texture);
+      curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
-      curContext.texImage2D(curContext.TEXTURE_2D, 0, cvs, true);
+      curContext.texImage2D(curContext.TEXTURE_2D, 0, pimage.__cvs, true);
             
       usingTexture = true;
       curContext.useProgram(programObject3D);
