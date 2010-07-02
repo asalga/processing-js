@@ -4572,6 +4572,7 @@
           // Set defaults
           curContext.viewport(0, 0, curElement.width, curElement.height);
           curContext.enable(curContext.DEPTH_TEST);
+          curContext.enable(curContext.TEXTURE_2D);
           curContext.enable(curContext.BLEND);
           curContext.blendFunc(curContext.SRC_ALPHA, curContext.ONE_MINUS_SRC_ALPHA);
           refreshBackground(); // sets clearColor default;
@@ -5822,6 +5823,7 @@
         }
 
         uniformi(programObject3D, "usingTexture", usingTexture);
+        uniformi(programObject3D, "Sampler", 0);
         vertexAttribPointer(programObject3D, "aTexture", 2, shapeTexVBO);
         curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
       }
@@ -6525,8 +6527,6 @@
       curTexture.width = pimage.width;
       curTexture.height = pimage.height;
       usingTexture = true;
-      curContext.useProgram(programObject3D);
-      uniformi(programObject3D, "usingTexture", usingTexture);
     };
 
     p.textureMode = function(mode){
@@ -8797,7 +8797,10 @@
       var aspect = textcanvas.width/textcanvas.height;
       curContext = oldContext;
 
-      curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false, true);
+      var tex = curContext.createTexture();
+      curContext.bindTexture(curContext.TEXTURE_2D, tex);
+
+      curContext.texImage2D(curContext.TEXTURE_2D, 0, textcanvas, false);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
       curContext.generateMipmap(curContext.TEXTURE_2D);
@@ -8822,7 +8825,7 @@
       curContext.useProgram(programObject2D);
       vertexAttribPointer(programObject2D, "Vertex", 3, textBuffer);
       vertexAttribPointer(programObject2D, "aTextureCoord", 2, textureBuffer);
-      uniformi(programObject2D, "uSampler", [0]);
+      uniformi(programObject2D, "uSampler", 0);
       uniformi(programObject2D, "picktype", 1);
       uniformMatrix( programObject2D, "model", true,  model.array() );
       uniformMatrix( programObject2D, "view", true, view.array() );
@@ -8830,6 +8833,7 @@
       uniformf(programObject2D, "color", fillStyle);
       curContext.bindBuffer(curContext.ELEMENT_ARRAY_BUFFER, indexBuffer);
       curContext.drawElements(curContext.TRIANGLES, 6, curContext.UNSIGNED_SHORT, 0);
+      curContext.deleteTexture(tex);
     }
 
     function text$4(str, x, y, z) {
