@@ -4725,6 +4725,10 @@
           var ctx = c.getContext("2d");          
           var obj = ctx.createImageData(this.width, this.height);
           var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
+          if(!uBuff){
+            uBuff = new WebGLUnsignedByteArray(this.width * this.height * 4);
+            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
+          }
           for(var i =0; i < uBuff.length; i++){
             obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
           }
