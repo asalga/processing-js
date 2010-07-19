@@ -15,7 +15,7 @@
     <p>To start the tests click Start.  Each test is run in order (downloaded from the server).  The first canvas is the reference image, the second is a live sketch that has just been executed, the third is a visual diff.  The diff is calculated with a tolerance value (e.g., ~5%).  If the third canvas is green, the test passed.  If it is white with red pixels (or all red), it failed, and the red shows where the pixels differ. The calibrating must fail on some tests.  You can generate ref tests <a href="../../tools/processing-helper.html">here</a>.</p>
 
     <h3>Settings</h3>
-    <div>Run Tests: <select id="test-type" onchange="updateSelectedTests();"><option value="2D,3D" selected>2D and 3D</option><option value="2D">2D Only</option><option value="3D">3D Only</option><option value="Calibration">Calibration</option></select>&nbsp;Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">&nbsp;Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">&nbsp;<input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
+    <div>Run Tests: <select id="test-type" onchange="updateSelectedTests();"><option value="2D,3D" selected>2D and 3D</option><option value="2D">2D Only</option><option value="3D">3D Only</option><option value="endShape2D">endShape2D</option><option value="endShape3D">endShape3D</option><option value="Calibration">Calibration</option></select>&nbsp;Blur Radius: <input type="text" size="2" id="sigma" onchange="updateTolerance();">&nbsp;Epsilon (0-1.0): <input type="text" size="4" id="epsilon" onchange="updateTolerance();">&nbsp;<input onclick="runTests(selectedTests);" type="button" value="Start"></input><span id="testCount"></span></div>
 
     <h3>Results</h3>
     <div id="results" style="margin: 5px; padding-top: 10px;"></div>
@@ -110,7 +110,7 @@
         req.open('GET', file, false);
         req.overrideMimeType('text/plain; charset=x-user-defined');
         req.send(null);
-        if (req.status != 200) {
+        if (req.status != 200 && req.status !=0) {
           return null;
         } else {
           return req.responseText;
@@ -178,33 +178,18 @@
                  (failMessage ? " -- FAILED (" + failMessage + ")" : " -- PASSED");
         };
 
-        var getPixels = function(aCanvas, isWebGL) {
+        var getPixels = function(aCanvas, isWebGL) {        
           try {
             if (isWebGL) {
-              // Safari returns a regular JS object for readPixels.
-              // Minefield returns a WebGLUnsignedByteArray.
-              // Chromium raises an exception because of an XHR bug.
-              // So we need to handle each case differently.
-
-              var browserString = navigator.userAgent;
-              var regex = /Safari/i;
-              var isSafari = browserString.match(regex);
-
               var context = aCanvas.getContext("experimental-webgl");
+              
+              // try deprecated way first (keeps code cleaner)
+              var data = context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE);
 
-              // Safari returns null if format RGB is requested
-              var unsignedBuffer = context.readPixels(0,0,aCanvas.width,aCanvas.height,context.RGBA,context.UNSIGNED_BYTE);
-              var data;
-
-              if (isSafari) {
-                // extract the data from the WebGLUnsignedByteArray and place
-                // it in a JS array for easy manipulation.
-                data = new Array(unsignedBuffer.length);
-                for(var i = 0, ubl = unsignedBuffer.length; i < ubl; i++) {
-                  data[i] = unsignedBuffer[i];
-                }
-              } else {
-                data = unsignedBuffer.data;
+              // if that failed, try new way              
+              if(!data){
+                data = new WebGLUnsignedByteArray(aCanvas.width * aCanvas.height * 4);
+                context.readPixels(0, 0, aCanvas.width, aCanvas.height, context.RGBA, context.UNSIGNED_BYTE, data);
               }
               return data;
             } else {
@@ -251,7 +236,7 @@
             var startTime = (new Date).getTime(), totalTime = 0;
             var p;
             try {
-              p = Processing(current, test.code);
+              p = new Processing(current, test.code);
             } catch (e) {
               title.innerHTML = titleText(i+1, tl, 0, test.name, "Processing failed: " + e.toString());
               failedCount++;
