@@ -891,7 +891,8 @@
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
       "  if( lightCount == 0 ) {" +
-      "    gl_FrontColor = col + vec4(mat_specular,1.0);" +
+      //!!!
+      "    gl_FrontColor = col + vec4(mat_specular,0.0);" +
       "  }" +
       "  else {" +
       "    for( int i = 0; i < lightCount; i++ ) {" +
@@ -914,17 +915,20 @@
       "      vec3(col) * finalAmbient +" +
       "      vec3(col) * finalDiffuse +" +
       "      vec3(col) * finalSpecular," +
-      "      col[3] );" +
+      "      0.0);" +
       "   }" +
       "   else{" +
       "     gl_FrontColor = vec4( " +
       "       mat_emissive + " +
+      
+      //// finalAmbient
       "       (vec3(col) * mat_ambient * finalAmbient) + " +
       "       (vec3(col) * finalDiffuse) + " +
       "       (mat_specular * finalSpecular), " +
-      "       col[3] );" +
+      "       0.0 );" +
       "    }" +
       "  }" +
+
       "  vTexture.xy = aTexture.xy;" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
       "}";
@@ -940,7 +944,7 @@
       "    gl_FragColor =  vec4(texture2D(sampler, vTexture.xy));" +
       "  }"+
       "  else{" +
-      "    gl_FragColor = vec4(gl_Color);" +
+      "    gl_FragColor = vec4(gl_Color.r, gl_Color.g, gl_Color.b, gl_Color.a);" +
       "  }" +
       "}";
 
@@ -6516,6 +6520,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+          normalMatrix.transpose();
 
           uniformMatrix(programObject3D, "normalTransform", false, normalMatrix.array());
 
@@ -6526,8 +6531,19 @@
           // array. No idea why, so I'm passing in dummy data.
           vertexAttribPointer(programObject3D, "aColor", 3, boxNormBuffer);
 
+          if(fillStyle[3] < 1){
+            //curContext.disable(curContext.DEPTH_TEST);
+            curContext.enable(curContext.BLEND);
+            curContext.depthMask(false);
+          }
+          
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
+ 
+          if(fillStyle[3] < 1){
+            curContext.disable(curContext.BLEND);
+            curContext.depthMask(true);
+          }
         }
 
         if (lineWidth > 0 && doStroke) {
@@ -6836,6 +6852,7 @@
         }
         // Otherwise three values were provided (r,g,b)
         else {
+        //!!!
           uniformf(programObject3D, "mat_ambient", [a[0] / 255, a[1] / 255, a[2] / 255]);
         }
       }
@@ -8298,18 +8315,24 @@
         var model = new PMatrix3D();
         model.translate(x, y, 0);
         model.scale(width, height, 1);
+        model.transpose();
 
         // viewing transformation needs to have Y flipped
         // becuase that's what Processing does.
         var view = new PMatrix3D();
         view.scale(1, -1, 1);
         view.apply(modelView.array());
+        view.transpose();
+        
+        var proj = new PMatrix3D();
+        proj.set(projection);
+        proj.transpose();
 
         if (lineWidth > 0 && doStroke) {
           curContext.useProgram(programObject2D);
-          uniformMatrix(programObject2D, "model", true, model.array());
-          uniformMatrix(programObject2D, "view", true, view.array());
-          uniformMatrix(programObject2D, "projection", true, projection.array());
+          uniformMatrix(programObject2D, "model", false, model.array());
+          uniformMatrix(programObject2D, "view", false, view.array());
+          uniformMatrix(programObject2D, "projection", false, proj.array());
           
           uniformf(programObject2D, "color", strokeStyle);
           uniformi(programObject2D, "picktype", 0);
@@ -8318,14 +8341,24 @@
           disableVertexAttribPointer(programObject2D, "aTextureCoord");
           
           curContext.lineWidth(lineWidth);
+          
+         if(fillStyle[3] < 1){           
+            curContext.enable(curContext.BLEND);
+            curContext.depthMask(false);
+          }
           curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
+         if(fillStyle[3] < 1){           
+            curContext.disable(curContext.BLEND);
+            curContext.depthMask(true);
+          }
+
         }
 
         if (doFill) {
           curContext.useProgram(programObject3D);
-          uniformMatrix(programObject3D, "model", true, model.array());
-          uniformMatrix(programObject3D, "view", true, view.array());
-          uniformMatrix(programObject3D, "projection", true, projection.array());
+          uniformMatrix(programObject3D, "model", false, model.array());
+          uniformMatrix(programObject3D, "view", false, view.array());
+          uniformMatrix(programObject3D, "projection", false, proj.array());
 
           // fix stitching problems. (lines get occluded by triangles
           // since they share the same depth values). This is not entirely
@@ -8353,7 +8386,19 @@
           vertexAttribPointer(programObject3D, "Vertex", 3, rectBuffer);
           vertexAttribPointer(programObject3D, "Normal", 3, rectNormBuffer);
 
+          if(fillStyle[3] < 1){
+            //curContext.disable(curContext.DEPTH_TEST);
+            curContext.enable(curContext.BLEND);
+            curContext.depthMask(false);
+          }
           curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
+
+          if(fillStyle[3] < 1){
+            //curContext.disable(curContext.DEPTH_TEST);
+            curContext.disable(curContext.BLEND);
+            curContext.depthMask(true);
+          }
+
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
         }
       }

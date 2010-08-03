@@ -1,0 +1,68 @@
+import processing.opengl.*;
+
+void setup() {
+  size(100, 100, P3D);
+  background(33, 66, 99);
+  translate(width/2, height/2, 0);
+}
+
+void draw(){
+  
+  background(33,66,99);
+
+  // opaque first behind
+  // transparent second front
+  pushMatrix();
+  translate(width/4, height/4, 0);
+  fill(255);
+  box(20);
+  popMatrix();
+  
+  pushMatrix();
+  translate(width/4, height/4, 30);
+  fill(255, 0, 0, 128);
+  box(20);
+  popMatrix();
+  
+  // transparent first, behind
+  // opaque second in front
+  pushMatrix();
+  translate(width/1.5, height/4, 0);
+  fill(0, 255, 0, 128);
+  box(20);
+  popMatrix();
+  
+  pushMatrix();
+  translate(width/1.5, height/4, 30);
+  fill(255);
+  box(20);
+  popMatrix();
+
+  // opaque first in front
+  // transparent second, behind  
+  pushMatrix();
+  translate(width/4, height/1.5, 30);
+  fill(255);
+  box(20);
+  popMatrix();
+  
+  pushMatrix();
+  translate(width/4, height/1.5, 0);
+  fill(0, 0, 256, 128);
+  box(20);
+  popMatrix();
+
+  // transparent first, behind
+  // opaque second in front
+  pushMatrix();
+  translate(width/1.5, height/1.5, 30);
+  fill(255, 255, 0, 128);
+  box(20);
+  popMatrix();
+  
+  pushMatrix();
+  translate(width/1.5, height/1.5, 0);
+  fill(255);
+  box(20);
+  popMatrix();
+}
