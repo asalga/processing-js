@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for bug 555</h2>
+    
+    <p>
+    Test for drawing transparent objects which use vertex()<br />
+    Colors are slightly off, which is known.
+    </p>
+    <p>
+      <canvas datasrc="test.pjs"></canvas><img src="p5_result.png" style="margin: 10px 0;"/>
+    </p>
+    
+    <pre>
+<b>// Test </b>
+float xmag, ymag = 0;
+float newXmag, newYmag = 0; 
+ 
+void setup() 
+{ 
+  size(640, 360, P3D); 
+  noStroke(); 
+  colorMode(RGB, 1); 
+} 
+ 
+void draw() 
+{ 
+  background(0.5);
+  
+  pushMatrix(); 
+ 
+  translate(width/2, height/2, -30); 
+  
+  newXmag = mouseX/float(width) * TWO_PI;
+  newYmag = mouseY/float(height) * TWO_PI;
+  
+  float diff = xmag-newXmag;
+  if (abs(diff) >  0.01) { xmag -= diff/4.0; }
+  
+  diff = ymag-newYmag;
+  if (abs(diff) >  0.01) { ymag -= diff/4.0; }
+  
+  rotateX(-ymag); 
+  rotateY(-xmag); 
+  
+  scale(90);
+  beginShape(QUADS);
+
+  fill(0, 1, 1,0.5); vertex(-1,  1,  1);
+  fill(1, 1, 1,0.5); vertex( 1,  1,  1);
+  fill(1, 0, 1,0.5); vertex( 1, -1,  1);
+  fill(0, 0, 1,0.5); vertex(-1, -1,  1);
+
+  fill(1, 1, 1,0.5); vertex( 1,  1,  1);
+  fill(1, 1, 0,0.5); vertex( 1,  1, -1);
+  fill(1, 0, 0,0.5); vertex( 1, -1, -1);
+  fill(1, 0, 1,0.5); vertex( 1, -1,  1);
+
+  fill(1, 1, 0,0.5); vertex( 1,  1, -1);
+  fill(0, 1, 0,0.5); vertex(-1,  1, -1);
+  fill(0, 0, 0,0.5); vertex(-1, -1, -1);
+  fill(1, 0, 0,0.5); vertex( 1, -1, -1);
+
+  fill(0, 1, 0,0.5); vertex(-1,  1, -1);
+  fill(0, 1, 1,0.5); vertex(-1,  1,  1);
+  fill(0, 0, 1,0.5); vertex(-1, -1,  1);
+  fill(0, 0, 0,0.5); vertex(-1, -1, -1);
+
+  fill(0, 1, 0,0.5); vertex(-1,  1, -1);
+  fill(1, 1, 0,0.5); vertex( 1,  1, -1);
+  fill(1, 1, 1,0.5); vertex( 1,  1,  1);
+  fill(0, 1, 1,0.5); vertex(-1,  1,  1);
+
+  fill(0, 0, 0,0.5); vertex(-1, -1, -1);
+  fill(1, 0, 0,0.5); vertex( 1, -1, -1);
+  fill(1, 0, 1,0.5); vertex( 1, -1,  1);
+  fill(0, 0, 1,0.5); vertex(-1, -1,  1);
+
+  endShape();
+  
+  popMatrix(); 
+} 
+</pre>
+
+  </body>
+</html>

@@ -891,7 +891,6 @@
       // If there were no lights this draw call, just use the
       // assigned fill color of the shape and the specular value
       "  if( lightCount == 0 ) {" +
-      //!!!
       "    gl_FrontColor = col + vec4(mat_specular,0.0);" +
       "  }" +
       "  else {" +
@@ -910,25 +909,23 @@
       "      }" +
       "    }" +
 
-      "   if( usingMat == false ) {" +
-      "    gl_FrontColor = vec4(  " +
-      "      vec3(col) * finalAmbient +" +
-      "      vec3(col) * finalDiffuse +" +
-      "      vec3(col) * finalSpecular," +
-      "      0.0);" +
-      "   }" +
-      "   else{" +
-      "     gl_FrontColor = vec4( " +
-      "       mat_emissive + " +
-      
-      //// finalAmbient
-      "       (vec3(col) * mat_ambient * finalAmbient) + " +
-      "       (vec3(col) * finalDiffuse) + " +
-      "       (mat_specular * finalSpecular), " +
-      "       0.0 );" +
+      "    if( usingMat == false ) {" +
+      "      gl_FrontColor = vec4(  " +
+      "        vec3(col) * finalAmbient +" +
+      "        vec3(col) * finalDiffuse +" +
+      "        vec3(col) * finalSpecular," +
+      "        0.0);" +
+      "    }" +
+      "    else{" +
+      "      gl_FrontColor = vec4( " +
+      "        mat_emissive + " +
+      "        (vec3(col) * mat_ambient * finalAmbient ) + " +
+      "        (vec3(col) * finalDiffuse) + " +
+      "        (mat_specular * finalSpecular), " +
+      "        col[3]" +
+      "      );"+
       "    }" +
       "  }" +
-
       "  vTexture.xy = aTexture.xy;" +
       "  gl_Position = projection * view * model * vec4( Vertex, 1.0 );" +
       "}";
@@ -944,7 +941,7 @@
       "    gl_FragColor =  vec4(texture2D(sampler, vTexture.xy));" +
       "  }"+
       "  else{" +
-      "    gl_FragColor = vec4(gl_Color.r, gl_Color.g, gl_Color.b, gl_Color.a);" +
+      "    gl_FragColor = gl_Color;" +
       "  }" +
       "}";
 
@@ -6532,7 +6529,6 @@
           vertexAttribPointer(programObject3D, "aColor", 3, boxNormBuffer);
 
           if(fillStyle[3] < 1){
-            //curContext.disable(curContext.DEPTH_TEST);
             curContext.enable(curContext.BLEND);
             curContext.depthMask(false);
           }
@@ -6730,6 +6726,7 @@
           var normalMatrix = new PMatrix3D();
           normalMatrix.set(v);
           normalMatrix.invert();
+          normalMatrix.transpose();
 
           curContext.useProgram(programObject3D);
           disableVertexAttribPointer(programObject3D, "aTexture");
@@ -6755,8 +6752,22 @@
 
           uniformf(programObject3D, "color", fillStyle);
 
+         // curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
+         // curContext.disable(curContext.POLYGON_OFFSET_FILL);
+          
+          
+           if(fillStyle[3] < 1){
+            curContext.enable(curContext.BLEND);
+            curContext.depthMask(false);
+          }
+          
           curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
+ 
+          if(fillStyle[3] < 1){
+            curContext.disable(curContext.BLEND);
+            curContext.depthMask(true);
+          }
         }
 
         if (lineWidth > 0 && doStroke) {
@@ -7316,8 +7327,12 @@
         curContext.bufferData(curContext.ARRAY_BUFFER, newWebGLArray(tArray), curContext.STREAM_DRAW);
       }
 
+      curContext.enable(curContext.BLEND);
+
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
       curContext.disable( curContext.POLYGON_OFFSET_FILL );
+      
+      curContext.disable(curContext.BLEND);
     };
 
     p.endShape = function endShape(close){
@@ -8342,16 +8357,16 @@
           
           curContext.lineWidth(lineWidth);
           
-         if(fillStyle[3] < 1){           
+          if(fillStyle[3] < 1){           
             curContext.enable(curContext.BLEND);
             curContext.depthMask(false);
           }
           curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
-         if(fillStyle[3] < 1){           
+          
+          if(fillStyle[3] < 1){           
             curContext.disable(curContext.BLEND);
             curContext.depthMask(true);
           }
-
         }
 
         if (doFill) {
@@ -8387,14 +8402,12 @@
           vertexAttribPointer(programObject3D, "Normal", 3, rectNormBuffer);
 
           if(fillStyle[3] < 1){
-            //curContext.disable(curContext.DEPTH_TEST);
             curContext.enable(curContext.BLEND);
             curContext.depthMask(false);
           }
           curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
 
           if(fillStyle[3] < 1){
-            //curContext.disable(curContext.DEPTH_TEST);
             curContext.disable(curContext.BLEND);
             curContext.depthMask(true);
           }

@@ -1,27 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="../../../../processing.js"></script>
+    <link rel="stylesheet" href="../../../style.css" />
+  </head> 
+
+  <body> 
+    <h1><a href="http://asalga.wordpress.com">Andor Salga</a></h1>
+    <h2>Test for bug 555</h2>
+    
+    <p>
+    Test for drawing opaque spheres behind and in front of transparent spheres.<br />
+    Colors are slightly off, which is known.
+    </p>
+    <p>
+      <canvas datasrc="test.pjs"> </canvas> <img src="p5_result.png" style="margin: 10px 0;"/>
+    </p>
+    
+    <pre>
+<b>// Test </b>
 import processing.opengl.*;
 
 void setup() {
   size(100, 100, P3D);
   background(33, 66, 99);
-  translate(width/2, height/2, 0);
-}
-
-void draw(){
-  
-  background(33,66,99);
+  noStroke();
 
   // opaque first behind
   // transparent second front
   pushMatrix();
   translate(width/4, height/4, 0);
   fill(255);
-  box(20);
+  sphere(20);
   popMatrix();
   
   pushMatrix();
   translate(width/4, height/4, 30);
   fill(255, 0, 0, 128);
-  box(20);
+  sphere(20);
   popMatrix();
   
   // transparent first, behind
@@ -29,13 +45,13 @@ void draw(){
   pushMatrix();
   translate(width/1.5, height/4, 0);
   fill(0, 255, 0, 128);
-  box(20);
+  sphere(20);
   popMatrix();
   
   pushMatrix();
   translate(width/1.5, height/4, 30);
   fill(255);
-  box(20);
+  sphere(20);
   popMatrix();
 
   // opaque first in front
@@ -43,13 +59,13 @@ void draw(){
   pushMatrix();
   translate(width/4, height/1.5, 30);
   fill(255);
-  box(20);
+  sphere(20);
   popMatrix();
   
   pushMatrix();
   translate(width/4, height/1.5, 0);
   fill(0, 0, 256, 128);
-  box(20);
+  sphere(20);
   popMatrix();
 
   // transparent first, behind
@@ -57,12 +73,16 @@ void draw(){
   pushMatrix();
   translate(width/1.5, height/1.5, 30);
   fill(255, 255, 0, 128);
-  box(20);
+  sphere(20);
   popMatrix();
   
   pushMatrix();
   translate(width/1.5, height/1.5, 0);
   fill(255);
-  box(20);
+  sphere(20);
   popMatrix();
 }
+</pre>
+
+  </body>
+</html>
