@@ -1059,6 +1059,7 @@
         strokeColorBuffer,
         pointBuffer,
         shapeTexVBO,
+        canTex,   // texture for createGraphics
         curTexture = {width:0,height:0},
         curTextureMode = PConstants.IMAGE,
         usingTexture = false,
@@ -6114,6 +6115,7 @@
           }
           curContext = curElement.getContext("experimental-webgl");
           p.use3DContext = true;
+          canTex = curContext.createTexture(); // texture
         } catch(e_size) {
           Processing.debug(e_size);
         }
@@ -6217,7 +6219,7 @@
           p.perspective();
           forwardTransform = modelView;
           reverseTransform = modelViewInv;
-
+          
           userMatrixStack = new PMatrixStack();
           // used by both curve and bezier, so just init here
           curveBasisMatrix = new PMatrix3D();
@@ -6274,11 +6276,8 @@
           var c = document.createElement("canvas");
           var ctx = c.getContext("2d");          
           var obj = ctx.createImageData(this.width, this.height);
-          var uBuff = curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE);
-          if(!uBuff){
-            uBuff = new Uint8Array(this.width * this.height * 4);
-            curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
-          }
+          var uBuff = new Uint8Array(this.width * this.height * 4);
+          curContext.readPixels(0,0,this.width,this.height,curContext.RGBA,curContext.UNSIGNED_BYTE, uBuff);
           for(var i =0; i < uBuff.length; i++){
             obj.data[i] = uBuff[(this.height - 1 - Math.floor(i / 4 / this.width)) * this.width * 4 + (i % (this.width * 4))];
           }
@@ -8096,7 +8095,15 @@
     };
     
     p.texture = function(pimage){
-      if (!pimage.__texture) {
+      if(pimage.localName === "canvas"){
+        curContext.bindTexture(curContext.TEXTURE_2D, canTex);
+        executeTexImage2D(pimage);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
+        curContext.generateMipmap(curContext.TEXTURE_2D);
+      }
+      else if(!pimage.__texture)
+      {
         var texture = curContext.createTexture();
         pimage.__texture = texture;
 
@@ -8107,19 +8114,20 @@
         var textureImage = ctx.createImageData(cvs.width, cvs.height);
 
         var imgData = pimage.toImageData();
-
+        
         for (var i = 0; i < cvs.width; i += 1) {
           for (var j = 0; j < cvs.height; j += 1) {
-            var index = (j * cvs.width + i) * 4;
+          var index = (j * cvs.width + i) * 4;
             textureImage.data[index + 0] = imgData.data[index + 0];
             textureImage.data[index + 1] = imgData.data[index + 1];
             textureImage.data[index + 2] = imgData.data[index + 2];
             textureImage.data[index + 3] = 255;
           }
         }
+        
         ctx.putImageData(textureImage, 0, 0);
         pimage.__cvs = cvs;
-
+        
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
@@ -9245,6 +9253,17 @@
     // Draws an image to the Canvas
     p.image = function image(img, x, y, w, h) {
       if (img.width > 0) {
+        var wid = w || img.width;
+        var hgt = h || img.height;
+        if(p.use3DContext){
+          p.beginShape(p.QUADS);
+          p.texture(img.externals.canvas);
+          p.vertex(x, y, 0, 0, 0);
+          p.vertex(x, y+hgt, 0, 0, hgt);
+          p.vertex(x+wid, y+hgt, 0, wid, hgt);
+          p.vertex(x+wid, y, 0, wid, 0);
+          p.endShape();
+        } else {
         var bounds = imageModeConvert(x || 0, y || 0, w || img.width, h || img.height, arguments.length < 4);
         var obj = img.toImageData();
 
@@ -9266,9 +9285,11 @@
 
         // draw the image
         curTint(obj);
-
-        curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height,
-          bounds.x, bounds.y, bounds.w, bounds.h);
+        
+        
+          curContext.drawImage(getCanvasData(obj).canvas, 0, 0, img.width, img.height,
+            bounds.x, bounds.y, bounds.w, bounds.h);
+        }
       }
     };
 
@@ -10230,7 +10251,22 @@
       }
     };
 
-    p.createFont = function(name, size) {};
+    p.createFont = function(name, size, smooth, charset) {
+      if (arguments.length === 2) {
+        p.textSize(size);
+        return p.loadFont(name);
+      } else if (arguments.length === 3) {
+        // smooth: true for an antialiased font, false for aliased
+        p.textSize(size);
+        return p.loadFont(name);
+      } else if (arguments.length === 4) {
+        // charset: char array containing characters to be generated
+        p.textSize(size);
+        return p.loadFont(name);
+      } else {
+        throw("incorrent number of parameters for createFont");
+      }
+    };
 
     // Sets a 'current font' for use
     p.textFont = function textFont(name, size) {
@@ -11315,8 +11351,8 @@
       }
 
       var executeSketch = function(processing) {
-        // Don't start until all specified images in the cache are preloaded
-        if (!curSketch.imageCache.pending) {
+        // Don't start until all specified images and fonts in the cache are preloaded
+        if (!curSketch.imageCache.pending && curSketch.fonts.pending()) {
           curSketch.attach(processing, PConstants);
 
           // Run void setup()
@@ -12515,28 +12551,47 @@
     // Parse out @pjs directive, if any.
     var dm = new RegExp(/\/\*\s*@pjs\s+((?:[^\*]|\*+[^\*\/])*)\*\//g).exec(aCode);
     if (dm && dm.length === 2) {
-      var directives = dm.splice(1, 2)[0].replace('\n', '').replace('\r', '').split(';');
+      // masks contents of a JSON to be replaced later
+      // to protect the contents from further parsing
+      var jsonItems = [],
+          directives = dm.splice(1, 2)[0].replace(/\{([\s\S]*?)\}/g, (function() {
+            return function(all, item) {
+              jsonItems.push(item);
+              return "{" + (jsonItems.length-1) + "}";
+            };
+          }())).replace('\n', '').replace('\r', '').split(";");
 
       // We'll L/RTrim, and also remove any surrounding double quotes (e.g., just take string contents)
       var clean = function(s) {
-        return s.replace(/^\s*\"?/, '').replace(/\"?\s*$/, '');
+        return s.replace(/^\s*["']?/, '').replace(/["']?\s*$/, '');
       };
 
       for (var i = 0, dl = directives.length; i < dl; i++) {
         var pair = directives[i].split('=');
         if (pair && pair.length === 2) {
-          var key = clean(pair[0]);
-          var value = clean(pair[1]);
+          var key = clean(pair[0]),
+              value = clean(pair[1]),
+              list = [];
           // A few directives require work beyond storying key/value pairings
           if (key === "preload") {
-            var list = value.split(',');
+            list = value.split(',');
             // All pre-loaded images will get put in imageCache, keyed on filename
-            for (var j = 0, ll = list.length; j < ll; j++) {
+            for (var j = 0, jl = list.length; j < jl; j++) {
               var imageName = clean(list[j]);
               sketch.imageCache.add(imageName);
             }
           } else if (key === "transparent") {
             sketch.options.isTransparent = value === "true";
+          // fonts can be declared as a string containing a url,
+          // or a JSON object, containing a font name, and a url
+          } else if (key === "font") {
+            list = value.split(",");
+            for (var x = 0, xl = list.length; x < xl; x++) {
+              var fontName = clean(list[x]),
+                  index = /^\{(\d*?)\}$/.exec(fontName);
+              // if index is not null, send JSON, otherwise, send string
+              sketch.fonts.add(index ? JSON.parse("{" + jsonItems[index[1]] + "}") : fontName);
+            }
           } else if (key === "crisp") {
             sketch.options.crispLines = value === "true";
           } else if (key === "pauseOnBlur") {
@@ -12616,6 +12671,81 @@
         this.pending++;
         this.images[href] = img;
         img.src = href;
+      }
+    };
+    this.fonts = {
+      // template element used to compare font sizes
+      template: (function() {
+        var element = document.createElement('p');
+        element.style.fontFamily = "serif";
+        element.style.fontSize = "72px";
+        element.style.visibility = "hidden";
+        element.innerHTML = "abcmmmmmmmmmmlll";
+        document.getElementsByTagName("body")[0].appendChild(element);
+        return element;
+      }()),
+      // number of attempts to load a font
+      attempt: 0,
+      // returns true is fonts are all loaded,
+      // true if number of attempts hits the limit,
+      // false otherwise
+      pending: function() {
+        var r = true;
+        for (var i = 0; i < this.fontList.length; i++) {
+          // compares size of text in pixels, if equal, custom font is not yet loaded
+          if (this.fontList[i].offsetWidth === this.template.offsetWidth && this.fontList[i].offsetHeight === this.template.offsetHeight) {
+            r = false;
+            this.attempt++;
+          } else {
+            // removes loaded font from the array and dom, so we don't compare it again
+            document.getElementsByTagName("body")[0].removeChild(this.fontList[i]);
+            this.fontList.splice(i--, 1);
+            this.attempt = 0;
+          }
+        }
+        // give up loading after max attempts have been reached
+        if (this.attempt >= 30) {
+          r = true;
+          // remove remaining elements from the dom and array
+          for (var j = 0; j < this.fontList.length; j++) {
+            document.getElementsByTagName("body")[0].removeChild(this.fontList[j]);
+            this.fontList.splice(j--, 1);
+          }
+        }
+        // Remove the template element from the dom once done comparing
+        if (r) {
+          document.getElementsByTagName("body")[0].removeChild(this.template);
+        }
+        return r;
+      },
+      // fontList contains elements to compare font sizes against a template
+      fontList: [],
+      // string containing a css @font-face list of custom fonts
+      fontFamily: "",
+      // style element to hold the @font-face string
+      style: document.createElement('style'),
+      // adds a font to the font cache
+      // creates an element using the font, to start loading the font,
+      // and compare against a default font to see if the custom font is loaded
+      add: function(fontSrc) {
+        // fontSrc can be a string or a JSON object
+        // string contains a url to a font
+        // JSON object would contain a name and a url
+        // acceptable fonts are .ttf, .otf, and a data uri
+        var fontName = (typeof fontSrc === 'object' ? fontSrc.fontFace : fontSrc),
+            fontUrl = (typeof fontSrc === 'object' ? fontSrc.url : fontSrc);
+        // creating the @font-face style
+        this.fontFamily += "@font-face{\n  font-family: '" + fontName + "';\n  src:  url('" + fontUrl + "');\n}\n";
+        this.style.innerHTML = this.fontFamily;
+        document.getElementsByTagName("head")[0].appendChild(this.style);
+        // creating the element to load, and compare the new font
+        var preLoader = document.createElement('p');
+        preLoader.style.fontFamily = "'" + fontName + "', serif";
+        preLoader.style.fontSize = "72px";
+        preLoader.style.visibility = "hidden";
+        preLoader.innerHTML = "abcmmmmmmmmmmlll";
+        document.getElementsByTagName("body")[0].appendChild(preLoader);
+        this.fontList.push(preLoader);
       }
     };
     this.sourceCode = undefined;
