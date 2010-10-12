@@ -98,5 +98,7 @@ void draw()
     scale(20);
     drawBox(crate3);
   popMatrix();
-document.getElementById('fps').innerHTML = frameRate;
+ 
+  document.getElementById('fps').innerHTML = frameRate;
+
 }
