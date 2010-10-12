@@ -5,7 +5,7 @@ PImage crate, crate2, crate3;
 
 void setup()
 {
-  size(400, 400, OPENGL);
+  size(800, 800, OPENGL);
   crate = loadImage("crate1.jpg");
   crate2 = loadImage("crate2.jpg");
   crate3 = loadImage("crate3.jpg");
@@ -68,7 +68,11 @@ void draw()
 {
   frames++;
   background(0);
+//pointLight(0,256,0, 1,0,0);
+directionalLight(1,0,256, -1, 0,0);
 
+
+for(int i=0; i < 10; i++){
   pushMatrix();
     translate(width/2-80, height/2, 150);
     translate(0, sin((100+frames)/30)* 40, 0);  
@@ -98,5 +102,7 @@ void draw()
     scale(20);
     drawBox(crate3);
   popMatrix();
-document.getElementById('fps').innerHTML = frameRate;
+}
+
+  document.getElementById('fps').innerHTML = frameRate;
 }
