@@ -10407,6 +10407,9 @@
      * @see screenZ
     */
     p.screenX = function screenX( x, y, z ) {
+      if(!p.use3DContext){
+        return x;
+      }
       var mv = modelView.array();
       var pj = projection.array();
 
@@ -10438,6 +10441,9 @@
      * @see screenZ
     */
     p.screenY = function screenY( x, y, z ) {
+      if(!p.use3DContext){
+        return y;
+      }
       var mv = modelView.array();
       var pj = projection.array();
 
@@ -10469,6 +10475,11 @@
      * @see screenY
     */
     p.screenZ = function screenZ( x, y, z ) {
+      // This is what P5 returns. This should not be called
+      // from a 2D context.
+      if(!p.use3DContext){
+        return 0.0;
+      }
       var mv = modelView.array();
       var pj = projection.array();
 
