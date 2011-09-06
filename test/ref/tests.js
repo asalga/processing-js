@@ -15,6 +15,7 @@ var tests = [
   { path: "background-color-1arg-2d.pde", tags: ["2D"] },
   { path: "background-color-1arg-alpha-2d.pde", tags: ["2D"] },
   { path: "background-hex-3RGB-alpha.pde", tags: ["2D"], knownFailureTicket: "1346" },
+  { path: "size-3d.pde", tags: ["3D"] },
   { path: "background-gray-3d.pde", tags: ["3D"] },
   { path: "background-gray-alpha-3d.pde", tags: ["3D"] },
   { path: "background-3-arg-3d.pde", tags: ["3D"] },
@@ -64,6 +65,7 @@ var tests = [
   { path: "rect-quad.pde", tags: ["2D"] },
   { path: "size-fill-rect.pde", tags: ["2D"] },
   { path: "triangle.pde", tags: ["2D"] },
+  { path: "triangle-3d.pde", tags: ["3D"] },
   { path: "svg_font_biotyp.pde", tags: ["2D"] },
   { path: "3d-arc-4-combo.pde", tags: ["3D"], epsilonOverride: 0.13 },
   { path: "text-leading.pde", tags: ["2D"], epsilonOverride: 0.20 },
@@ -142,5 +144,13 @@ var tests = [
   { path: "beginEndShape-3dtriangles2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.15 },
   { path: "beginEndShape-3dtrianglestrip1.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
   { path: "beginEndShape-3dtrianglestrip2.pde", tags:["endShape3D", "3D"], epsilonOverride: 0.20 },
-  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35} /* See ticket #1172 */
+  { path: "textWidth_comic.pde", tags:["2D"], epsilonOverride: 0.35}, /* See ticket #1172 */
+  { path: "frustum_1.pde", tags:["3D"], knownFailureTicket: "1513"},
+  { path: "default_ortho_1.pde", tags:["3D"]},
+  { path: "default_ortho_2.pde", tags:["3D"], knownFailureTicket: "1638" },
+  { path: "default_perspective_1.pde", tags:["3D"]},
+  { path: "default_perspective_2.pde", tags:["3D"]},
+  { path: "default_perspective_3.pde", tags:["3D"]},
+  { path: "scale-3D.pde", tags:["3D"]},
+  { path: "applyMatrix.pde", tags:["3D"]}
 ];

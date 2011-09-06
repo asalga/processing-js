@@ -1712,7 +1712,6 @@
         inverseCopy,
         projection,
         manipulatingCamera = false,
-        frustumMode = false,
         cameraFOV = 60 * (Math.PI / 180),
         cameraX = p.width / 2,
         cameraY = p.height / 2,
@@ -10293,7 +10292,6 @@
      * @see perspective
      */
     p.frustum = function(left, right, bottom, top, near, far) {
-      frustumMode = true;
       projection = new PMatrix3D();
       projection.set((2 * near) / (right - left), 0, (right + left) / (right - left),
                      0, 0, (2 * near) / (top - bottom), (top + bottom) / (top - bottom),
@@ -10325,13 +10323,17 @@
      * @param {float} far    maximum distance from the origin away from the viewer
      */
     p.ortho = function(left, right, bottom, top, near, far) {
-      if (arguments.length === 0) {
+      if (arguments.length === 4) {
+        near = -10;
+        far = 1000;
+      }
+      else if (arguments.length === 0) {
         left = 0;
         right = p.width;
         bottom = 0;
         top = p.height;
         near = -10;
-        far = 10;
+        far = 1000;
       }
 
       var x = 2 / (right - left);
@@ -10339,11 +10341,14 @@
       var z = -2 / (far - near);
 
       var tx = -(right + left) / (right - left);
-      var ty = -(top + bottom) / (top - bottom);
+      var ty = (top + bottom) / (top - bottom);
       var tz = -(far + near) / (far - near);
 
       projection = new PMatrix3D();
-      projection.set(x, 0, 0, tx, 0, y, 0, ty, 0, 0, z, tz, 0, 0, 0, 1);
+      projection.set( x, 0, 0, tx,
+                      0, y, 0, ty,
+                      0, 0, z, tz,
+                      0, 0, 0, 1);
 
       var proj = new PMatrix3D();
       proj.set(projection);
@@ -10354,7 +10359,6 @@
       uniformMatrix("projection3d", programObject3D, "projection", false, proj.array());
       curContext.useProgram(programObjectUnlitShape);
       uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
-      frustumMode = false;
     };
     /**
      * The printProjection() prints the current projection matrix to the text window.
