@@ -1,4 +1,3 @@
-
 (function(window, document, Math, undef) {
 
   var nop = function(){};
@@ -2464,10 +2463,7 @@
       // vec4(1.0,1.0,1.0,0.5)
       "void main(void){" +
       "  if(usingTexture){" +
-      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy));" +
-      "    if(usingTint){" +
-      "      gl_FragColor = gl_FragColor*frontColor;" +
-      "    }"+
+      "    gl_FragColor = vec4(texture2D(sampler, vTexture.xy)) * frontColor;" +
       "  }"+
       "  else{" +
       "    gl_FragColor = frontColor;" +
@@ -2681,6 +2677,529 @@
 
       return programObject;
     };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // OBJModel
+    ////////////////////////////////////////////////////////////////////////////
+
+    var OBJModel = p.OBJModel = function(){
+      this.xhr = null;
+
+      // hashMap which will hold matName: GL texureObject
+      this.materials = {};
+
+      // Has the file already been parsed? if so, we can go straight to rendering.
+      this.parsed = false;
+
+      // A segment has: num verts, vertex VBO, texture VBO, normal VBO
+      this.segments = [];
+
+      this.objRelPath = "";
+      this.relPath = "";
+    };
+
+    OBJModel.prototype = {
+       /**
+       */
+       load: function(path){
+         this.relPath = path;
+
+         this.xhr = new XMLHttpRequest();
+         this.xhr.open("GET", this.relPath, false);
+
+         if (this.xhr.overrideMimeType) {
+           this.xhr.overrideMimeType("text/plain");
+         }
+
+         // We take the first element since that contains the path.
+         // demos/objs/file.obj
+         this.objRelPath = this.relPath.match(/.*\//);
+         if(this.objRelPath === null){
+           this.objRelPath = "";
+         }
+
+         this.xhr.send(null);
+       },
+
+       /**
+       */
+       drawMode: function(){
+         // If we finished downloading the file, but haven't parsed it yet, parse it now.
+         if(this.xhr.readyState === 4 && !this.parsed){
+           this.parsed = true;
+
+           var str = this.xhr.responseText;
+
+           // Anything after a # character is a comment, so just remove them.
+           str = str.replace(/#.*\n/g,"");
+
+           // Try to find if the user included a material library.
+           var MatLibPath = str.match(/mtllib.*/);
+
+           if(MatLibPath){
+             // If we actually found something, we can append the
+             // relative path to shorten our code a bit.
+             MatLibPath = this.objRelPath + ("" + str.match(/mtllib.*/)).split(" ")[1];
+
+             var matLibXHR = new XMLHttpRequest();
+             matLibXHR.mat = this.materials;
+
+             if(matLibXHR.overrideMimeType) {
+               matLibXHR.overrideMimeType("text/plain");
+             }
+
+             matLibXHR.open("GET", MatLibPath, false);
+
+             matLibXHR.onload = function(){
+               var file = matLibXHR.responseText;
+
+               // switch over all the line endings so we only need to
+               // deal with one type of line endings in the future code.
+               // Also, get rid of multiple new lines
+               file = file.replace(/\r\n/ ,'\n');
+
+               // Get rid of comments just so we don't have to worry about them later.
+               file = file.replace(/#.*\n/g ,'');
+
+               file = file.replace(/\s+$/,'');
+
+               var test = file.split(/newmtl\s+/);
+
+               // Remove first empty element since we split on newmtl.
+               test.shift();
+
+               for(var i = 0; i < test.length; i++){
+                 var matName = test[i].split(/\n/)[0];
+
+                 var texName = "" + test[i].match(/map_Kd\s+.*\n*/);
+
+                 texName = texName.replace(/map_Kd\s+/, '');
+                 texName = texName.replace(/\n/,'');
+
+                 matLibXHR.mat[matName] = texName;
+               }
+             };
+             matLibXHR.send(null);
+           }
+
+          for(var matName in this.materials){
+            var img = new Image();
+            img.src = this.objRelPath + this.materials[matName];
+
+            img.matName = matName;
+
+            img.parentMaterials = this.materials;
+
+            img.onload = function(){
+              // Create the WebGL texture object.
+              var texObj = curContext.createTexture();
+              this.parentMaterials[this.matName] = texObj;
+              curContext.bindTexture(curContext.TEXTURE_2D, this.parentMaterials[this.matName]);
+
+              // Are these power of two?
+              var widthPOT = false;
+              if((this.width & (this.width-1)) === 0 ){
+                widthPOT = true;
+              }
+
+              var heightPOT = false;
+              if((this.height & (this.height-1)) === 0){
+                heightPOT = true;
+              }
+
+              // If both dimensions are power of two, we don't need to do much work.
+              if(widthPOT && heightPOT){
+                curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, this);
+              }
+              else{
+                var cvs = document.createElement('canvas');
+
+                cvs.width = this.width;
+                cvs.height = this.height;
+
+                var nextPOT;
+
+                // WebGL does not support non-power of two textures, so we'll need to
+                // resize if it is NPOT.
+                if(!widthPOT){
+                  nextPOT = 1;
+                  while (nextPOT < this.width) {
+                    nextPOT *= 2;
+                  }
+                  cvs.width = nextPOT;
+                }
+
+                if(!heightPOT){
+                  nextPOT = 1;
+                  while (nextPOT < this.height) {
+                    nextPOT *= 2;
+                  }
+                  cvs.height = nextPOT;
+                }
+
+                // Create a PImage so we can just call resize.
+                var pimage = new p.PImage(img);
+                pimage.resize(cvs.width, cvs.height);
+
+                // Put the pixel data from the Pimage into the canvas.
+                var cvsCtx = cvs.getContext('2d');
+                cvsCtx.putImageData(pimage.imageData, 0, 0);
+
+                curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, cvs);
+              }
+
+              curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
+              curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
+              curContext.generateMipmap(curContext.TEXTURE_2D);
+            };
+          }
+
+          // Find groups of multiple spaces and replace with
+          // a single space. This allows us to more easily parse the strings later on.
+          str = str.replace(/ +/g," ");
+
+          // Gather all the unique vertices
+          // This will create an array which looks like:
+          // [ 1.0 -1.0 -1.0], [-1.0 -1.0 -1.0],
+          // [-1.0  1.0 -1.0], [ 1.0  1.0 -1.0],
+          // [ 1.0 -1.0  1.0], [-1.0 -1.0  1.0],
+          // [-1.0  1.0  1.0], [ 1.0  1.0  1.0]
+          var verts = str.match(/v .*/g);
+
+          var uniqueVertices = [];
+          var splitLine;
+          var vertexLine;
+          var i;
+
+          for(i = 0; i < verts.length; i++){
+            vertexLine = verts[i].replace(/v\s+/,"");
+
+            // split the vertex line into its three xyz components
+            splitLine = vertexLine.split(" ");
+
+            uniqueVertices.push([
+              parseFloat(splitLine[0]),
+              -parseFloat(splitLine[1]),
+              parseFloat(splitLine[2])
+            ]);
+          }
+
+          // Gather all the unique normals
+          var normals = str.match(/vn .*/g);
+          var uniqueNormals = [];
+
+          if(normals){
+            for(i = 0; i < normals.length; i++){
+              var normLine = normals[i].replace(/vn\s+/,"");
+
+              // split the vertex line into its three xyz components
+              splitLine = normLine.split(" ");
+
+              uniqueNormals.push([
+                parseFloat(splitLine[0]),
+                parseFloat(splitLine[1]),
+                parseFloat(splitLine[2])
+              ]);
+            }
+          }
+
+          // Gather all the texture coordinates
+          var uvs = str.match(/vt .*/g);
+          var uniqueUVs = [];
+
+          if(uvs){
+            for(i = 0; i < uvs.length; i++){
+              vertexLine = uvs[i].replace(/vt\s+/,"");
+
+              splitLine = vertexLine.split(" ");
+
+              uniqueUVs.push([
+                parseFloat(splitLine[0]),
+                1-parseFloat(splitLine[1])
+              ]);
+            }
+          }
+
+          // split the string on 'usemtl' which means the first section of the
+          // split will contain the material name
+          var matNames = str.split(/usemtl /g);
+
+          var usemtlExists = str.match(/usemtl /g);
+
+          // There's a chance we didn't find any usemtl directives. This could
+          // occur in the case if there are no textured faces.
+          if(!usemtlExists){
+            matNames = [];
+            matNames.push(str);
+          }
+          else{
+            // The first element will either be empty or have vertex
+            // stuff which we don't care about
+            matNames.shift();
+          }
+
+          for(var segIndex = 0; segIndex < matNames.length; segIndex++){
+            // Create an empty object which will hold all the segments.
+            this.segments.push({});
+
+            if(matNames.length >= 1){
+              this.segments[segIndex].matName = ("" + matNames[segIndex]).match(/.*/);
+            }
+
+            var currSegment = matNames[segIndex];
+
+            // FACES
+            var faces = currSegment.match(/f .*/g);
+
+            var vertIndices = [];
+            var uvIndices = [];
+            var normIndices = [];
+
+            for(i = 0; i < faces.length; i++){
+              // Get a face line without the 'f' qualifier since
+              // that will interfere when we're adding values to
+              // the array below.
+              //
+              // example:
+              // f 2/3 3/4 4/2
+              var faceLine = faces[i].replace(/f /,"");
+              var vertParts;
+
+              // !!! This needs to be fixed.
+              // Get rid of any whitespace before the end of the line
+              faceLine = faceLine.replace(/\s+$/, "");
+
+              // remove extra spaces
+
+              // There are 4 cases:
+
+              // The .obj spec says there needs to be consistency
+              // in a single line. This means we only need to check
+              // the first part of the face definition to know if
+              // it has vertex, tex coords and/or normals.
+
+              // If no slashes were found we're only dealing with vertices
+              // f 1 2 3
+              // TODO: fix non-triangulated faces
+              if(!faceLine.match(/\//)){
+                vertParts = faceLine.split(/\/|\s+/);
+                vertIndices.push(parseInt(vertParts[0],10)-1);
+                vertIndices.push(parseInt(vertParts[1],10)-1);
+                vertIndices.push(parseInt(vertParts[2],10)-1);
+              }
+
+              // VERTEX/TEXCOORD/NORMAL
+              //
+              // f 1/1/1 2/2/2 3/3/3
+              // TODO: fix non-triangulated faces
+              else if(faceLine.match(/\d+\/\d+\/\d+/)){
+                var numVertices = faceLine.split(" ").length;
+
+                vertParts = faceLine.split(/\/|\s+/);
+
+                vertIndices.push(parseInt(vertParts[0],10)-1);
+                uvIndices.push(parseInt(  vertParts[1],10)-1);
+                normIndices.push(parseInt(vertParts[2]-1,10));
+
+                vertIndices.push(parseInt(vertParts[3],10)-1);
+                uvIndices.push(parseInt(  vertParts[4],10)-1);
+                normIndices.push(parseInt(vertParts[5]-1,10));
+
+                vertIndices.push(parseInt(vertParts[6],10)-1);
+                uvIndices.push(parseInt(  vertParts[7],10)-1);
+                normIndices.push(parseInt(vertParts[8]-1,10));
+
+                // TODO: fix this
+                if( numVertices === 4 ){
+                  vertIndices.push(parseInt(vertParts[0],10)-1);
+                  uvIndices.push(parseInt(vertParts[1],10)-1);
+                  // 2
+
+                  vertIndices.push(parseInt(vertParts[6],10)-1);
+                  uvIndices.push(parseInt(vertParts[7],10)-1);
+                  // 8
+
+                  vertIndices.push(parseInt(vertParts[9],10)-1);
+                  uvIndices.push(parseInt(vertParts[10],10)-1);
+                  // 11
+                }
+              }
+
+              // If there's only one slash between numbers, we're dealing with v/t
+              // example:
+              // f 1/1 2/2 3/3
+              else if(faceLine.match(/\d+\/\d+/)){
+                vertParts = faceLine.split(/\/|\s+/);
+
+                vertIndices.push(parseInt(vertParts[0],10)-1);
+                uvIndices.push(parseInt(vertParts[1],10)-1);
+
+                vertIndices.push(parseInt(vertParts[2],10)-1);
+                uvIndices.push(parseInt(vertParts[3],10)-1);
+
+                vertIndices.push(parseInt(vertParts[4],10)-1);
+                uvIndices.push(parseInt(vertParts[5],10)-1);
+              }
+
+              // If no value between two slashes
+              // f 1//1 2//2 3//3
+              else if(faceLine.match(/\d+\/\/\d+/)){
+                // split on two consecutive slashes or a space
+                vertParts = faceLine.split(/\/\/|\s+/);
+
+                vertIndices.push(parseInt(vertParts[0],10)-1);
+                normIndices.push(parseInt(vertParts[1]-1,10));
+
+                vertIndices.push(parseInt(vertParts[2],10)-1);
+                normIndices.push(parseInt(vertParts[3]-1,10));
+
+                vertIndices.push(parseInt(vertParts[4],10)-1);
+                normIndices.push(parseInt(vertParts[5]-1,10));
+              }
+            }
+
+            // Expand UVS.
+            if(uvIndices.length > 0){
+              var  ec = 0;
+              var ExpandedTexCoords = new Float32Array(vertIndices.length * 3);
+              for(i = 0; i < uvIndices.length; i++){
+
+                var uvIndex = uniqueUVs[uvIndices[i]];
+
+                for(var j = 0; j < 2; j++){
+                  ExpandedTexCoords[ec] = uvIndex[j];
+                  ec++;
+                }
+              }
+
+              var texcVBO = curContext.createBuffer();
+              curContext.bindBuffer(curContext.ARRAY_BUFFER, texcVBO);
+              curContext.bufferData(curContext.ARRAY_BUFFER, ExpandedTexCoords, curContext.STATIC_DRAW);
+
+              this.segments[segIndex].texcVBO = texcVBO;
+            }
+
+            // Expand Normals.
+            if(normIndices.length > 0){
+              var k = 0;
+              i = 0;
+              var ExpandedNormals = new Float32Array(vertIndices.length * 3);
+              for(; i < normIndices.length; i++){
+
+                var normIndex = uniqueNormals[normIndices[i]];
+
+                for(var ni = 0; ni < 3; ni++){
+                  ExpandedNormals[k] = normIndex[ni];
+                  k++;
+                }
+              }
+
+              var normVBO = curContext.createBuffer();
+              curContext.bindBuffer(curContext.ARRAY_BUFFER, normVBO);
+              curContext.bufferData(curContext.ARRAY_BUFFER, ExpandedNormals, curContext.STATIC_DRAW);
+
+              this.segments[segIndex].normVBO = normVBO;
+            }
+
+            // TODO: needs comment
+            var expandedVerts = new Float32Array(vertIndices.length * 3);
+
+            var ev = 0;
+            for(i = 0; i < vertIndices.length; i++){
+              var vertIndex = uniqueVertices[vertIndices[i]];
+              for(var vi = 0; vi < 3; vi++){
+                expandedVerts[ev] = vertIndex[vi];
+                ev++;
+              }
+            }
+
+            // Safe to assume we'll have vertices, so we don't need a check
+            var vertVBO = curContext.createBuffer();
+            this.segments[segIndex].vertVBO = vertVBO;
+            this.segments[segIndex].numVerts = expandedVerts.length / 3;
+
+            curContext.bindBuffer(curContext.ARRAY_BUFFER, vertVBO);
+            curContext.bufferData(curContext.ARRAY_BUFFER, expandedVerts, curContext.STATIC_DRAW);
+          }// segments
+        }// faces
+
+        // Otherwise, if we are done parsing, render
+        else{
+          // viewing transformation needs to have Y flipped
+          // becuase that's what Processing does.
+          var view = new p.PMatrix3D();
+          view.scale(1, -1, 1);
+          view.apply(modelView.array());
+          view.transpose();
+
+          var proj = new p.PMatrix3D();
+          proj.set(projection);
+          proj.transpose();
+
+          curContext.useProgram(programObject3D);
+
+          // TODO: comment
+          if(lightCount > 0){
+            uniformf("color_3d", programObject3D, "color", [1,1,1,1]);
+          }
+          else{
+            uniformf("color_3d", programObject3D, "color", [0,0,0,1]);
+          }
+
+          uniformMatrix("model3d_obj", programObject3D, "model", false, [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+          uniformMatrix("view3d_obj", programObject3D, "view", false, view.array());
+          uniformMatrix("projection3d_obj", programObject3D, "projection", false, proj.array());
+
+          // Turn off per vertex colors since none of those exist in .obj files
+          disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
+
+          // Every parsed .OBJ file will be assgined at least one segment.
+          // Many segments exist if different parts of the ojbect are assigned different
+          // materials/textures.
+          for(var segIter = 0; segIter < this.segments.length; segIter++){
+            var currSeg = this.segments[segIter];
+
+            var texObj = currSeg.matName;
+            texObj = this.materials[texObj];
+
+            if(currSeg.texcVBO && texObj && typeof(texObj) === "object"){
+
+              uniformi("usingTexture3d", programObject3D, "usingTexture", true);
+              curContext.bindTexture(curContext.TEXTURE_2D, texObj);
+              vertexAttribPointer("aTexture3d", programObject3D, "aTexture", 2, currSeg.texcVBO);
+
+              // if there is a texture, but there are no lights on, we need to use
+              // all the tex coords
+              if(lightCount === 0){
+                uniformf("color_3d", programObject3D, "color", [1,1,1,1]);
+              }
+            }
+            else{
+              uniformi("usingTexture3d", programObject3D, "usingTexture", false);
+              disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
+            }
+
+            if(currSeg.normVBO){
+              var normalMatrix = new p.PMatrix3D();
+              normalMatrix.set(modelView.array());
+              normalMatrix.invert();
+              uniformMatrix("normalTransform3d", programObject3D, "normalTransform", false, normalMatrix.array());
+              vertexAttribPointer("normal3d", programObject3D, "Normal", 3, currSeg.normVBO);
+            }
+            else{
+              disableVertexAttribPointer("normal3D", programObject3D, "Normal");
+            }
+
+            vertexAttribPointer("vertex3d", programObject3D, "Vertex", 3, currSeg.vertVBO);
+            curContext.drawArrays(curContext.TRIANGLES, 0, currSeg.numVerts);
+          }
+
+          // Some object (like rect) expect this to be off when they render.
+          uniformi("usingTexture3d", programObject3D, "usingTexture", false);
+        }// render
+      }// drawMode
+    };// OBJModel
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D/3D drawing handling
@@ -17613,7 +18132,7 @@
       "mouseOut", "mouseOver", "mousePressed", "mouseReleased", "mouseScroll",
       "mouseScrolled", "mouseX", "mouseY", "name", "nf", "nfc", "nfp", "nfs",
       "noCursor", "noFill", "noise", "noiseDetail", "noiseSeed", "noLights",
-      "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "ortho",
+      "noLoop", "norm", "normal", "noSmooth", "noStroke", "noTint", "OBJModel", "ortho",
       "param", "parseBoolean", "parseByte", "parseChar", "parseFloat",
       "parseInt", "peg", "perspective", "PImage", "pixels", "PMatrix2D",
       "PMatrix3D", "PMatrixStack", "pmouseX", "pmouseY", "point",

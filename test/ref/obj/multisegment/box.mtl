@@ -1,0 +1,17 @@
+newmtl ID01
+map_Kd texture1.jpg
+
+newmtl ID02
+map_Kd texture2.jpg
+
+newmtl ID03
+map_Kd texture3.jpg
+
+newmtl ID04
+map_Kd texture4.jpg
+
+newmtl ID05
+map_Kd texture5.jpg
+
+newmtl ID06
+map_Kd texture6.jpg

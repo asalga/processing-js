@@ -1,0 +1,9 @@
+#tested with meshlab
+
+v -1  1 0
+v -1 -1 0
+v  1 -1 0
+v  1  1 0
+
+f 1 2 3
+f 3 4 1

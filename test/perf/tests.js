@@ -105,6 +105,7 @@ var tests = [
   { path: "shininess.pde", tags: ["3D", "lights"] } ,
   { path: "quad-texture.pde", tags: ["3D"] },
   { path: "quad-notexture.pde", tags: ["3D"] },
+  { path: "text-3D.pde", tags: ["3D"] },
 
   // PMatrix3D
   { path: "PMatrix3D-create.pde", tags: ["3D"] },
@@ -118,5 +119,9 @@ var tests = [
   { path: "PMatrix3D-rotateZ.pde", tags: ["3D"] },
   { path: "PMatrix3D-multX.pde", tags: ["3D"] },
   { path: "PMatrix3D-set.pde", tags: ["3D"] },
-  { path: "PMatrix3D-reset.pde", tags: ["3D"] }
+  { path: "PMatrix3D-reset.pde", tags: ["3D"] },
+  
+  // OBJ
+  { path: "obj_cottage.pde", tags: ["3D"] }
+
 ];
