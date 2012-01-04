@@ -332,10 +332,13 @@ var tests = [
   
   // OBJModel
   { path: "obj_triangle_tria.pde", tags: ["OBJ", "3D"] },
+  { path: "obj_triangle_tria_fo.pde", tags: ["OBJ", "3D"] },
   { path: "obj_triangle_tria_n.pde", tags: ["OBJ", "3D"] },
   { path: "obj_triangle_tria_t.pde", tags: ["OBJ", "3D"] },
+  { path: "obj_triangle_tria_t_npot.pde", tags: ["OBJ", "3D"] },
   { path: "obj_triangle_tria_tn.pde", tags: ["OBJ", "3D"] },
   { path: "obj_triangle_tria_tn_npot.pde", tags: ["OBJ", "3D"] },
+
   { path: "obj_triangle_tria_n_dirLight.pde", tags: ["OBJ", "3D"] },
   { path: "obj_triangle_tria_tn_dirLight.pde", tags: ["OBJ", "3D"] },
   { path: "obj_triangle_tria_tn_dirLight_double.pde", tags: ["OBJ", "3D"] },
@@ -344,15 +347,25 @@ var tests = [
   { path: "obj_plane_tria_t.pde", tags: ["OBJ", "3D"] },
   { path: "obj_plane_tria_n_dirLight.pde", tags: ["OBJ", "3D"] },
   { path: "obj_plane_tria_tn_dirLight.pde", tags: ["OBJ", "3D"] },
-  { path: "obj_plane_quads.pde", tags: ["OBJ", "3D"], knownFailureTicket: "0" },
-  { path: "obj_plane_quads_t.pde", tags: ["OBJ", "3D"], knownFailureTicket: "0" },
+  { path: "obj_plane_quads.pde", tags: ["OBJ", "3D"]},
+  { path: "obj_plane_quads_t.pde", tags: ["OBJ", "3D"] },
+  { path: "obj_plane_tria_t_mtl_space.pde", tags: ["OBJ", "3D"] },
+
   { path: "obj_cube_tria.pde", tags: ["OBJ", "3D"] },
+  { path: "obj_cube_tria_dirLight.pde", tags: ["OBJ", "3D"] },
   { path: "obj_cube_tria_n.pde", tags: ["OBJ", "3D"] },
   { path: "obj_cube_tria_n_dirLight.pde", tags: ["OBJ", "3D"] },
   { path: "obj_cube_tria_t_ms.pde", tags: ["OBJ", "3D"] },
+  { path: "obj_cube_tria_tn_dirLight.pde", tags: ["OBJ", "3D"], epsilonOverride: 0.1 },
+
+  { path: "obj_teapot.pde", tags: ["OBJ", "3D"] },
+
+  // .obj parser tests
+  { path: "obj_parser_space_at_eof.pde", tags: ["OBJ", "3D"] },
+
   { path: "obj_cottage_tria_t.pde", tags: ["OBJ", "3D"] },
   { path: "obj_cottage_tria_tn.pde", tags: ["OBJ", "3D"] },
-  { path: "obj_cottage_tria_tn_dirLight.pde", tags: ["OBJ", "3D"] },
+  { path: "obj_cottage_tria_tn_dirLight.pde", tags: ["OBJ", "3D"], epsilonOverride: 0.2 },
   { path: "obj_props.pde", tags: ["OBJ", "3D"] },
   { path: "obj_duck_tria_t_nomtl.pde", tags: ["OBJ"], knownFailureTicket: "0" },
   { path: "obj_multi_obj.pde", tags: ["OBJ", "3D"] },
