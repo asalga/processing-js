@@ -2085,7 +2085,8 @@
         cameraZ = cameraY / Math.tan(cameraFOV / 2),
         cameraNear = cameraZ / 10,
         cameraFar = cameraZ * 10,
-        cameraAspect = p.width / p.height;
+        cameraAspect = p.width / p.height,
+        cameraDepth = cameraZ;
 
     var vertArray = [],
         curveVertArray = [],
@@ -10688,21 +10689,57 @@
         upZ = 0;
       }
 
-      var z = new PVector(eyeX - centerX, eyeY - centerY, eyeZ - centerZ);
+    //  var z = new PVector(eyeX - centerX, eyeY - centerY, eyeZ - centerZ);
+
+var z0 = eyeX - centerX;
+var z1 = eyeY - centerY;
+var z2 = eyeZ - centerZ;
+
+
+var mag = Math.sqrt(z0*z0 + z1 * z1 + z2*z2);
+if(mag !=0){
+z0 /= mag;
+z1 /= mag;
+z2 /= mag;
+}
+
       var y = new PVector(upX, upY, upZ);
       var transX, transY, transZ;
-      z.normalize();
-      var x = PVector.cross(y, z);
-      y = PVector.cross(z, x);
+
+/*      var mag = Math.sqrt(z0 * z[0] + z[1] * z[1] + z[2] * z[2]);
+      if(mag != 0){
+        z[0] = z[0] /mag;
+z[1] = z[1]/ mag;
+z[2] = z[2] / mag;
+      }
+*/
+cameraDepth = mag;
+
+    //  z.normalize();
+
+
+
+      var x = PVector.cross(y,  new PVector(z0, z1, z2));
+      y = PVector.cross( new PVector(z0,z1,z2), x);
       x.normalize();
       y.normalize();
 
-      cam.set(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+      cam.set(
+x.x, y.x, z0, 0,
+x.y, y.y, z1, 0, 
+x.z, y.x, z2, 0, 
+0, 0, 0, 1);
+//cam.transpose();
+
+//x.x, x.y, x.z, 0, 
+//y.x, y.y, y.z, 0, 
+//z.x, z.y, z.z, 0, 
+//0, 0, 0, 1);
 
       cam.translate(-eyeX, -eyeY, -eyeZ);
 
       cameraInv.reset();
-      cameraInv.invApply(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
+    //  cameraInv.invApply(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, 0, 1);
 
       cameraInv.translate(eyeX, eyeY, eyeZ);
 
@@ -10794,30 +10831,43 @@
      * @param {float} far    maximum distance from the origin away from the viewer
      */
     p.ortho = function(left, right, bottom, top, near, far) {
+
+     // change this !!!!
       if (arguments.length === 4) {
-        near = cameraNear;
-        far = cameraFar;
+        near = -500;
+        far = 500;
       }
       else if (arguments.length === 0) {
         left = 0;
         right = p.width;
         bottom = 0;
         top = p.height;
-        near = cameraNear;
-        far = cameraFar;
+        near = -500;
+        far = 500;
       }
-      
+
+      left -= p.width/2;
+      right -= p.width/2;
+    
+      bottom -= p.height/2;
+      top -= p.height/2;
+    
+    //  cameraDepth = cameraZ;
+
+  //    near += cameraDepth;
+    //  far += cameraDepth;   
+
       var x = 2 / (right - left);
       var y = 2 / (top - bottom);
       var z = -2 / (far - near);
 
       var tx = -(right + left) / (right - left);
-      var ty =  -(top + bottom) / (top - bottom);
+      var ty = -(top + bottom) / (top - bottom);
       var tz = -(far + near) / (far - near);
 
       projection = new PMatrix3D();
       projection.set( x, 0, 0, tx,
-                      0, -y, 0, ty,
+                      0, y, 0, -ty,
                       0, 0, z, tz,
                       0, 0, 0, 1);
 
