@@ -2804,6 +2804,8 @@
              matLibXHR.onload = function(){
                var file = matLibXHR.responseText;
 
+                file = file.replace(/\r\n/g ,'\n');
+
                // Switch over all the line endings so we only need to
                // deal with one type of line endings in the future code.
                // Also, get rid of multiple new lines.
@@ -20465,3 +20467,4 @@
     this.Processing = Processing;
   }
 }(window, window.document, Math));
+
