@@ -11579,31 +11579,27 @@
      * @see screenY
      * @see screenZ
     */
-    Drawing2D.prototype.screenX = function(){
-	  throw("screenX() is not supported in 2D mode.");
+    Drawing2D.prototype.screenX = function( x, y ){
+      return modelView.multX(x, y);
     };
 
     Drawing3D.prototype.screenX = function( x, y, z ) {
       var mv = modelView.array();
-      if( mv.length === 16 )
-      {
-        var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
-        var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
-        var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
-        var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
+      
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-        var pj = projection.array();
+      var pj = projection.array();
 
-        var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
-        var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+      var ox = pj[ 0]*ax + pj[ 1]*ay + pj[ 2]*az + pj[ 3]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
 
-        if ( ow !== 0 ){
-          ox /= ow;
-        }
-        return p.width * ( 1 + ox ) / 2.0;
+      if ( ow !== 0 ){
+        ox /= ow;
       }
-      // We assume that we're in 2D
-      return modelView.multX(x, y);
+      return p.width * ( 1 + ox ) / 2.0;
     };
 
     /**
@@ -11619,30 +11615,27 @@
      * @see screenX
      * @see screenZ
     */
-    Drawing2D.prototype.screenY = function(){
-	  throw("screenY() is not supported in 2D mode.");
+    Drawing2D.prototype.screenY = function( x, y ){
+      return modelView.multY(x, y);
     };
 
     Drawing3D.prototype.screenY = function screenY( x, y, z ) {
       var mv = modelView.array();
-      if( mv.length === 16 ) {
-        var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
-        var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
-        var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
-        var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-        var pj = projection.array();
+      var ax = mv[ 0]*x + mv[ 1]*y + mv[ 2]*z + mv[ 3];
+      var ay = mv[ 4]*x + mv[ 5]*y + mv[ 6]*z + mv[ 7];
+      var az = mv[ 8]*x + mv[ 9]*y + mv[10]*z + mv[11];
+      var aw = mv[12]*x + mv[13]*y + mv[14]*z + mv[15];
 
-        var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
-        var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+      var pj = projection.array();
 
-        if ( ow !== 0 ){
-          oy /= ow;
-        }
-        return p.height * ( 1 + oy ) / 2.0;
+      var oy = pj[ 4]*ax + pj[ 5]*ay + pj[ 6]*az + pj[ 7]*aw;
+      var ow = pj[12]*ax + pj[13]*ay + pj[14]*az + pj[15]*aw;
+
+      if ( ow !== 0 ){
+        oy /= ow;
       }
-      // We assume that we're in 2D
-      return modelView.multY(x, y);
+      return p.height * ( 1 + oy ) / 2.0;
     };
 
     /**
