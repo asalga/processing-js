@@ -4699,7 +4699,7 @@
   
       if (selector) {
         if (typeof selector === "string") {
-          if (namespaceURI === undef && selector.indexOf("<")>-1) {
+          if (namespaceURI === undef && selector.indexOf("<") > -1) {
             // load XML from text string (illegal use, see ticket 1774)
             this.parse(selector);
           } else {
@@ -4712,7 +4712,7 @@
           }
         }  
       }
-      else if (namespaceURI && namespaceURI.indexOf(".")>-1){
+      else if (namespaceURI && namespaceURI.indexOf(".") > -1) {
         // XMLElement(<PApplet reference>,fileuri) format
         this.parse(namespaceURI);
       }
@@ -4911,20 +4911,20 @@
        * @member XMLElement
        * The getAttribute() function returns the value of an attribute
        *
-       * @param {String} fullname        the non-null full name of the attribute
-       * @param {String} name    the namespace URI, which may be null
+       * @param {String} fullname     the non-null full name of the attribute
+       * @param {String} name         the namespace URI, which may be null
        * @param {String} defaultValue the default value of the attribute
        *
        * @return {String} the value, or defaultValue if the attribute does not exist
        */
       //Changed to use explicit arguments
-      getAttribute: function (fullname, namespaceURI, defaultValue){
+      getAttribute: function (fullname, namespaceURI, defaultValue) {
         var attribute;
         attribute = this.findAttribute(fullname,namespaceURI);
         if (attribute) {
           return attribute.getValue();
         }
-        else if ( defaultValue ) {
+        else if (defaultValue) {
           return defaultValue;
         } else { 
           return null;
