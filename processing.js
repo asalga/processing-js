@@ -15318,15 +15318,21 @@
     };
 
     Drawing3D.prototype.background = function(arg1, arg2, arg3, arg4) {
-      if (arguments.length > 0) {
+      if (arg1 !== undef) {
         backgroundHelper(arg1, arg2, arg3, arg4);
       }
-
-      var c = p.color.toGLArray(backgroundObj);
-      curContext.clearColor(c[0], c[1], c[2], c[3]);
-      curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
-
-      // An image as a background in 3D is not implemented yet
+      if (backgroundObj instanceof PImage || backgroundObj.__isPImage) {
+        // Get a copy of the matrix
+        var test = modelView.array();
+        p.camera();
+        // Hack the scaling so the image fillsStretch the image slightly 
+        p.image(arg1, -1, 0, arg1.width+ 1, arg1.height+1 );
+        modelView.set(test);
+      } else {
+        var c = p.color.toGLArray(backgroundObj);
+        curContext.clearColor(c[0], c[1], c[2], c[3]);
+        curContext.clear(curContext.COLOR_BUFFER_BIT | curContext.DEPTH_BUFFER_BIT);
+      }
     };
 
     // Draws an image to the Canvas
