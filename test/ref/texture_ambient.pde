@@ -2,10 +2,9 @@
 /* @pjs preload="berlin.png"; */
 
 size(100, 100, P3D);
-
 PImage img = loadImage("berlin.png");
 noStroke();
-ambientLight(255, 0, 0);
+ambientLight(255, 0,0);
 
 beginShape(TRIANGLES);
 texture(img);
@@ -13,4 +12,5 @@ vertex(0, 100, 0, 255);
 vertex(100, 100, 255, 255);
 vertex(50, 0, 127, 0);
 endShape();
+
 exit();
