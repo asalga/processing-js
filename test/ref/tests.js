@@ -457,5 +457,4 @@ var tests = [
   { path: "falloff-amb-1.pde", tags: ["3D"], knownFailureTicket: "1678" },
   { path: "falloff-amb-2.pde", tags: ["3D"], knownFailureTicket: "1678" },
   { path: "falloff-amb-3.pde", tags: ["3D"], knownFailureTicket: "1678" }
->>>>>>> jbuck/develop
 ];
