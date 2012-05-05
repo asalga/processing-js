@@ -417,7 +417,7 @@ var tests = [
   { path: "obj_cube_tria_t_ms.pde", tags: ["OBJ", "3D"] },
   { path: "obj_cube_tria_tn_dirLight.pde", tags: ["OBJ", "3D"], epsilonOverride: 0.1 },
 
-  { path: "obj_teapot.pde", tags: ["OBJ", "3D"] },
+  { path: "obj_teapot.pde", tags: ["OBJ", "3D"], epsilonOverride: 0.1 },
 
   // .obj parser tests
   { path: "obj_parser_space_at_eof.pde", tags: ["OBJ", "3D"] },

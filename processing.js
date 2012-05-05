@@ -3400,15 +3400,15 @@
 
           // !!! TODO: comment
           if(lightCount > 0){
-            uniformf('color_3d', programObject3D, 'color', [1,1,1,1]);
+            uniformf('color_3d', programObject3D, 'uColor', [1,1,1,1]);
           }
           else{
-            uniformf('color_3d', programObject3D, 'color', [0,0,0,1]);
+            uniformf('color_3d', programObject3D, 'uColor', [0,0,0,1]);
           }
 
-          uniformMatrix('model3d_obj', programObject3D, 'model', false, [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
-          uniformMatrix('view3d_obj', programObject3D, 'view', false, view.array());
-          uniformMatrix('projection3d_obj', programObject3D, 'projection', false, proj.array());
+          uniformMatrix('model3d_obj', programObject3D, 'uModel', false, [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+          uniformMatrix('view3d_obj', programObject3D, 'uView', false, view.array());
+          uniformMatrix('projection3d_obj', programObject3D, 'uProjection', false, proj.array());
 
           // Turn off per vertex colors since none of those exist in .obj files
           disableVertexAttribPointer('aColor3d', programObject3D, 'aColor');
@@ -3423,18 +3423,18 @@
             texObj = this.materials[texObj];
 
             if(currSeg.texcVBO && texObj && typeof(texObj) === 'object'){
-              uniformi('usingTexture3d', programObject3D, 'usingTexture', true);
+              uniformi('usingTexture3d', programObject3D, 'uUsingTexture', true);
               curContext.bindTexture(curContext.TEXTURE_2D, texObj);
               vertexAttribPointer('aTexture3d', programObject3D, 'aTexture', 2, currSeg.texcVBO);
 
               // if there is a texture, but there are no lights on, we need to use
               // all the tex coords
               if(lightCount === 0){
-                uniformf('color_3d', programObject3D, 'color', [1,1,1,1]);
+                uniformf('color_3d', programObject3D, 'uColor', [1,1,1,1]);
               }
             }
             else{
-              uniformi('usingTexture3d', programObject3D, 'usingTexture', false);
+              uniformi('usingTexture3d', programObject3D, 'uUsingTexture', false);
               disableVertexAttribPointer('aTexture3d', programObject3D, 'aTexture');
             }
 
@@ -3442,19 +3442,19 @@
               var normalMatrix = new p.PMatrix3D();
               normalMatrix.set(modelView.array());
               normalMatrix.invert();
-              uniformMatrix('normalTransform3d', programObject3D, 'normalTransform', false, normalMatrix.array());
-              vertexAttribPointer("normal3d", programObject3D, "Normal", 3, currSeg.normVBO);
+              uniformMatrix('normalTransform3d', programObject3D, 'uNormalTransform', false, normalMatrix.array());
+              vertexAttribPointer("normal3d", programObject3D, 'aNormal', 3, currSeg.normVBO);
             }
             else{
-              disableVertexAttribPointer('normal3D', programObject3D, 'Normal');
+              disableVertexAttribPointer('normal3D', programObject3D, 'uNormal');
             }
 
-            vertexAttribPointer('vertex3d', programObject3D, 'Vertex', 3, currSeg.vertVBO);
+            vertexAttribPointer('vertex3d', programObject3D, 'aVertex', 3, currSeg.vertVBO);
             curContext.drawArrays(curContext.TRIANGLES, 0, currSeg.numVerts);
           }
 
           // Some objects (like rect) expect this to be off when they render.
-          uniformi('usingTexture3d', programObject3D, 'usingTexture', false);
+          uniformi('usingTexture3d', programObject3D, 'uUsingTexture', false);
         }// render
       }// drawMode
     };// OBJModel
