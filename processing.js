@@ -7961,7 +7961,7 @@
     * @see pushMatrix
     */
     Drawing2D.prototype.rotateZ = function(){
-	  throw("rotateZ() is not supported in 2D mode.");
+	    throw("rotateZ() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.rotateZ = function(angleInRadians) {
@@ -10504,7 +10504,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.ambientLight = function(){
-	  throw("ambientLight() is not supported in 2D mode.");
+	    throw("ambientLight() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.ambientLight = function(r, g, b, x, y, z) {
@@ -10561,7 +10561,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.directionalLight = function(){
-	  throw("directionalLight() is not supported in 2D mode.");
+      throw("directionalLight() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.directionalLight = function(r, g, b, nx, ny, nz) {
@@ -10626,7 +10626,7 @@
      * @see lightSpecular
     */
     Drawing2D.prototype.lightFalloff = function(){
-	  throw("lightFalloff() is not supported in 2D mode.");
+      throw("lightFalloff() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.lightFalloff = function(constant, linear, quadratic) {
@@ -10654,7 +10654,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.lightSpecular = function(){
-	  throw("lightSpecular() is not supported in 2D mode.");
+      throw("lightSpecular() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.lightSpecular = function(r, g, b) {
@@ -10689,7 +10689,7 @@
      *
     */
     Drawing2D.prototype.lights = function(){
-	  throw("lights() is not supported in 2D mode.");
+      throw("lights() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.lights = function() {
@@ -10722,7 +10722,7 @@
      * @see spotLight
     */
     Drawing2D.prototype.pointLight = function(){
-	  throw("pointLight() is not supported in 2D mode.");
+      throw("pointLight() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.pointLight = function(r, g, b, x, y, z) {
@@ -10763,7 +10763,7 @@
      * @see lights
     */
     Drawing2D.prototype.noLights = function(){
-	  throw("noLights() is not supported in 2D mode.");
+      throw("noLights() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.noLights = function() {
@@ -10802,7 +10802,7 @@
      * @see pointLight
     */
     Drawing2D.prototype.spotLight = function(){
-	  throw("spotLight() is not supported in 2D mode.");
+      throw("spotLight() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.spotLight = function(r, g, b, x, y, z, nx, ny, nz, angle, concentration) {
@@ -10873,7 +10873,7 @@
      * @see scale
      */
     Drawing2D.prototype.beginCamera = function(){
-	  throw("beginCamera() is not supported in 2D mode.");
+      throw("beginCamera() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.beginCamera = function() {
@@ -10892,7 +10892,7 @@
      * @see beginCamera
      */
     Drawing2D.prototype.endCamera = function(){
-	  throw("endCamera() is not supported in 2D mode.");
+      throw("endCamera() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.endCamera = function() {
@@ -10927,7 +10927,7 @@
      * @see frustum
      */
     Drawing2D.prototype.camera = function(){
-	  throw("camera() is not supported in 2D mode.");
+      throw("camera() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.camera = function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
@@ -10994,7 +10994,7 @@
      * @param {float} zFar    z-positions of farthest clipping plane
      */
     Drawing2D.prototype.perspective = function(){
-	  throw("perspective() is not supported in 2D mode.");
+      throw("perspective() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.perspective = function(fov, aspect, near, far) {
@@ -11036,7 +11036,7 @@
      * @see perspective
      */
     Drawing2D.prototype.frustum = function(){
-	  throw("frustum() is not supported in 2D mode.");
+      throw("frustum() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.frustum = function(left, right, bottom, top, near, far) {
@@ -11072,7 +11072,7 @@
      * @param {float} far    maximum distance from the origin away from the viewer
      */
     Drawing2D.prototype.ortho = function(){
-	  throw("ortho() is not supported in 2D mode.");
+      throw("ortho() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.ortho = function(left, right, bottom, top, near, far) {
@@ -11111,7 +11111,7 @@
      * The printProjection() prints the current projection matrix to the text window.
      */
     Drawing2D.prototype.printProjection = function(){
-	  throw("printProjection() is not supported in 2D mode.");
+      throw("printProjection() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.printProjection = function() {
@@ -11121,7 +11121,7 @@
      * The printCamera() function prints the current camera matrix.
      */
     Drawing2D.prototype.printCamera = function(){
-	  throw("printCamera() is not supported in 2D mode.");
+      throw("printCamera() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.printCamera = function() {
@@ -11140,7 +11140,7 @@
      * @param {int|float} d  dimension of the box in the z-dimension
      */
     Drawing2D.prototype.box = function(){
-	  throw("box() is not supported in 2D mode.");
+      throw("box() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.box = function(w, h, d) {
@@ -11320,7 +11320,7 @@
      * @see #sphere()
      */
     Drawing2D.prototype.sphereDetail = function(){
-	  throw("sphereDetail() is not supported in 2D mode.");
+      throw("sphereDetail() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.sphereDetail = function(ures, vres) {
@@ -11388,7 +11388,7 @@
      * @param {int|float} r the radius of the sphere
      */
     Drawing2D.prototype.sphere = function(){
-	  throw("sphere() is not supported in 2D mode.");
+      throw("sphere() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.sphere = function() {
@@ -11490,7 +11490,7 @@
      * @see modelZ
     */
     Drawing2D.prototype.modelX = function(){
-	  throw("modelX() is not supported in 2D mode.");
+      throw("modelX() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.modelX = function(x, y, z) {
@@ -11526,7 +11526,7 @@
      * @see modelZ
     */
     Drawing2D.prototype.modelY = function(){
-	  throw("modelY() is not supported in 2D mode.");
+      throw("modelY() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.modelY = function(x, y, z) {
@@ -11561,7 +11561,7 @@
      * @see modelY
     */
     Drawing2D.prototype.modelZ = function(){
-	  throw("modelZ() is not supported in 2D mode.");
+      throw("modelZ() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.modelZ = function(x, y, z) {
@@ -11601,7 +11601,7 @@
      * @see shininess
     */
     Drawing2D.prototype.ambient = function(){
-	  throw("ambient() is not supported in 2D mode.");
+      throw("ambient() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.ambient = function(v1, v2, v3) {
@@ -11636,7 +11636,7 @@
      * @see shininess
     */
     Drawing2D.prototype.emissive = function(){
-	  throw("emissive() is not supported in 2D mode.");
+      throw("emissive() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.emissive = function(v1, v2, v3) {
@@ -11656,7 +11656,7 @@
      * @returns none
     */
     Drawing2D.prototype.shininess = function(){
-	  throw("shininess() is not supported in 2D mode.");
+      throw("shininess() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.shininess = function(shine) {
@@ -11702,7 +11702,7 @@
      * @see shininess
     */
     Drawing2D.prototype.specular = function(){
-	  throw("specular() is not supported in 2D mode.");
+      throw("specular() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.specular = function(v1, v2, v3) {
@@ -11802,7 +11802,7 @@
      * @see screenY
     */
     Drawing2D.prototype.screenZ = function(){
-	  throw("screenZ() is not supported in 2D mode.");
+      throw("screenZ() is not supported in 2D mode.");
     };
 
     Drawing3D.prototype.screenZ = function screenZ( x, y, z ) {
