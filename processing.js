@@ -2947,44 +2947,68 @@
         components
         numTriangles
       */
-        quadsToTris: function(arrToMod, arr, pivot, components, numTriangles){
-          var lastIndex = components + pivot;
+      quadsToTris: function(arrToMod, arr, pivot, components, numTriangles){
+        var lastIndex = components + pivot;
 
-          for(var test = 0; test < numTriangles; test++, lastIndex += components){
-            arrToMod.push(arr[pivot]);
-            arrToMod.push(arr[lastIndex]|0);
-            arrToMod.push(arr[lastIndex+components]|0);
+        for(var test = 0; test < numTriangles; test++, lastIndex += components){
+          arrToMod.push(arr[pivot]);
+          arrToMod.push(arr[lastIndex]|0);
+          arrToMod.push(arr[lastIndex+components]|0);
+        }
+      },
+
+      /*
+      */
+      expandCoordsFromIndices: function(uniqueCoords, indices, size, vertindices){
+        var expandedCoords, ev, index, i, vi;
+
+        expandedCoords = new Float32Array(vertindices.length * size);
+
+        // Iterate over every coord, which consists of 2 or 3
+        for(i = 0, ev = 0; i < vertindices.length; i++){
+          if(indices){
+            index = uniqueCoords[indices[i] - 1];
           }
-        },
+          else{
+            index = uniqueCoords[i];
+          }
 
-       /**
-       */
-       load: function(path){
-         this.relPath = path;
+          for(vi = 0; vi < size; vi++){
+            expandedCoords[ev] = index[vi];
+            ev++;
+          }
+        }
+        return expandedCoords;
+      },
 
-         this.xhr = new XMLHttpRequest();
-         this.xhr.open('GET', this.relPath, false);
+      /**
+      */
+      load: function(path){
+        this.relPath = path;
 
-         // Tell the browser we are XHR'ing a plain text file so it doesn't dump
-         // silly syntax errors into the console.
-         if (this.xhr.overrideMimeType) {
-           this.xhr.overrideMimeType('text/plain');
-         }
+        this.xhr = new XMLHttpRequest();
+        this.xhr.open('GET', this.relPath, false);
 
-         // We take the first element since that contains the path.
-         // demos/objs/file.obj
-         this.objRelPath = this.relPath.match(/.*\//);
-         if(this.objRelPath === null){
-           this.objRelPath = '';
-         }
+        // Tell the browser we are XHR'ing a plain text file so it doesn't dump
+        // silly syntax errors into the console.
+        if (this.xhr.overrideMimeType) {
+         this.xhr.overrideMimeType('text/plain');
+        }
 
-         this.xhr.send(null);
-         return this;
-       },
+        // We take the first element since that contains the path.
+        // demos/objs/file.obj
+        this.objRelPath = this.relPath.match(/.*\//);
+        if(this.objRelPath === null){
+         this.objRelPath = '';
+        }
 
-       /**
-       */
-       drawMode: function(){
+        this.xhr.send(null);
+        return this;
+      },
+
+      /**
+      */
+      drawMode: function(){
          // If we finished downloading the file, but haven't parsed it yet, parse it now.
          if(this.xhr.readyState === 4 && !this.parsed){
            this.parsed = true;
@@ -3259,74 +3283,78 @@
             var vertIndices = [];
             var texcIndices = [];
             var normIndices = [];
+            this.numFaces = 0;
 
-            for(i = 0; i < faces.length; i++){
-              // Get a face line without the 'f' qualifier since
-              // that will interfere when we're adding values to
-              // the array below.
-              //
-              // example:
-              // f 2/3 3/4 4/2
-              var faceLine = faces[i].replace(/(f|fo) /,'');
-              var vertParts;
-
-              // Some .obj files have whitespace near the end of the 'face line'.
-              // This creates issues when trying to split up the elements in this
-              // face definition below. The easiest thing is to simply remove the trailing spaces.
-              faceLine = faceLine.replace(/( |\t)+$/, '');
-
-              // There are 4 cases in a face definition:
-
-              // The .obj spec says there needs to be consistency
-              // in a single line. This means we only need to check
-              // the first part of the face definition to know if
-              // it has vertex, tex coords and/or normals.
-
-              // If slashes were not found in a line, we're only dealing with vertices.
-              // 
-              // example:
-              // f 1 2 3
-              if(!faceLine.match(/\//)){
-
+            // Point clouds do not have have face definitions.
+            if(faces){
+              for(i = 0; i < faces.length; i++){
+                this.numFaces++;
+                // Get a face line without the 'f' qualifier since
+                // that will interfere when we're adding values to
+                // the array below.
                 //
-                var numVertices = faceLine.split(/\s+/).length;
+                // example:
+                // f 2/3 3/4 4/2
+                var faceLine = faces[i].replace(/(f|fo) /,'');
+                var vertParts;
 
-                vertParts = faceLine.split(/\s+/);
+                // Some .obj files have whitespace near the end of the 'face line'.
+                // This creates issues when trying to split up the elements in this
+                // face definition below. The easiest thing is to simply remove the trailing spaces.
+                faceLine = faceLine.replace(/( |\t)+$/, '');
 
-                // Trivial if we have less than 4 vertices
-                if(numVertices < 4){
-                  vertIndices.push(vertParts[0]|0);
-                  vertIndices.push(vertParts[1]|0);
-                  vertIndices.push(vertParts[2]|0);
-                }
-                else{
-                  // 4 verts = 2 tris
-                  // 5 verts = 3 tris
-                  // 8 verts = 6 tris
-                  // etc..
-                  var numTriangles = numVertices - 2;
-                  var lastIndex = 1;
+                // There are 4 cases in a face definition:
 
-                  for(var test = 0; test < numTriangles; test++, lastIndex++){
-                    // Insert the pivot
+                // The .obj spec says there needs to be consistency
+                // in a single line. This means we only need to check
+                // the first part of the face definition to know if
+                // it has vertex, tex coords and/or normals.
+
+                // If slashes were not found in a line, we're only dealing with vertices.
+                // 
+                // example:
+                // f 1 2 3
+                if(!faceLine.match(/\//)){
+
+                  //
+                  var numVertices = faceLine.split(/\s+/).length;
+
+                  vertParts = faceLine.split(/\s+/);
+
+                  // Trivial if we have less than 4 vertices
+                  if(numVertices < 4){
                     vertIndices.push(vertParts[0]|0);
+                    vertIndices.push(vertParts[1]|0);
+                    vertIndices.push(vertParts[2]|0);
+                  }
+                  else{
+                    // 4 verts = 2 tris
+                    // 5 verts = 3 tris
+                    // 8 verts = 6 tris
+                    // etc..
+                    var numTriangles = numVertices - 2;
+                    var lastIndex = 1;
 
-                    vertIndices.push(vertParts[lastIndex]|0);
-                    vertIndices.push(vertParts[lastIndex+1]|0);
+                    for(var test = 0; test < numTriangles; test++, lastIndex++){
+                      // Insert the pivot
+                      vertIndices.push(vertParts[0]|0);
+
+                      vertIndices.push(vertParts[lastIndex]|0);
+                      vertIndices.push(vertParts[lastIndex+1]|0);
+                    }
                   }
                 }
-              }
 
-              // VERTEX / TEXCOORD / NORMAL
-              //
-              // example:
-              // f 1/1/1 2/2/2 3/3/3
-              else if(faceLine.match(/\d+\/\d+\/\d+/)){
-                var numVertices = faceLine.split(" ").length;
+                // VERTEX / TEXCOORD / NORMAL
+                //
+                // example:
+                // f 1/1/1 2/2/2 3/3/3
+                else if(faceLine.match(/\d+\/\d+\/\d+/)){
+                  var numVertices = faceLine.split(" ").length;
 
-                vertParts = faceLine.split(/\/|\s+/);
-                
-                if( numVertices < 4 ){
+                  vertParts = faceLine.split(/\/|\s+/);
+                  
+                  if( numVertices < 4 ){
                     vertIndices.push(vertParts[0]|0);
                     texcIndices.push(vertParts[1]|0);
                     normIndices.push(vertParts[2]|0);
@@ -3338,27 +3366,27 @@
                     vertIndices.push(vertParts[6]|0);
                     texcIndices.push(vertParts[7]|0);
                     normIndices.push(vertParts[8]|0);
-                }
-                else{
+                  }
+                  else{
                     var numTriangles = numVertices - 2;
                     this.quadsToTris(vertIndices, vertParts, 0, 3, numTriangles);
                     this.quadsToTris(texcIndices, vertParts, 1, 3, numTriangles);
                     this.quadsToTris(normIndices, vertParts, 2, 3, numTriangles);
+                  }
                 }
-              }
 
-              // VERTEX / TEXCOORD
-              // If there's only one slash between numbers, we're dealing with v/t
-              //
-              // example:
-              // f 1/1 2/2 3/3
-              // f 1/1 2/2 3/3 4/4 5/5
-              else if(faceLine.match(/\d+\/\d+/)){
-                vertParts = faceLine.split(/\/|\s+/);
+                // VERTEX / TEXCOORD
+                // If there's only one slash between numbers, we're dealing with v/t
+                //
+                // example:
+                // f 1/1 2/2 3/3
+                // f 1/1 2/2 3/3 4/4 5/5
+                else if(faceLine.match(/\d+\/\d+/)){
+                  vertParts = faceLine.split(/\/|\s+/);
 
-                var numVertices = faceLine.split(/\s+/).length;
+                  var numVertices = faceLine.split(/\s+/).length;
 
-                if( numVertices < 4 ){       
+                  if( numVertices < 4 ){       
                     vertIndices.push(vertParts[0]|0);
                     texcIndices.push(vertParts[1]|0);
 
@@ -3367,26 +3395,26 @@
 
                     vertIndices.push(vertParts[4]|0);
                     texcIndices.push(vertParts[5]|0);
-                }
-                else{
+                  }
+                  else{
                     var numTriangles = numVertices - 2;
                     this.quadsToTris(vertIndices, vertParts, 0, 2, numTriangles);
                     this.quadsToTris(texcIndices, vertParts, 1, 2, numTriangles);
+                  }
                 }
-              }
 
-              // VERTEX / / NORMAL
-              // If there are no values between two slashes, we have vertices and normals.
-              //
-              // example:
-              // f 1//1 2//2 3//3
-              else if(faceLine.match(/\d+\/\/\d+/)){
-                // split on two consecutive slashes or a space
-                vertParts = faceLine.split(/\/\/|\s+/);
- 
-                var numVertices = faceLine.split(/\s+/).length;
+                // VERTEX / / NORMAL
+                // If there are no values between two slashes, we have vertices and normals.
+                //
+                // example:
+                // f 1//1 2//2 3//3
+                else if(faceLine.match(/\d+\/\/\d+/)){
+                  // split on two consecutive slashes or a space
+                  vertParts = faceLine.split(/\/\/|\s+/);
+   
+                  var numVertices = faceLine.split(/\s+/).length;
 
-                if(numVertices < 4){
+                  if(numVertices < 4){
                     vertIndices.push(vertParts[0]|0);
                     normIndices.push(vertParts[1]|0);
 
@@ -3395,70 +3423,49 @@
 
                     vertIndices.push(vertParts[4]|0);
                     normIndices.push(vertParts[5]|0);
-                }
-                else{
+                  }
+                  else{
                     var numTriangles = numVertices - 2;
                     this.quadsToTris(vertIndices, vertParts, 0, 2, numTriangles);
                     this.quadsToTris(normIndices, vertParts, 1, 2, numTriangles);
+                  }
                 }
               }
             }
 
             // Expand UVS.
             if(texcIndices.length > 0){
-              var  ec = 0;
-              var ExpandedTexCoords = new Float32Array(vertIndices.length * 3);
-              for(i = 0; i < texcIndices.length; i++){
-
-                // Subtract one since the OBJ standard starts at one.
-                var uvIndex = uniqueUVs[texcIndices[i]-1];
-
-                for(var j = 0; j < 2; j++){
-                  ExpandedTexCoords[ec] = uvIndex[j];
-                  ec++;
-                }
-              }
+              expandedTexCoords = this.expandCoordsFromIndices(uniqueUVs, texcIndices, 2, vertIndices);
 
               var texcVBO = curContext.createBuffer();
               curContext.bindBuffer(curContext.ARRAY_BUFFER, texcVBO);
-              curContext.bufferData(curContext.ARRAY_BUFFER, ExpandedTexCoords, curContext.STATIC_DRAW);
+              curContext.bufferData(curContext.ARRAY_BUFFER, expandedTexCoords, curContext.STATIC_DRAW);
 
               this.segments[segIndex].texcVBO = texcVBO;
             }
 
             // Expand Normals.
-            if(normIndices.length > 0){
-              var k = 0;
-              i = 0;
-              var ExpandedNormals = new Float32Array(vertIndices.length * 3);
-              for(; i < normIndices.length; i++){
-
-                // Subtract one since the OBJ standard starts at one.
-                var normIndex = uniqueNormals[normIndices[i]-1];
-
-                for(var ni = 0; ni < 3; ni++){
-                  ExpandedNormals[k] = normIndex[ni];
-                  k++;
-                }
+            if(uniqueNormals.length > 0){
+              if(normIndices.length > 0){
+                expandedNormals = this.expandCoordsFromIndices(uniqueNormals, normIndices, 3, vertIndices);
+              }
+              else{
+                expandedNormals = this.expandCoordsFromIndices(uniqueNormals, null, 3, uniqueNormals);
               }
 
               var normVBO = curContext.createBuffer();
               curContext.bindBuffer(curContext.ARRAY_BUFFER, normVBO);
-              curContext.bufferData(curContext.ARRAY_BUFFER, ExpandedNormals, curContext.STATIC_DRAW);
+              curContext.bufferData(curContext.ARRAY_BUFFER, expandedNormals, curContext.STATIC_DRAW);
 
               this.segments[segIndex].normVBO = normVBO;
             }
 
-            // !!! needs comment
-            var expandedVerts = new Float32Array(vertIndices.length * 3);
-
-            var ev = 0;
-            for(i = 0; i < vertIndices.length; i++){
-              var vertIndex = uniqueVertices[vertIndices[i] - 1];
-              for(var vi = 0; vi < 3; vi++){
-                expandedVerts[ev] = vertIndex[vi];
-                ev++;
-              }
+            // !! comment
+            if(vertIndices.length > 0){
+              expandedVerts = this.expandCoordsFromIndices(uniqueVertices, vertIndices, 3, vertIndices);
+            }
+            else{
+              expandedVerts = this.expandCoordsFromIndices(uniqueVertices, null, 3, uniqueVertices);
             }
 
             // Safe to assume we'll have vertices, so we don't need a check
@@ -3486,7 +3493,7 @@
 
           curContext.useProgram(programObject3D);
 
-          // !!! TODO: comment
+          // 
           if(lightCount > 0){
             uniformf('color_3d', programObject3D, 'uColor', [1,1,1,1]);
           }
@@ -3510,6 +3517,7 @@
             var texObj = currSeg.matName;
             texObj = this.materials[texObj];
 
+            // Texture
             if(currSeg.texcVBO && texObj && typeof(texObj) === 'object'){
               uniformi('usingTexture3d', programObject3D, 'uUsingTexture', true);
               curContext.bindTexture(curContext.TEXTURE_2D, texObj);
@@ -3526,19 +3534,28 @@
               disableVertexAttribPointer('aTexture3d', programObject3D, 'aTexture');
             }
 
+            // Don't perform the expensive normal transformation if 
+            // we don't actually have any normals
             if(currSeg.normVBO){
               var normalMatrix = new p.PMatrix3D();
               normalMatrix.set(modelView.array());
               normalMatrix.invert();
               uniformMatrix('normalTransform3d', programObject3D, 'uNormalTransform', false, normalMatrix.array());
-              vertexAttribPointer("normal3d", programObject3D, 'aNormal', 3, currSeg.normVBO);
+              vertexAttribPointer('normal3d', programObject3D, 'aNormal', 3, currSeg.normVBO);
             }
             else{
               disableVertexAttribPointer('normal3D', programObject3D, 'uNormal');
             }
 
             vertexAttribPointer('vertex3d', programObject3D, 'aVertex', 3, currSeg.vertVBO);
-            curContext.drawArrays(curContext.TRIANGLES, 0, currSeg.numVerts);
+
+            // A hack to either render a point cloud or a mesh
+            if(this.numFaces > 0){
+              curContext.drawArrays(curContext.TRIANGLES, 0, currSeg.numVerts);
+            }
+            else{
+              curContext.drawArrays(curContext.POINTS, 0, currSeg.numVerts);
+            }
           }
 
           // Some objects (like rect) expect this to be off when they render.
