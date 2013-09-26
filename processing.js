@@ -11418,6 +11418,7 @@
       uniformMatrix("projection2d", programObject2D, "uProjection", false, proj.array());
       curContext.useProgram(programObject3D);
       uniformMatrix("projection3d", programObject3D, "uProjection", false, proj.array());
+
       curContext.useProgram(programObjectUnlitShape);
       uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
 
@@ -14404,7 +14405,7 @@
           shaderTransform.apply(v);
           shaderTransform.transpose();
 
-          vertexAttribPointer("aVertex3d" + programObject3D.name, programObject3D, "aVertex", 3, rectBuffer);
+          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 3, rectBuffer);
           uniformMatrix("transform", programObject3D, "transform", false, shaderTransform.array());
         }
 
