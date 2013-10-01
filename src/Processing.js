@@ -994,121 +994,6 @@
       return programObject;
     };
 
-   /**
-        PShader()
-        PShader(parent)
-        PShader(parent, vertFilename, fragFilename)
-        PShader(parent, vertURL, fragURL)
-    */
-    var PShader = p.PShader = function(parent, vertexShader, fragmentShader) {
-      this.programObject = createProgramObject(curContext, vertexShader, fragmentShader);
-      this.programObject.name = this.__nextID();
-    };
-
-    /**
-      .set(name, x) x float, or int: first component of the variable to modify
-      .set(name, x, y) y float, or int: second component of the variable to modify. The variable has to be declared with an array/vector type in the shader (i.e.: int[2], vec2)
-      .set(name, x, y, z) z float, or int: third component of the variable to modify. The variable has to be declared with an array/vector type in the shader (i.e.: int[3], vec3)
-      .set(name, x, y, z, w) w float, or int: fourth component of the variable to modify. The variable has to be declared with an array/vector type in the shader (i.e.: int[4], vec4)
-
-      .set(name, vec) vec float[], int[], or PVector: modifies all the components of an array/vector uniform variable. PVector can only be used if the type of the variable is vec3.
-      .set(name, vec, ncoords) ncoords int: number of coordinates per element, max 4
-
-      .set(name, mat) mat PMatrix3D, or PMatrix2D: matrix of values
-      .set(name, mat, use3x3) use3x3 boolean: enforces the matrix is 3 x 3
-
-      .set(name, tex) tex PImage: sets the sampler uniform variable to read from this image texture
-    */
-     PShader.prototype = {
-
-      // total hack to keep all shader uniform locations unique
-      __nextID: (function(){
-        var i = -1;
-        return function(){return i++;};
-      })(),
-
-      set: function(name, p1, p2, p3, p4){
-
-        var lastUsedProgramObject = defaultProgramObject3D;
-
-        curContext.useProgram(this.programObject);
-        var a = arguments;
-
-        //
-        if(a.length === 2){
-          if(a[1] instanceof PVector){
-            uniformf(name, this.programObject, name, PVector.array());
-          }
-          else if(a[1] instanceof PMatrix3D){
-            uniformMatrix(name, this.programObject, name, a[1]);
-          }
-          else if(p1 instanceof PImage ){
-            p.texture(p1);
-          }
-          else{
-            if(a[1] % 1 === 0){
-              uniformi(name, this.programObject, name, a[1]);
-            }
-            else{
-              uniformf(name, this.programObject, name, a[1]);
-            }
-          }
-        }
-        else if(a.length === 3){
-          if(a[2]){
-            uniformf(name, this.programObject, name, [a[1], a[2]]);
-          }
-        }
-        else if(a.length === 4){
-          uniformf(name, this.programObject, name, [a[1], a[2], a[3]]);
-        }
-        else if(a.length === 5){
-          uniformf(name, this.programObject, name, [a[1], a[2], a[3], a[4]]);
-        }
-
-        curContext.useProgram(lastUsedProgramObject);
-      }
-    };
-
-    /**
-      shader
-      kind: type of shader, either POINTS, LINES, or TRIANGLES
-    */
-    p.shader = function(shader, kind){
-      // TODO: Only change shader if we really need to
-      programObject3D = shader.programObject;
-      curContext.useProgram(programObject3D);
-      usingDefaultProgramObject3D = false;
-      p.perspective();
-    };
-
-    /**
-      Go back to using the default shader
-    */
-    p.resetShader = function(){
-      programObject3D = defaultProgramObject3D;
-      curContext.useProgram(programObject3D)
-      usingDefaultProgramObject3D = true;
-      p.perspective();
-    };
-
-    /**
-      Loads a shader into the PShader object. The shader file must be loaded in the sketch's "data" folder/directory to load correctly. Shaders are compatible with the P2D and P3D renderers, but not with the default renderer.
-
-      Alternatively, the file maybe be loaded from anywhere on the local computer using an absolute path (something that starts with / on Unix and Linux, or a drive letter on Windows), or the filename parameter can be a URL for a file found on a network.
-
-      If the file is not available or an error occurs, null will be returned and an error message will be printed to the console. The error message does not halt the program, however the null value may cause a NullPointerException if your code does not check whether the value returned is null.
-
-      @param fragShader
-      @param vertShader {not req}
-
-      @returns PShader
-    */
-    p.loadShader = function(fragShader, vertShader){
-      var fs = ajax(fragShader);
-      var vs = ajax(vertShader);
-      return new PShader(this, vs, fs);
-    };
 
     ////////////////////////////////////////////////////////////////////////////
     // 2D/3D drawing handling
@@ -3550,6 +3435,66 @@
     Drawing3D.prototype.scale = function(x, y, z) {
       modelView.scale(x, y, z);
       modelViewInv.invScale(x, y, z);
+    };
+
+
+
+    /**
+      .set(name, x) x float, or int: first component of the variable to modify
+      .set(name, x, y) y float, or int: second component of the variable to modify. The variable has to be declared with an array/vector type in the shader (i.e.: int[2], vec2)
+      .set(name, x, y, z) z float, or int: third component of the variable to modify. The variable has to be declared with an array/vector type in the shader (i.e.: int[3], vec3)
+      .set(name, x, y, z, w) w float, or int: fourth component of the variable to modify. The variable has to be declared with an array/vector type in the shader (i.e.: int[4], vec4)
+
+      .set(name, vec) vec float[], int[], or PVector: modifies all the components of an array/vector uniform variable. PVector can only be used if the type of the variable is vec3.
+      .set(name, vec, ncoords) ncoords int: number of coordinates per element, max 4
+
+      .set(name, mat) mat PMatrix3D, or PMatrix2D: matrix of values
+      .set(name, mat, use3x3) use3x3 boolean: enforces the matrix is 3 x 3
+
+      .set(name, tex) tex PImage: sets the sampler uniform variable to read from this image texture
+    */
+     
+
+    /**
+      shader
+      kind: type of shader, either POINTS, LINES, or TRIANGLES
+    */
+    Drawing3D.prototype.shader = function(shader, kind){
+      // TODO: Only change shader if we really need to
+      programObject3D = shader.programObject;
+      curContext.useProgram(programObject3D);
+      usingDefaultProgramObject3D = false;
+      p.perspective();
+    };
+
+    /**
+      Go back to using the default shader
+    */
+    Drawing3D.prototype.resetShader = function(){
+      programObject3D = defaultProgramObject3D;
+      curContext.useProgram(programObject3D)
+      usingDefaultProgramObject3D = true;
+      p.perspective();
+    };
+
+    /**
+      Loads a shader into the PShader object. The shader file must be loaded in the sketch's "data" folder/directory to load correctly. Shaders are compatible with the P2D and P3D renderers, but not with the default renderer.
+
+      Alternatively, the file maybe be loaded from anywhere on the local computer using an absolute path (something that starts with / on Unix and Linux, or a drive letter on Windows), or the filename parameter can be a URL for a file found on a network.
+
+      If the file is not available or an error occurs, null will be returned and an error message will be printed to the console. The error message does not halt the program, however the null value may cause a NullPointerException if your code does not check whether the value returned is null.
+
+      @param fragShader
+      @param vertShader {not req}
+
+      @returns PShader
+    */
+    Drawing3D.prototype.loadShader = function(fragShader, vertShader){
+
+      var fs = ajax(fragShader);
+      var vs = ajax(vertShader);
+
+      return new PShader(vs, fs);
     };
 
 
@@ -6012,8 +5957,62 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
       view.transpose();
+/*
+       if (doFill) {
+        curContext.useProgram(programObject3D);
+
+        if(usingDefaultProgramObject3D){
+          uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
+          uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
+          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, rectBuffer);
+        }
+        else{
+          var m = new PMatrix3D();
+          m.translate(x, y, 0);
+          m.scale(width, height, 1);
+
+          var v = new PMatrix3D();
+          v.scale(1, -1, 1);
+          v.apply(modelView.array());
+          v.apply(m);
+
+          var shaderTransform = new PMatrix3D();
+          shaderTransform.set(lastProjection);
+          shaderTransform.apply(v);
+          shaderTransform.transpose();
+
+          vertexAttribPointer("aVertex3d" + programObject3D.name, programObject3D, "aVertex", 3, rectBuffer);
+          uniformMatrix("transform", programObject3D, "transform", false, shaderTransform.array());
+        }
+*/
 
       if (doFill) {
+
+        curContext.useProgram(programObject3D);
+ 
+        if(usingDefaultProgramObject3D){
+          uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
+          uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
+          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, sphereBuffer);
+        }
+        else{
+          var m = new PMatrix3D();
+          m.set(model);
+
+          var v = new PMatrix3D();
+          v.scale(1, -1, 1);
+          v.apply(modelView.array());
+          v.apply(m);
+
+          var shaderTransform = new PMatrix3D();
+          shaderTransform.set(lastProjection);
+          shaderTransform.apply(v);
+          shaderTransform.transpose();
+
+          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 3, sphereBuffer);
+          uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
+        }
+
         // Calculating the normal matrix can be expensive, so only
         // do it if it's necessary.
         if(lightCount > 0){
@@ -6041,9 +6040,9 @@
         curContext.useProgram(programObject3D);
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
 
-        uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
-        uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
-        vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, sphereBuffer);
+        //uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
+        //uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
+        
 
         // Turn off per vertex colors.
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
@@ -8636,8 +8635,6 @@
 
       if (doFill) {
         curContext.useProgram(programObject3D);
-        uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
-        uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
 
         if(usingDefaultProgramObject3D){
           uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
@@ -8659,8 +8656,8 @@
           shaderTransform.apply(v);
           shaderTransform.transpose();
 
-          vertexAttribPointer("aVertex3d" + programObject3D.name, programObject3D, "aVertex", 3, rectBuffer);
-          uniformMatrix("transform", programObject3D, "transform", false, shaderTransform.array());
+          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 3, rectBuffer);
+          uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
         }
 
         // fix stitching problems. (lines get occluded by triangles
@@ -9035,6 +9032,65 @@
 
       };
     }
+
+    /**
+    */
+    var PShader = function(vertexShader, fragmentShader) {
+      this.programObject = createProgramObject(curContext, vertexShader, fragmentShader);
+      
+      this.programObject.name = this.__nextID();
+  };
+  
+  PShader.prototype = {
+
+      // total hack to keep all shader uniform locations unique
+      __nextID: (function(){
+        var i = -1;
+        return function(){return i++;};
+      })(),
+
+      set: function(name, p1, p2, p3, p4){
+
+      /*  var lastUsedProgramObject = defaultProgramObject3D;
+
+        curContext.useProgram(this.programObject);
+        var arg = arguments;
+
+        //
+        if(a.length === 2){
+          if(arg[1] instanceof PVector){
+            uniformf(name, this.programObject, name, PVector.array());
+          }
+          else if(arg[1] instanceof PMatrix3D){
+            uniformMatrix(name, this.programObject, name, arg[1]);
+          }
+          else if(p1 instanceof PImage ){
+            p.texture(p1);
+          }
+          else{
+            if(arg[1] % 1 === 0){
+              uniformi(name, this.programObject, name, arg[1]);
+            }
+            else{
+              uniformf(name, this.programObject, name, arg[1]);
+            }
+          }
+        }
+        else if(arg.length === 3){
+          if(arg[2]){
+            uniformf(name, this.programObject, name, [arg[1], arg[2]]);
+          }
+        }
+        else if(arg.length === 4){
+          uniformf(name, this.programObject, name, [arg[1], arg[2], arg[3]]);
+        }
+        else if(arg.length === 5){
+          uniformf(name, this.programObject, name, [arg[1], arg[2], arg[3], arg[4]]);
+        }
+
+        curContext.useProgram(lastUsedProgramObject);*/
+      }
+    };
 
     /**
     * Datatype for storing images. Processing can display .gif, .jpg, .tga, and .png images. Images may be
@@ -11814,6 +11870,9 @@
     DrawingPre.prototype.curve = createDrawingPreFunction("curve");
     DrawingPre.prototype.line = createDrawingPreFunction("line");
     DrawingPre.prototype.bezier = createDrawingPreFunction("bezier");
+    DrawingPre.prototype.loadShader = createDrawingPreFunction("loadShader");
+    DrawingPre.prototype.shader = createDrawingPreFunction("shader");
+    DrawingPre.prototype.resetShader = createDrawingPreFunction("resetShader");
     DrawingPre.prototype.rect = createDrawingPreFunction("rect");
     DrawingPre.prototype.ellipse = createDrawingPreFunction("ellipse");
     DrawingPre.prototype.background = createDrawingPreFunction("background");
@@ -11822,6 +11881,7 @@
     DrawingPre.prototype.text$line = createDrawingPreFunction("text$line");
     DrawingPre.prototype.$ensureContext = createDrawingPreFunction("$ensureContext");
     DrawingPre.prototype.$newPMatrix = createDrawingPreFunction("$newPMatrix");
+
 
     DrawingPre.prototype.size = function(aWidth, aHeight, aMode) {
       wireDimensionalFunctions(aMode === PConstants.WEBGL ? "3D" : "2D");
