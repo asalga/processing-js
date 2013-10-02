@@ -5957,34 +5957,6 @@
       view.scale(1, -1, 1);
       view.apply(modelView.array());
       view.transpose();
-/*
-       if (doFill) {
-        curContext.useProgram(programObject3D);
-
-        if(usingDefaultProgramObject3D){
-          uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
-          uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
-          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, rectBuffer);
-        }
-        else{
-          var m = new PMatrix3D();
-          m.translate(x, y, 0);
-          m.scale(width, height, 1);
-
-          var v = new PMatrix3D();
-          v.scale(1, -1, 1);
-          v.apply(modelView.array());
-          v.apply(m);
-
-          var shaderTransform = new PMatrix3D();
-          shaderTransform.set(lastProjection);
-          shaderTransform.apply(v);
-          shaderTransform.transpose();
-
-          vertexAttribPointer("aVertex3d" + programObject3D.name, programObject3D, "aVertex", 3, rectBuffer);
-          uniformMatrix("transform", programObject3D, "transform", false, shaderTransform.array());
-        }
-*/
 
       if (doFill) {
 
@@ -6916,30 +6888,53 @@
       view.transpose();
 
       curContext.useProgram( programObject3D );
-      uniformMatrix( "model3d", programObject3D, "uModel", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
-      uniformMatrix( "view3d", programObject3D, "uView", false, view.array() );
-      curContext.enable( curContext.POLYGON_OFFSET_FILL );
-      curContext.polygonOffset( 1, 1 );
-      uniformf( "color3d", programObject3D, "uColor", [-1,0,0,0] );
-      vertexAttribPointer( "aVertex3d", programObject3D, "aVertex", 3, fillBuffer );
-      curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW );
 
-      // if we are using a texture and a tint, then overwrite the
-      // contents of the color buffer with the current tint
-      if ( usingTexture && curTint !== null ){
-        curTint3d( cArray );
+      if(usingDefaultProgramObject3D){
+        uniformMatrix( "model3d", programObject3D, "uModel", false,  [1,0,0,0,  0,1,0,0,   0,0,1,0,   0,0,0,1] );
+        uniformMatrix( "view3d", programObject3D, "uView", false, view.array() );
+
+        vertexAttribPointer( "aVertex", programObject3D, "aVertex", 3, fillBuffer );
+        curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW );
+
+        curContext.enable( curContext.POLYGON_OFFSET_FILL );
+        curContext.polygonOffset( 1, 1 );
+        uniformf( "color3d", programObject3D, "uColor", [-1,0,0,0] );
+
+        vertexAttribPointer( "aColor3d", programObject3D, "aColor", 4, fillColorBuffer );
+        curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW );
+
+        if ( usingTexture ) {
+          uniformi( "uUsingTexture3d", programObject3D, "uUsingTexture", usingTexture );
+          vertexAttribPointer( "aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO );
+          curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW );
+        }
+
+        // if we are using a texture and a tint, then overwrite the
+        // contents of the color buffer with the current tint
+        if ( usingTexture && curTint !== null ){
+          curTint3d( cArray );
+        }
+        
+        // No support for lights....yet
+        disableVertexAttribPointer( "aNormal3d", programObject3D, "aNormal" );
       }
+      else{
+        var v = new PMatrix3D();
+        v.scale(1, -1, 1);
+        v.apply(modelView.array());
 
-      vertexAttribPointer( "aColor3d", programObject3D, "aColor", 4, fillColorBuffer );
-      curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(cArray), curContext.STREAM_DRAW );
+        var shaderTransform = new PMatrix3D();
+        shaderTransform.set(lastProjection);
+        shaderTransform.apply(v);
+        shaderTransform.transpose();
 
-      // No support for lights....yet
-      disableVertexAttribPointer( "aNormal3d", programObject3D, "aNormal" );
+        vertexAttribPointer( "vertex" + programObject3D.name, programObject3D, "vertex", 3, fillBuffer );
+        curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW );
 
-      if ( usingTexture ) {
-        uniformi( "uUsingTexture3d", programObject3D, "uUsingTexture", usingTexture );
-        vertexAttribPointer( "aTexture3d", programObject3D, "aTexture", 2, shapeTexVBO );
+        vertexAttribPointer( "vertTexCoord" + programObject3D.name, programObject3D, "vertTexCoord", 2, shapeTexVBO );
         curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW );
+
+        uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
       }
 
       curContext.drawArrays( ctxMode, 0, vArray.length/3 );
@@ -9039,9 +9034,9 @@
       this.programObject = createProgramObject(curContext, vertexShader, fragmentShader);
       
       this.programObject.name = this.__nextID();
-  };
+    };
   
-  PShader.prototype = {
+    PShader.prototype = {
 
       // total hack to keep all shader uniform locations unique
       __nextID: (function(){
