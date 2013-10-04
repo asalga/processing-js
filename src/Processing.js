@@ -9046,15 +9046,15 @@
 
       set: function(name, p1, p2, p3, p4){
 
-      /*  var lastUsedProgramObject = defaultProgramObject3D;
+        var lastUsedProgramObject = defaultProgramObject3D;
 
         curContext.useProgram(this.programObject);
         var arg = arguments;
 
         //
-        if(a.length === 2){
+        if(arg.length === 2){
           if(arg[1] instanceof PVector){
-            uniformf(name, this.programObject, name, PVector.array());
+            uniformf(name, this.programObject, name, arg[1].array());
           }
           else if(arg[1] instanceof PMatrix3D){
             uniformMatrix(name, this.programObject, name, arg[1]);
@@ -9067,6 +9067,7 @@
               uniformi(name, this.programObject, name, arg[1]);
             }
             else{
+
               uniformf(name, this.programObject, name, arg[1]);
             }
           }
@@ -9083,7 +9084,7 @@
           uniformf(name, this.programObject, name, [arg[1], arg[2], arg[3], arg[4]]);
         }
 
-        curContext.useProgram(lastUsedProgramObject);*/
+        curContext.useProgram(lastUsedProgramObject);
       }
     };
 
