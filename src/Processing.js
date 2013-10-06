@@ -7611,8 +7611,6 @@
             }
 
             if (doFill || usingTexture) {
-              // A.S.
-              //fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
               fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, usingTexture === false ? null : texVertArray);
             }
           }
@@ -9111,7 +9109,6 @@
         else if(arg.length === 3){
 
           if( arg[1].length !== null ){
-            console.log(arg[2])
             uniformf(name, this.programObject, name, arg[1], arg[2]);
             uniformi(name, this.programObject, name, arg[1], arg[2]);
           }
