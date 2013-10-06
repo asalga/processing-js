@@ -432,4 +432,15 @@ var tests = [
   // Shaders
   { path: "shader1.pde", tags: ["Shaders"] },
   { path: "shader-simple-sphere.pde", tags: ["Shaders"] },
+  { path: "shader-simple-box.pde", tags: ["Shaders"], knownFailureTicket: "000"  },
+  { path: "shader-SetInt.pde", tags: ["Shaders"] },
+  { path: "shader-SetFloat.pde", tags: ["Shaders"] },
+  { path: "shader-SetInt1fv.pde", tags: ["Shaders"] },
+  { path: "shader-SetInt4fv.pde", tags: ["Shaders"] },
+  
+  // { path: "shader-SetInt2fv.pde", tags: ["Shaders"] },
+  // { path: "shader-SetInt3fv.pde", tags: ["Shaders"] },
+  
+  // { path: "shader-SetMat.pde", tags: ["Shaders"] },
+  // { path: "shader-SetMat.pde", tags: ["Shaders"] },
 ];

@@ -799,13 +799,13 @@
      * createProgramObject
      * @param {String} varName the name of the variable in the shader
      * @param {float | Array} varValue either a scalar value or an Array
-     *
+     * @param {varLen | null}
      * @returns none
      *
      * @see uniformi
      * @see uniformMatrix
     */
-    function uniformf(cacheId, programObj, varName, varValue) {
+    function uniformf(cacheId, programObj, varName, varValue, varLen) {
       var varLocation = curContextCache.locations[cacheId];
       if(varLocation === undef) {
         varLocation = curContext.getUniformLocation(programObj, varName);
@@ -813,13 +813,15 @@
       }
       // the variable won't be found if it was optimized out.
       if (varLocation !== null) {
-        if (varValue.length === 4) {
+        if (varValue.length === 4 || varLen === 4) {
           curContext.uniform4fv(varLocation, varValue);
-        } else if (varValue.length === 3) {
+        } else if (varValue.length === 3 || varLen === 3) {
           curContext.uniform3fv(varLocation, varValue);
-        } else if (varValue.length === 2) {
+        } else if (varValue.length === 2 || varLen === 2) {
           curContext.uniform2fv(varLocation, varValue);
-        } else {
+        } else if (varLen === 1){
+          curContext.uniform1fv(varLocation, varValue);
+        } else{
           curContext.uniform1f(varLocation, varValue);
         }
       }
@@ -839,13 +841,14 @@
      * createProgramObject
      * @param {String} varName the name of the variable in the shader
      * @param {int | Array} varValue either a scalar value or an Array
+     * @param {varLen | null}
      *
      * @returns none
      *
      * @see uniformf
      * @see uniformMatrix
     */
-    function uniformi(cacheId, programObj, varName, varValue) {
+    function uniformi(cacheId, programObj, varName, varValue, varLen) {
       var varLocation = curContextCache.locations[cacheId];
       if(varLocation === undef) {
         varLocation = curContext.getUniformLocation(programObj, varName);
@@ -853,13 +856,15 @@
       }
       // the variable won't be found if it was optimized out.
       if (varLocation !== null) {
-        if (varValue.length === 4) {
+        if (varValue.length === 4 || varLen === 4) {
           curContext.uniform4iv(varLocation, varValue);
-        } else if (varValue.length === 3) {
+        } else if (varValue.length === 3 || varLen === 3) {
           curContext.uniform3iv(varLocation, varValue);
-        } else if (varValue.length === 2) {
+        } else if (varValue.length === 2 || varLen === 2) {
           curContext.uniform2iv(varLocation, varValue);
-        } else {
+        } else if (varLen === 1) {
+          curContext.uniform1iv(varLocation, varValue);
+        } else{
           curContext.uniform1i(varLocation, varValue);
         }
       }
@@ -6863,6 +6868,7 @@
      * @private
      * Render filled shapes created from calls to beginShape/vertex/endShape - based on the mode specified TRIANGLES, etc.
      *
+     * 
      * @param {Array} vArray an array of vertex coordinate
      * @param {String} mode  either LINES, LINE_LOOP, or LINE_STRIP
      * @param {Array} cArray an array of colours used for the vertices
@@ -6917,6 +6923,9 @@
         
         // No support for lights....yet
         disableVertexAttribPointer( "aNormal3d", programObject3D, "aNormal" );
+        
+        curContext.drawArrays( ctxMode, 0, vArray.length/3 );
+        curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
       else{
         var v = new PMatrix3D();
@@ -6928,17 +6937,39 @@
         shaderTransform.apply(v);
         shaderTransform.transpose();
 
-        vertexAttribPointer( "vertex" + programObject3D.name, programObject3D, "vertex", 3, fillBuffer );
-        curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(vArray), curContext.STREAM_DRAW );
+        // This is just a hack until I find time to dig into endShape
+        var fillBuff4 = new Float32Array((vArray.length/3) * 4);
+       
+        for(var i = 0, j = 0; j < fillBuff4.length; ){
+          if(i == 0){
+            fillBuff4[j] = vArray[i]; 
+            i++;
+            j++;
+          }
+          else if((j+1) % 4 === 0){
+            fillBuff4[j] = 1.0;
+            j++;
+          }
+          else{
+            fillBuff4[j] = vArray[i]; 
+            i++;
+            j++;
+          }
+        }
 
-        vertexAttribPointer( "vertTexCoord" + programObject3D.name, programObject3D, "vertTexCoord", 2, shapeTexVBO );
-        curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW );
+        vertexAttribPointer( "vertex" + programObject3D.name, programObject3D, "vertex", 4, fillBuffer );
+        curContext.bufferData( curContext.ARRAY_BUFFER, fillBuff4, curContext.STREAM_DRAW );
+
+        if(tArray != null){
+          vertexAttribPointer( "vertTexCoord" + programObject3D.name, programObject3D, "vertTexCoord", 2, shapeTexVBO );
+          curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW );
+        }
 
         uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
-      }
 
-      curContext.drawArrays( ctxMode, 0, vArray.length/3 );
-      curContext.disable( curContext.POLYGON_OFFSET_FILL );
+        curContext.drawArrays( ctxMode, 0, fillBuff4.length/4);
+        curContext.disable( curContext.POLYGON_OFFSET_FILL );
+      }
     };
 
     /**
@@ -7580,7 +7611,9 @@
             }
 
             if (doFill || usingTexture) {
-              fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
+              // A.S.
+              //fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, texVertArray);
+              fill3D(fillVertArray, "TRIANGLE_LIST", colorVertArray, usingTexture === false ? null : texVertArray);
             }
           }
         }
@@ -7613,7 +7646,7 @@
 
             // fill is ignored if textures are used
             if (doFill || usingTexture) {
-              fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, texVertArray);
+              fill3D(fillVertArray, "TRIANGLE_FAN", colorVertArray, usingTexture === false ? null : texVertArray);
             }
           }
         }
@@ -9044,6 +9077,10 @@
         return function(){return i++;};
       })(),
 
+      /**
+          If the user passes in 1.0 or 1 we can't distinguish between either,
+          so just call both, which seems to work.
+      */
       set: function(name, p1, p2, p3, p4){
 
         var lastUsedProgramObject = defaultProgramObject3D;
@@ -9062,19 +9099,38 @@
           else if(p1 instanceof PImage ){
             p.texture(p1);
           }
-          else{
-            if(arg[1] % 1 === 0){
-              uniformi(name, this.programObject, name, arg[1]);
-            }
-            else{
 
-              uniformf(name, this.programObject, name, arg[1]);
-            }
+          else{
+            uniformf(name, this.programObject, name, arg[1]);
+            uniformi(name, this.programObject, name, arg[1]);
           }
         }
+        // .set(name, x, y);
+        // .set(name, vec, ncoords);
+        // .set(name, mat, use3x3);
         else if(arg.length === 3){
-          if(arg[2]){
+
+          if( arg[1].length !== null ){
+            console.log(arg[2])
+            uniformf(name, this.programObject, name, arg[1], arg[2]);
+            uniformi(name, this.programObject, name, arg[1], arg[2]);
+          }
+          else if(arg[1] instanceof PVector){
+            if(arg[2] === 1){
+              uniformf(name, this.programObject, name, arg[1]);
+              uniformi(name, this.programObject, name, arg[1]);
+            }
+            if(arg[2] === 2){
+              curContext.uniform2fv(varLocation, varValue);
+              curContext.uniform2iv(varLocation, varValue);
+            }
+          }
+          else if(arg[1] instanceof PMatrix3D){
+            //uniformMatrix(name, this.programObject, name, arg[1]);
+          }
+          else{
             uniformf(name, this.programObject, name, [arg[1], arg[2]]);
+            uniformi(name, this.programObject, name, [arg[1], arg[2]]);
           }
         }
         else if(arg.length === 4){

@@ -3,9 +3,8 @@ precision mediump float;
 precision mediump int;
 #endif
 
-uniform mat4 transform;
-attribute vec4 vertex;
+uniform ivec2 ivector2;
 
 void main(){
-  gl_Position = transform * vertex;
+  gl_FragColor = vec4(ivector2, 0.0, 1.0);
 }
