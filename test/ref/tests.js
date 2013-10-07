@@ -436,11 +436,5 @@ var tests = [
   { path: "shader-SetInt.pde", tags: ["Shaders"] },
   { path: "shader-SetFloat.pde", tags: ["Shaders"] },
   { path: "shader-SetInt1fv.pde", tags: ["Shaders"] },
-  { path: "shader-SetInt4fv.pde", tags: ["Shaders"] },
-  
-  // { path: "shader-SetInt2fv.pde", tags: ["Shaders"] },
-  // { path: "shader-SetInt3fv.pde", tags: ["Shaders"] },
-  
-  // { path: "shader-SetMat.pde", tags: ["Shaders"] },
-  // { path: "shader-SetMat.pde", tags: ["Shaders"] },
+  { path: "shader-SetInt4fv.pde", tags: ["Shaders"] }  
 ];
