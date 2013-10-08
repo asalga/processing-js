@@ -9085,6 +9085,7 @@
 
         curContext.useProgram(this.programObject);
         var arg = arguments;
+        var cacheID = name + this.programObject.name;
 
         //
         if(arg.length === 2){
@@ -9109,13 +9110,13 @@
         else if(arg.length === 3){
 
           if( arg[1].length !== null ){
-            uniformf(name, this.programObject, name, arg[1], arg[2]);
-            uniformi(name, this.programObject, name, arg[1], arg[2]);
+            uniformf(cacheID, this.programObject, name, arg[1], arg[2]);
+            uniformi(cacheID, this.programObject, name, arg[1], arg[2]);
           }
           else if(arg[1] instanceof PVector){
             if(arg[2] === 1){
-              uniformf(name, this.programObject, name, arg[1]);
-              uniformi(name, this.programObject, name, arg[1]);
+              uniformf(cacheID, this.programObject, name, arg[1]);
+              uniformi(cacheID, this.programObject, name, arg[1]);
             }
             if(arg[2] === 2){
               curContext.uniform2fv(varLocation, varValue);
@@ -9126,15 +9127,15 @@
             //uniformMatrix(name, this.programObject, name, arg[1]);
           }
           else{
-            uniformf(name, this.programObject, name, [arg[1], arg[2]]);
-            uniformi(name, this.programObject, name, [arg[1], arg[2]]);
+            uniformf(cacheID, this.programObject, name, [arg[1], arg[2]]);
+            uniformi(cacheID, this.programObject, name, [arg[1], arg[2]]);
           }
         }
         else if(arg.length === 4){
-          uniformf(name, this.programObject, name, [arg[1], arg[2], arg[3]]);
+          uniformf(cacheID, this.programObject, name, [arg[1], arg[2], arg[3]]);
         }
         else if(arg.length === 5){
-          uniformf(name, this.programObject, name, [arg[1], arg[2], arg[3], arg[4]]);
+          uniformf(cacheID, this.programObject, name, [arg[1], arg[2], arg[3], arg[4]]);
         }
 
         curContext.useProgram(lastUsedProgramObject);
