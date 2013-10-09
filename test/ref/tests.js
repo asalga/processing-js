@@ -437,5 +437,6 @@ var tests = [
   { path: "shader-SetFloat.pde", tags: ["Shaders"] },
   { path: "shader-SetInt1fv.pde", tags: ["Shaders"] },
   { path: "shader-SetInt4fv.pde", tags: ["Shaders"] },
-  { path: "shader-sameVarLoc.pde", tags: ["Shaders"] }  
+  { path: "shader-sameVarLoc.pde", tags: ["Shaders"] },
+  { path: "shader-resetShader.pde", tags: ["Shaders"] },
 ];
