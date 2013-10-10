@@ -468,7 +468,7 @@
     var vertexShaderSrc2D =
       "varying vec4 vFrontColor;" +
 
-      "attribute vec3 aVertex;" +
+      "attribute vec4 aVertex;" +
       "attribute vec2 aTextureCoord;" +
       "uniform vec4 uColor;" +
 
@@ -481,7 +481,7 @@
       "void main(void) {" +
       "  gl_PointSize = uPointSize;" +
       "  vFrontColor = uColor;" +
-      "  gl_Position = uProjection * uView * uModel * vec4(aVertex, 1.0);" +
+      "  gl_Position = uProjection * uView * uModel * vec4(aVertex);" +
       "  vTextureCoord = aTextureCoord;" +
       "}";
 
@@ -6074,7 +6074,6 @@
         //uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
         //uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
         
-
         // Turn off per vertex colors.
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
 
@@ -6094,11 +6093,11 @@
         curContext.useProgram(programObject2D);
         uniformMatrix("uModel2d", programObject2D, "uModel", false, model.array());
         uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
-        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 3, sphereBuffer);
+        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 4, sphereBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
         uniformi("uIsDrawingText", programObject2D, "uIsDrawingText", false);
-        curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 3);
+        curContext.drawArrays(curContext.LINE_STRIP, 0, sphereVerts.length / 4);
       }
     };
 
