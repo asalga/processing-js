@@ -400,6 +400,14 @@
       -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5,
        0.5,  0.5,  0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5]);
 
+    var boxVertsPShader = new Float32Array([
+       0.5,  0.5, -0.5,1,  0.5, -0.5, -0.5,1, -0.5, -0.5, -0.5,1, -0.5, -0.5, -0.5,1, -0.5,  0.5, -0.5,1,  0.5,  0.5, -0.5,1,
+       0.5,  0.5,  0.5,1 ,-0.5,  0.5,  0.5,1, -0.5, -0.5,  0.5,1, -0.5, -0.5,  0.5,1,  0.5, -0.5,  0.5,1,  0.5,  0.5,  0.5,1,
+       0.5,  0.5, -0.5,1 , 0.5,  0.5,  0.5,1,  0.5, -0.5,  0.5,1,  0.5, -0.5,  0.5,1,  0.5, -0.5, -0.5,1,  0.5,  0.5, -0.5,1,
+       0.5, -0.5, -0.5,1 , 0.5, -0.5,  0.5,1, -0.5, -0.5,  0.5,1, -0.5, -0.5,  0.5,1, -0.5, -0.5, -0.5,1,  0.5, -0.5, -0.5,1,
+      -0.5, -0.5, -0.5,1 ,-0.5, -0.5,  0.5,1, -0.5,  0.5,  0.5,1, -0.5,  0.5,  0.5,1, -0.5,  0.5, -0.5,1, -0.5, -0.5, -0.5,1,
+       0.5,  0.5,  0.5,1 , 0.5,  0.5, -0.5,1, -0.5,  0.5, -0.5,1, -0.5,  0.5, -0.5,1, -0.5,  0.5,  0.5,1,  0.5,  0.5,  0.5,1]);
+
     var boxOutlineVerts = new Float32Array([
        0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,
       -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5,
@@ -409,12 +417,12 @@
       -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5]);
 
     var boxNorms = new Float32Array([
-       0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,
-       0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,
-       1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,
-       0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,
-      -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0,
-       0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0,  0,  1,  0]);
+       0,  0, -1,0,  0,  0, -1,0,  0,  0, -1,0,  0,  0, -1,0,  0,  0, -1,0,  0,  0, -1,0,
+       0,  0,  1,0,  0,  0,  1,0,  0,  0,  1,0,  0,  0,  1,0,  0,  0,  1,0,  0,  0,  1,0,
+       1,  0,  0,0,  1,  0,  0,0,  1,  0,  0,0,  1,  0,  0,0,  1,  0,  0,0,  1,  0,  0,0,
+       0, -1,  0,0,  0, -1,  0,0,  0, -1,  0,0,  0, -1,  0,0,  0, -1,  0,0,  0, -1,  0,0,
+      -1,  0,  0,0, -1,  0,  0,0, -1,  0,  0,0, -1,  0,  0,0, -1,  0,  0,0, -1,  0,  0,0,
+       0,  1,  0,0,  0,  1,  0,0,  0,  1,  0,0,  0,  1,  0,0,  0,  1,  0,0,  0,  1,  0,0]);
 
     // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP.
     var rectVerts = new Float32Array([0,0,0, 0,1,0, 1,1,0, 1,0,0]);
@@ -513,8 +521,8 @@
     var vertexShaderSrc3D =
       "varying vec4 vFrontColor;" +
 
-      "attribute vec3 aVertex;" +
-      "attribute vec3 aNormal;" +
+      "attribute vec4 aVertex;" +
+      "attribute vec4 aNormal;" +
       "attribute vec4 aColor;" +
       "attribute vec2 aTexture;" +
       "varying   vec2 vTexture;" +
@@ -701,9 +709,9 @@
       // But this only works if the sphere vertices are unit length, so we
       // have to normalize the normals here. Since this is only required for spheres
       // we could consider placing this in a conditional later on.
-      "  vec3 norm = normalize(vec3( uNormalTransform * vec4( aNormal, 0.0 ) ));" +
+      "  vec3 norm = normalize(vec3( uNormalTransform * vec4( vec3(aNormal), 0.0 ) ));" +
 
-      "  vec4 ecPos4 = uView * uModel * vec4(aVertex, 1.0);" +
+      "  vec4 ecPos4 = uView * uModel * vec4(aVertex);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
 
       // If there were no lights this draw call, just use the
@@ -756,7 +764,7 @@
       "  }" +
 
       "  vTexture.xy = aTexture.xy;" +
-      "  gl_Position = uProjection * uView * uModel * vec4( aVertex, 1.0 );" +
+      "  gl_Position = uProjection * uView * uModel * vec4(aVertex);" +
       "}";
 
     var fragmentShaderSrc3D =
@@ -5002,6 +5010,10 @@
         curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
         curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
 
+        boxBufferPShader = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBufferPShader);
+        curContext.bufferData(curContext.ARRAY_BUFFER, boxVertsPShader, curContext.STATIC_DRAW);
+
         boxNormBuffer = curContext.createBuffer();
         curContext.bindBuffer(curContext.ARRAY_BUFFER, boxNormBuffer);
         curContext.bufferData(curContext.ARRAY_BUFFER, boxNorms, curContext.STATIC_DRAW);
@@ -5723,48 +5735,69 @@
 
       if (doFill) {
         curContext.useProgram(programObject3D);
-        uniformMatrix("model3d", programObject3D, "uModel", false, model.array());
-        uniformMatrix("view3d", programObject3D, "uView", false, view.array());
-        // Fix stitching problems. (lines get occluded by triangles
-        // since they share the same depth values). This is not entirely
-        // working, but it's a start for drawing the outline. So
-        // developers can start playing around with styles.
-        curContext.enable(curContext.POLYGON_OFFSET_FILL);
-        curContext.polygonOffset(1, 1);
-        uniformf("color3d", programObject3D, "uColor", fillStyle);
 
-        // Calculating the normal matrix can be expensive, so only
-        // do it if it's necessary.
-        if(lightCount > 0){
-          // Create the normal transformation matrix.
-          var v = new PMatrix3D();
-          v.set(view);
+        if(usingDefaultProgramObject3D){
+          uniformMatrix("model3d", programObject3D, "uModel", false, model.array());
+          uniformMatrix("view3d", programObject3D, "uView", false, view.array());
+          // Fix stitching problems. (lines get occluded by triangles
+          // since they share the same depth values). This is not entirely
+          // working, but it's a start for drawing the outline. So
+          // developers can start playing around with styles.
+          curContext.enable(curContext.POLYGON_OFFSET_FILL);
+          curContext.polygonOffset(1, 1);
+          uniformf("color3d", programObject3D, "uColor", fillStyle);
 
+          // Calculating the normal matrix can be expensive, so only
+          // do it if it's necessary.
+          if(lightCount > 0){
+            // Create the normal transformation matrix.
+            var v = new PMatrix3D();
+            v.set(view);
+
+            var m = new PMatrix3D();
+            m.set(model);
+
+            v.mult(m);
+
+            var normalMatrix = new PMatrix3D();
+            normalMatrix.set(v);
+            normalMatrix.invert();
+            normalMatrix.transpose();
+
+            uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
+            vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 4, boxNormBuffer);
+          }
+          else{
+            disableVertexAttribPointer("aNormal3d", programObject3D, "aNormal");
+          }
+
+          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 4, boxBufferPShader);
+
+          // Turn off per vertex colors.
+          disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
+          disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
+
+          curContext.drawArrays(curContext.TRIANGLES, 0, boxVertsPShader.length / 4);
+          curContext.disable(curContext.POLYGON_OFFSET_FILL);
+        }
+        else{
           var m = new PMatrix3D();
           m.set(model);
 
-          v.mult(m);
+          var v = new PMatrix3D();
+          v.scale(1, -1, 1);
+          v.apply(modelView.array());
+          v.apply(m);
 
-          var normalMatrix = new PMatrix3D();
-          normalMatrix.set(v);
-          normalMatrix.invert();
-          normalMatrix.transpose();
+          var shaderTransform = new PMatrix3D();
+          shaderTransform.set(lastProjection);
+          shaderTransform.apply(v);
+          shaderTransform.transpose();
 
-          uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
-          vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 3, boxNormBuffer);
+          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 4, boxBufferPShader);
+          uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
+          curContext.drawArrays(curContext.TRIANGLES, 0, boxVertsPShader.length / 4);
         }
-        else{
-          disableVertexAttribPointer("aNormal3d", programObject3D, "aNormal");
-        }
-
-        vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, boxBuffer);
-
-        // Turn off per vertex colors.
-        disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
-        disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
-
-        curContext.drawArrays(curContext.TRIANGLES, 0, boxVerts.length / 3);
-        curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
 
       // Draw the box outline.
@@ -5794,16 +5827,22 @@
         sphereVerts.push(0);
         sphereVerts.push(-1);
         sphereVerts.push(0);
+        sphereVerts.push(1);
+
         sphereVerts.push(sphereX[i]);
         sphereVerts.push(sphereY[i]);
         sphereVerts.push(sphereZ[i]);
+        sphereVerts.push(1);
       }
       sphereVerts.push(0);
       sphereVerts.push(-1);
       sphereVerts.push(0);
+      sphereVerts.push(1);
+
       sphereVerts.push(sphereX[0]);
       sphereVerts.push(sphereY[0]);
       sphereVerts.push(sphereZ[0]);
+      sphereVerts.push(1);
 
       var v1, v11, v2;
 
@@ -5817,9 +5856,12 @@
           sphereVerts.push(sphereX[v1]);
           sphereVerts.push(sphereY[v1]);
           sphereVerts.push(sphereZ[v1++]);
+          sphereVerts.push(1);
+
           sphereVerts.push(sphereX[v2]);
           sphereVerts.push(sphereY[v2]);
           sphereVerts.push(sphereZ[v2++]);
+          sphereVerts.push(1);
         }
 
         // close each ring
@@ -5829,9 +5871,12 @@
         sphereVerts.push(sphereX[v1]);
         sphereVerts.push(sphereY[v1]);
         sphereVerts.push(sphereZ[v1]);
+        sphereVerts.push(1);
+
         sphereVerts.push(sphereX[v2]);
         sphereVerts.push(sphereY[v2]);
         sphereVerts.push(sphereZ[v2]);
+        sphereVerts.push(1);
       }
 
       // add the northern cap
@@ -5841,17 +5886,23 @@
         sphereVerts.push(sphereX[v2]);
         sphereVerts.push(sphereY[v2]);
         sphereVerts.push(sphereZ[v2]);
+        sphereVerts.push(1);
+
         sphereVerts.push(0);
         sphereVerts.push(1);
         sphereVerts.push(0);
+        sphereVerts.push(1);
       }
 
       sphereVerts.push(sphereX[voff]);
       sphereVerts.push(sphereY[voff]);
       sphereVerts.push(sphereZ[voff]);
+      sphereVerts.push(1);
+
       sphereVerts.push(0);
       sphereVerts.push(1);
       sphereVerts.push(0);
+      sphereVerts.push(1);
 
       //set the buffer data
       curContext.bindBuffer(curContext.ARRAY_BUFFER, sphereBuffer);
@@ -5915,6 +5966,7 @@
       sphereX = new Float32Array(vertCount);
       sphereY = new Float32Array(vertCount);
       sphereZ = new Float32Array(vertCount);
+      //last = new Float32Array(vertCount);
 
       var angle_step = (PConstants.SINCOS_LENGTH * 0.5) / vres;
       var angle = angle_step;
@@ -5926,7 +5978,9 @@
         for (var j = 0; j < ures; j++) {
           sphereX[currVert] = cx[j] * curradius;
           sphereY[currVert] = currY;
-          sphereZ[currVert++] = cz[j] * curradius;
+          sphereZ[currVert] = cz[j] * curradius;
+        //  last[currVert] = 1;
+          currVert++;
         }
         angle += angle_step;
       }
@@ -5970,7 +6024,7 @@
         if(usingDefaultProgramObject3D){
           uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
           uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
-          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, sphereBuffer);
+          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 4, sphereBuffer);
         }
         else{
           var m = new PMatrix3D();
@@ -5986,7 +6040,7 @@
           shaderTransform.apply(v);
           shaderTransform.transpose();
 
-          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 3, sphereBuffer);
+          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 4, sphereBuffer);
           uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
         }
 
@@ -6008,7 +6062,7 @@
           normalMatrix.transpose();
 
           uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
-          vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 3, sphereBuffer);
+          vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 4, sphereBuffer);
         }
         else{
           disableVertexAttribPointer("aNormal3d", programObject3D, "aNormal");
@@ -6031,7 +6085,7 @@
         curContext.enable(curContext.POLYGON_OFFSET_FILL);
         curContext.polygonOffset(1, 1);
         uniformf("uColor3d", programObject3D, "uColor", fillStyle);
-        curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 3);
+        curContext.drawArrays(curContext.TRIANGLE_STRIP, 0, sphereVerts.length / 4);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
 
