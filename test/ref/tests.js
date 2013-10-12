@@ -439,4 +439,5 @@ var tests = [
   { path: "shader-SetInt4fv.pde", tags: ["Shaders"] },
   { path: "shader-sameVarLoc.pde", tags: ["Shaders"] },
   { path: "shader-resetShader.pde", tags: ["Shaders"] },
+  { path: "shader-sphere-normal.pde", tags: ["Shaders"] },
 ];
