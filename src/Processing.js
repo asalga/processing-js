@@ -481,7 +481,7 @@
       "void main(void) {" +
       "  gl_PointSize = uPointSize;" +
       "  vFrontColor = uColor;" +
-      "  gl_Position = uProjection * uView * uModel * vec4(aVertex);" +
+      "  gl_Position = uProjection * uView * uModel * aVertex;" +
       "  vTextureCoord = aTextureCoord;" +
       "}";
 
@@ -937,7 +937,7 @@
      *
      * @see disableVertexAttribPointer
     */
-    function vertexAttribPointer(cacheId, programObj, varName, size, VBO) {
+    function vertexAttribPointer(cacheId, programObj, varName, size, VBO, stride) {
       var varLocation = curContextCache.attributes[cacheId];
       if(varLocation === undef) {
         varLocation = curContext.getAttribLocation(programObj, varName);
@@ -945,7 +945,7 @@
       }
       if (varLocation !== -1) {
         curContext.bindBuffer(curContext.ARRAY_BUFFER, VBO);
-        curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, 0, 0);
+        curContext.vertexAttribPointer(varLocation, size, curContext.FLOAT, false, stride || 0, 0);
         curContext.enableVertexAttribArray(varLocation);
       }
     }
@@ -1596,8 +1596,14 @@
      * If no parameters are provided the matrix is set to the identity matrix.
      */
     var PMatrix3D = p.PMatrix3D = function() {
-      // When a matrix is created, it is set to an identity matrix
-      this.reset();
+      if (arguments.length === 1 && arguments[0] instanceof PMatrix3D) {
+        this.set(arguments[0].array());
+      } else if (arguments.length === 16) {
+        var a = arguments;
+        this.set(a[0],a[1],a[2],a[3],  a[4],a[5],a[6],a[7],  a[8],a[9],a[10],a[11],  a[12],a[13],a[14],a[15]);
+      } else{
+        this.reset();
+      }
     };
     /**
      * PMatrix3D methods
@@ -6006,58 +6012,55 @@
         p.sphereDetail(30);
       }
 
-      // Modeling transformation.
-      var model = new PMatrix3D();
-      model.scale(sRad, sRad, sRad);
-
-      // viewing transformation needs to have Y flipped
-      // becuase that's what Processing does.
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      var model = new PMatrix3D(sRad,0,0,0,   0,sRad,0,0,   0,0,sRad,0,   0,0,0,1);
+      
+      // viewing transform needs Y flipped becuase that's what Processing does.
+      var view = new PMatrix3D(1,0,0,0,   0,-1,0,0,   0,0,1,0,   0,0,0,1);
       view.apply(modelView.array());
       view.transpose();
 
-      if (doFill) {
+      // 
+      var modelViewMat = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
+      modelViewMat.apply(modelView.array());
+      modelViewMat.apply(model);
 
+      if (doFill) {
         curContext.useProgram(programObject3D);
  
         if(usingDefaultProgramObject3D){
+          
+          // no need to transpose the model.
           uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
           uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
           vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 4, sphereBuffer);
         }
+        // Using a user-defined shader
         else{
-          var m = new PMatrix3D();
-          m.set(model);
+          var shaderMVP = new PMatrix3D(lastProjection);
+          shaderMVP.apply(modelViewMat);
+          shaderMVP.transpose();
+          var progID = programObject3D.name;
 
-          var v = new PMatrix3D();
-          v.scale(1, -1, 1);
-          v.apply(modelView.array());
-          v.apply(m);
+          vertexAttribPointer("vertex" + progID, programObject3D, "vertex", 4, sphereBuffer);
+          uniformMatrix("transform" + progID, programObject3D, "transform", false, shaderMVP.array());
 
-          var shaderTransform = new PMatrix3D();
-          shaderTransform.set(lastProjection);
-          shaderTransform.apply(v);
-          shaderTransform.transpose();
+          // Only calculate normal matrix if shader actually has it defined
+          var loc = curContext.getUniformLocation(programObject3D, "normalMatrix" + programObject3D.name);
 
-          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 4, sphereBuffer);
-          uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
+          if( loc !== -1){
+            var normalMatrix = new PMatrix3D(modelViewMat);
+            normalMatrix.invert();
+            var n4x4 = normalMatrix.array();
+            var normalMat3x3 = [n4x4[0], n4x4[1], n4x4[2],   n4x4[4], n4x4[5], n4x4[6],   n4x4[8], n4x4[9], n4x4[10]];
+
+            vertexAttribPointer("normal" + progID, programObject3D, "normal", 3, sphereBuffer,16);
+            uniformMatrix("normalMatrix" + progID, programObject3D, "normalMatrix", false, normalMat3x3);
+          }
         }
 
-        // Calculating the normal matrix can be expensive, so only
-        // do it if it's necessary.
+        // Calculating the normal matrix can be expensive, so only do it if it's necessary.
         if(lightCount > 0){
-          // Create a normal transformation matrix.
-          var v = new PMatrix3D();
-          v.set(view);
-
-          var m = new PMatrix3D();
-          m.set(model);
-
-          v.mult(m);
-
-          var normalMatrix = new PMatrix3D();
-          normalMatrix.set(v);
+          var normalMatrix = new PMatrix3D(modelViewMat);
           normalMatrix.invert();
           normalMatrix.transpose();
 
@@ -6070,9 +6073,6 @@
 
         curContext.useProgram(programObject3D);
         disableVertexAttribPointer("aTexture3d", programObject3D, "aTexture");
-
-        //uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
-        //uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
         
         // Turn off per vertex colors.
         disableVertexAttribPointer("aColor3d", programObject3D, "aColor");
@@ -7912,8 +7912,8 @@
         curContext.bindTexture(curContext.TEXTURE_2D, texture);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
-        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.REPEAT);
-        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.REPEAT);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP);
         curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
 
@@ -11443,8 +11443,8 @@
       curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
-      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.REPEAT);
-      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.REPEAT);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP);
       // If we don't have a power of two texture, we can't mipmap it.
       // curContext.generateMipmap(curContext.TEXTURE_2D);
 
