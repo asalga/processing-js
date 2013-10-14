@@ -6047,7 +6047,8 @@
           // Only calculate normal matrix if shader actually has it defined
           var loc = curContext.getUniformLocation(programObject3D, "normalMatrix" + programObject3D.name);
 
-          if( loc !== -1){
+          if(loc !== -1){
+            modelViewMat.apply(1,0,0,0,  0,-1,0,0,   0,0,1,0,   0,0,0,1);
             var normalMatrix = new PMatrix3D(modelViewMat);
             normalMatrix.invert();
             var n4x4 = normalMatrix.array();
