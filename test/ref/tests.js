@@ -440,4 +440,5 @@ var tests = [
   { path: "shader-sameVarLoc.pde", tags: ["Shaders"] },
   { path: "shader-resetShader.pde", tags: ["Shaders"] },
   { path: "shader-sphere-normal.pde", tags: ["Shaders"] },
+  { path: "shader-box-normal.pde", tags: ["Shaders"] },
 ];

@@ -298,7 +298,7 @@
         programObject3D,
         programObject2D,
         programObjectUnlitShape,
-        boxBuffer,
+        
         boxNormBuffer,
         boxOutlineBuffer,
         rectBuffer,
@@ -409,25 +409,26 @@
        0.5,  0.5,  0.5,1 , 0.5,  0.5, -0.5,1, -0.5,  0.5, -0.5,1, -0.5,  0.5, -0.5,1, -0.5,  0.5,  0.5,1,  0.5,  0.5,  0.5,1]);
 
     var boxOutlineVerts = new Float32Array([
-       0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5,
-      -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5,
-       0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5,
-      -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5,
-       0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5]);
+       0.5,  0.5,  0.5,    0.5, -0.5,  0.5,    0.5,  0.5, -0.5,    0.5, -0.5, -0.5,
+      -0.5,  0.5, -0.5,   -0.5, -0.5, -0.5,   -0.5,  0.5,  0.5,   -0.5, -0.5,  0.5,
+       0.5,  0.5,  0.5,    0.5,  0.5, -0.5,    0.5,  0.5, -0.5,   -0.5,  0.5, -0.5,
+      -0.5,  0.5, -0.5,   -0.5,  0.5,  0.5,   -0.5,  0.5,  0.5,    0.5,  0.5,  0.5,
+       0.5, -0.5,  0.5,    0.5, -0.5, -0.5,    0.5, -0.5, -0.5,   -0.5, -0.5, -0.5,
+      -0.5, -0.5, -0.5,   -0.5, -0.5,  0.5,   -0.5, -0.5,  0.5,    0.5, -0.5,  0.5]);
 
     var boxNorms = new Float32Array([
-       0,  0, -1,0,  0,  0, -1,0,  0,  0, -1,0,  0,  0, -1,0,  0,  0, -1,0,  0,  0, -1,0,
-       0,  0,  1,0,  0,  0,  1,0,  0,  0,  1,0,  0,  0,  1,0,  0,  0,  1,0,  0,  0,  1,0,
-       1,  0,  0,0,  1,  0,  0,0,  1,  0,  0,0,  1,  0,  0,0,  1,  0,  0,0,  1,  0,  0,0,
-       0, -1,  0,0,  0, -1,  0,0,  0, -1,  0,0,  0, -1,  0,0,  0, -1,  0,0,  0, -1,  0,0,
-      -1,  0,  0,0, -1,  0,  0,0, -1,  0,  0,0, -1,  0,  0,0, -1,  0,  0,0, -1,  0,  0,0,
-       0,  1,  0,0,  0,  1,  0,0,  0,  1,  0,0,  0,  1,  0,0,  0,  1,  0,0,  0,  1,  0,0]);
+       0,  0, -1,    0,  0, -1,    0,  0, -1,    0,  0, -1,    0,  0, -1,    0,  0, -1,
+       0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1,    0,  0,  1,
+       1,  0,  0,    1,  0,  0,    1,  0,  0,    1,  0,  0,    1,  0,  0,    1,  0,  0,
+       0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0,    0, -1,  0,
+      -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0,
+       0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0]);
 
     // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP.
-    var rectVerts = new Float32Array([0,0,0, 0,1,0, 1,1,0, 1,0,0]);
+    var rectVerts     = new Float32Array([0,0,0,  0,1,0,  1,1,0,  1,0,0]);
 
-    var rectNorms = new Float32Array([0,0,1, 0,0,1, 0,0,1, 0,0,1]);
+    var rectFillVerts = new Float32Array([0,0,0,1,  0,1,0,1,  1,1,0,1,  1,0,0,1]);
+    var rectNorms = new Float32Array([0,0,1,  0,0,1,  0,0,1,  0,0,1]);
 
     // Shader for points and lines in begin/endShape.
     var vertexShaderSrcUnlitShape =
@@ -522,7 +523,7 @@
       "varying vec4 vFrontColor;" +
 
       "attribute vec4 aVertex;" +
-      "attribute vec4 aNormal;" +
+      "attribute vec3 aNormal;" +
       "attribute vec4 aColor;" +
       "attribute vec2 aTexture;" +
       "varying   vec2 vTexture;" +
@@ -539,7 +540,7 @@
       "uniform mat4 uModel;" +
       "uniform mat4 uView;" +
       "uniform mat4 uProjection;" +
-      "uniform mat4 uNormalTransform;" +
+      "uniform mat3 uNormalTransform;" +
 
       "uniform int uLightCount;" +
       "uniform vec3 uFalloff;" +
@@ -709,7 +710,7 @@
       // But this only works if the sphere vertices are unit length, so we
       // have to normalize the normals here. Since this is only required for spheres
       // we could consider placing this in a conditional later on.
-      "  vec3 norm = normalize(vec3( uNormalTransform * vec4( vec3(aNormal), 0.0 ) ));" +
+      "  vec3 norm = normalize(uNormalTransform * aNormal);" +
 
       "  vec4 ecPos4 = uView * uModel * vec4(aVertex);" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
@@ -916,6 +917,20 @@
           curContext.uniformMatrix2fv(varLocation, transpose, matrix);
         }
       }
+    }
+
+    /**
+        Createa a 3x3 normal matrix from a model view transformation matrix.
+    */
+    function createNormal3x3Matrix(matrix, usingCustomShader){
+      var mat = new PMatrix3D(matrix);
+      if(usingCustomShader){
+        mat.apply(1,0,0,0,  0,-1,0,0,   0,0,1,0,   0,0,0,1);
+      }
+      var normalMatrix = new PMatrix3D(mat);
+      normalMatrix.invert();
+      var n4x4 = normalMatrix.array();
+      return [n4x4[0], n4x4[1], n4x4[2],   n4x4[4], n4x4[5], n4x4[6],   n4x4[8], n4x4[9], n4x4[10]];
     }
 
     /**
@@ -5012,9 +5027,9 @@
         p.emissive(0, 0, 0);
 
         // Create buffers for 3D primitives
-        boxBuffer = curContext.createBuffer();
-        curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
-        curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
+        //boxBuffer = curContext.createBuffer();
+        //curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBuffer);
+        //curContext.bufferData(curContext.ARRAY_BUFFER, boxVerts, curContext.STATIC_DRAW);
 
         boxBufferPShader = curContext.createBuffer();
         curContext.bindBuffer(curContext.ARRAY_BUFFER, boxBufferPShader);
@@ -5028,10 +5043,9 @@
         curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
         curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
 
-        // used to draw the rectangle and the outline
-        rectBuffer = curContext.createBuffer();
-        curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
-        curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
+        rectFillBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, rectFillBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, rectFillVerts, curContext.STATIC_DRAW);
 
         rectNormBuffer = curContext.createBuffer();
         curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
@@ -5722,21 +5736,27 @@
     Drawing2D.prototype.box = DrawingShared.prototype.a3DOnlyFunction;
 
     Drawing3D.prototype.box = function(w, h, d) {
+      var model, view, modelViewMat, normalMat3x3;
+      var shaderMVP, normalMatlocation, progID;
+
       // user can uniformly scale the box by
       // passing in only one argument.
       if (!h || !d) {
         h = d = w;
       }
 
-      // Modeling transformation
-      var model = new PMatrix3D();
-      model.scale(w, h, d);
+      model = new PMatrix3D(w,0,0,0,   0,h,0,0,   0,0,d,0,  0,0,0,1);
 
-      // Viewing transformation needs to have Y flipped
-      // becuase that's what Processing does.
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      // Viewing transformation needs to have Y flipped becuase that's what Processing does.
+      view = new PMatrix3D(1,0,0,0,   0,-1,0,0,   0,0,1,0,   0,0,0,1);
       view.apply(modelView.array());
+      
+      // Save doing a matrix mult if we are using the default shader 
+      modelViewMat = new PMatrix3D(view);
+      if(usingDefaultProgramObject3D == false){
+        modelViewMat.apply(model);  
+      }
+
       view.transpose();
 
       if (doFill) {
@@ -5756,22 +5776,10 @@
           // Calculating the normal matrix can be expensive, so only
           // do it if it's necessary.
           if(lightCount > 0){
-            // Create the normal transformation matrix.
-            var v = new PMatrix3D();
-            v.set(view);
+            normalMat3x3 = createNormal3x3Matrix(modelViewMat, false);
 
-            var m = new PMatrix3D();
-            m.set(model);
-
-            v.mult(m);
-
-            var normalMatrix = new PMatrix3D();
-            normalMatrix.set(v);
-            normalMatrix.invert();
-            normalMatrix.transpose();
-
-            uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
-            vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 4, boxNormBuffer);
+            uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMat3x3);
+            vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 3, boxNormBuffer);
           }
           else{
             disableVertexAttribPointer("aNormal3d", programObject3D, "aNormal");
@@ -5786,28 +5794,32 @@
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVertsPShader.length / 4);
           curContext.disable(curContext.POLYGON_OFFSET_FILL);
         }
+        // Using user-defined shader
         else{
-          var m = new PMatrix3D();
-          m.set(model);
+          shaderMVP = new PMatrix3D(lastProjection);
+          shaderMVP.apply(modelViewMat);
+          shaderMVP.transpose();
 
-          var v = new PMatrix3D();
-          v.scale(1, -1, 1);
-          v.apply(modelView.array());
-          v.apply(m);
+          progID = programObject3D.name;
 
-          var shaderTransform = new PMatrix3D();
-          shaderTransform.set(lastProjection);
-          shaderTransform.apply(v);
-          shaderTransform.transpose();
+          vertexAttribPointer("vertex" + progID, programObject3D, "vertex", 4, boxBufferPShader);
+          uniformMatrix("transform" + progID, programObject3D, "transform", false, shaderMVP.array());
+          
+          // Only calculate normal matrix if shader actually has it defined
+          normalMatlocation = curContext.getUniformLocation(programObject3D, "normalMatrix" + progID);
+          if(normalMatlocation !== -1){
+            normalMat3x3 = createNormal3x3Matrix(modelViewMat, true);
 
-          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 4, boxBufferPShader);
-          uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
+            vertexAttribPointer("normal" + progID, programObject3D, "normal", 3, boxNormBuffer);
+            uniformMatrix("normalMatrix" + progID, programObject3D, "normalMatrix", false, normalMat3x3);
+          }
+
           curContext.drawArrays(curContext.TRIANGLES, 0, boxVertsPShader.length / 4);
         }
       }
 
       // Draw the box outline.
-      if (lineWidth > 0 && doStroke) {
+      if (lineWidth > 0 && doStroke && usingDefaultProgramObject3D) {
         curContext.useProgram(programObject2D);
         uniformMatrix("uModel2d", programObject2D, "uModel", false, model.array());
         uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
@@ -6013,63 +6025,56 @@
       }
 
       var model = new PMatrix3D(sRad,0,0,0,   0,sRad,0,0,   0,0,sRad,0,   0,0,0,1);
-      
+      // no need to transpose the model.
+
       // viewing transform needs Y flipped becuase that's what Processing does.
       var view = new PMatrix3D(1,0,0,0,   0,-1,0,0,   0,0,1,0,   0,0,0,1);
       view.apply(modelView.array());
-      view.transpose();
-
+      
       // 
-      var modelViewMat = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
-      modelViewMat.apply(modelView.array());
+      var modelViewMat = new PMatrix3D(view);
       modelViewMat.apply(model);
+
+      view.transpose();
 
       if (doFill) {
         curContext.useProgram(programObject3D);
  
         if(usingDefaultProgramObject3D){
-          
-          // no need to transpose the model.
           uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
           uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
           vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 4, sphereBuffer);
+
+          // Calculating the normal matrix can be expensive, so only do it if it's necessary.
+          if(lightCount > 0){
+            var normalMat3x3 = createNormal3x3Matrix(modelViewMat, false);
+
+            uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMat3x3);
+            vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 3, sphereBuffer, 16);
+          }
+          else{
+            disableVertexAttribPointer("aNormal3d", programObject3D, "aNormal");
+          }
         }
         // Using a user-defined shader
         else{
           var shaderMVP = new PMatrix3D(lastProjection);
           shaderMVP.apply(modelViewMat);
           shaderMVP.transpose();
+
           var progID = programObject3D.name;
 
           vertexAttribPointer("vertex" + progID, programObject3D, "vertex", 4, sphereBuffer);
           uniformMatrix("transform" + progID, programObject3D, "transform", false, shaderMVP.array());
 
           // Only calculate normal matrix if shader actually has it defined
-          var loc = curContext.getUniformLocation(programObject3D, "normalMatrix" + programObject3D.name);
-
+          var loc = curContext.getUniformLocation(programObject3D, "normalMatrix" + progID);
           if(loc !== -1){
-            modelViewMat.apply(1,0,0,0,  0,-1,0,0,   0,0,1,0,   0,0,0,1);
-            var normalMatrix = new PMatrix3D(modelViewMat);
-            normalMatrix.invert();
-            var n4x4 = normalMatrix.array();
-            var normalMat3x3 = [n4x4[0], n4x4[1], n4x4[2],   n4x4[4], n4x4[5], n4x4[6],   n4x4[8], n4x4[9], n4x4[10]];
+            var normalMat3x3 = createNormal3x3Matrix(modelViewMat, true);
 
             vertexAttribPointer("normal" + progID, programObject3D, "normal", 3, sphereBuffer,16);
             uniformMatrix("normalMatrix" + progID, programObject3D, "normalMatrix", false, normalMat3x3);
           }
-        }
-
-        // Calculating the normal matrix can be expensive, so only do it if it's necessary.
-        if(lightCount > 0){
-          var normalMatrix = new PMatrix3D(modelViewMat);
-          normalMatrix.invert();
-          normalMatrix.transpose();
-
-          uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
-          vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 4, sphereBuffer);
-        }
-        else{
-          disableVertexAttribPointer("aNormal3d", programObject3D, "aNormal");
         }
 
         curContext.useProgram(programObject3D);
@@ -6942,8 +6947,7 @@
         ctxMode = curContext.TRIANGLE_STRIP;
       }
 
-      var view = new PMatrix3D();
-      view.scale( 1, -1, 1 );
+      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,   0,0,0,1);
       view.apply( modelView.array() );
       view.transpose();
 
@@ -8672,6 +8676,8 @@
     };
 
     Drawing3D.prototype.rect = function(x, y, width, height, tl, tr, br, bl) {
+      var model, view, modelViewMat;
+
       if (tl !== undef) {
         throw "rect() with rounded corners is not supported in 3D mode";
       }
@@ -8689,17 +8695,20 @@
         y -= height / 2;
       }
 
-      // Modeling transformation
-      var model = new PMatrix3D();
-      model.translate(x, y, 0);
-      model.scale(width, height, 1);
+      model = new PMatrix3D(width,0,0,x,   0,height,0,y,  0,0,1,0,  0,0,0,1);
       model.transpose();
 
       // viewing transformation needs to have Y flipped
       // becuase that's what Processing does.
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      view = new PMatrix3D(1,0,0,0,  0,-1,0,0,   0,0,1,0,  0,0,0,1);
       view.apply(modelView.array());
+      
+      // We need to get a version of the MV that isn't transposed, instead
+      // of redoing all the work above, just copy it before view is transposed.
+      modelViewMat = new PMatrix3D(view);
+      modelViewMat.apply(model);
+
+      // Now, we can transpose this matrix.
       view.transpose();
 
       if (lineWidth > 0 && doStroke) {
@@ -8708,7 +8717,7 @@
         uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
         uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
         uniformi("uIsDrawingText2d", programObject2D, "uIsDrawingText", false);
-        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 3, rectBuffer);
+        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 4, rectFillBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
         curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
       }
@@ -8719,24 +8728,20 @@
         if(usingDefaultProgramObject3D){
           uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
           uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
-          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 3, rectBuffer);
+          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 4, rectFillBuffer);
         }
         else{
-          var m = new PMatrix3D();
-          m.translate(x, y, 0);
-          m.scale(width, height, 1);
+          var m = new PMatrix3D(width,0,0,x,   0,height,0,y,  0,0,1,0,  0,0,0,1);
+          
+          var MV = new PMatrix3D(1,0,0,0,  0,-1,0,0,   0,0,1,0,  0,0,0,1);
+          MV.apply(modelView.array());
+          MV.apply(m);
 
-          var v = new PMatrix3D();
-          v.scale(1, -1, 1);
-          v.apply(modelView.array());
-          v.apply(m);
-
-          var shaderTransform = new PMatrix3D();
-          shaderTransform.set(lastProjection);
-          shaderTransform.apply(v);
+          var shaderTransform = new PMatrix3D(lastProjection);
+          shaderTransform.apply(MV);
           shaderTransform.transpose();
 
-          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 3, rectBuffer);
+          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 4, rectFillBuffer);
           uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
         }
 
@@ -8750,20 +8755,9 @@
         uniformf("color3d", programObject3D, "uColor", fillStyle);
 
         if(lightCount > 0){
-          var v = new PMatrix3D();
-          v.set(view);
+          var normalMat3x3 = createNormal3x3Matrix(modelViewMat, false);
 
-          var m = new PMatrix3D();
-          m.set(model);
-
-          v.mult(m);
-
-          var normalMatrix = new PMatrix3D();
-          normalMatrix.set(v);
-          normalMatrix.invert();
-          normalMatrix.transpose();
-
-          uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMatrix.array());
+          uniformMatrix("uNormalTransform3d", programObject3D, "uNormalTransform", false, normalMat3x3);
           vertexAttribPointer("aNormal3d", programObject3D, "aNormal", 3, rectNormBuffer);
         }
         else{
