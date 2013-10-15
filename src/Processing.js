@@ -298,7 +298,6 @@
         programObject3D,
         programObject2D,
         programObjectUnlitShape,
-        
         boxNormBuffer,
         boxOutlineBuffer,
         rectBuffer,
@@ -424,11 +423,8 @@
       -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0,   -1,  0,  0,
        0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0,    0,  1,  0]);
 
-    // These verts are used for the fill and stroke using TRIANGLE_FAN and LINE_LOOP.
-    var rectVerts     = new Float32Array([0,0,0,  0,1,0,  1,1,0,  1,0,0]);
-
-    var rectFillVerts = new Float32Array([0,0,0,1,  0,1,0,1,  1,1,0,1,  1,0,0,1]);
-    var rectNorms = new Float32Array([0,0,1,  0,0,1,  0,0,1,  0,0,1]);
+    var rectVerts = new Float32Array([0,0,0,1,  0,1,0,1,  1,1,0,1,  1,0,0,1]);
+    var rectNorms = new Float32Array([0,0,1,    0,0,1,    0,0,1,    0,0,1]);
 
     // Shader for points and lines in begin/endShape.
     var vertexShaderSrcUnlitShape =
@@ -5043,9 +5039,9 @@
         curContext.bindBuffer(curContext.ARRAY_BUFFER, boxOutlineBuffer);
         curContext.bufferData(curContext.ARRAY_BUFFER, boxOutlineVerts, curContext.STATIC_DRAW);
 
-        rectFillBuffer = curContext.createBuffer();
-        curContext.bindBuffer(curContext.ARRAY_BUFFER, rectFillBuffer);
-        curContext.bufferData(curContext.ARRAY_BUFFER, rectFillVerts, curContext.STATIC_DRAW);
+        rectBuffer = curContext.createBuffer();
+        curContext.bindBuffer(curContext.ARRAY_BUFFER, rectBuffer);
+        curContext.bufferData(curContext.ARRAY_BUFFER, rectVerts, curContext.STATIC_DRAW);
 
         rectNormBuffer = curContext.createBuffer();
         curContext.bindBuffer(curContext.ARRAY_BUFFER, rectNormBuffer);
@@ -8717,9 +8713,9 @@
         uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
         uniformf("uColor2d", programObject2D, "uColor", strokeStyle);
         uniformi("uIsDrawingText2d", programObject2D, "uIsDrawingText", false);
-        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 4, rectFillBuffer);
+        vertexAttribPointer("aVertex2d", programObject2D, "aVertex", 4, rectBuffer);
         disableVertexAttribPointer("aTextureCoord2d", programObject2D, "aTextureCoord");
-        curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 3);
+        curContext.drawArrays(curContext.LINE_LOOP, 0, rectVerts.length / 4);
       }
 
       if (doFill) {
@@ -8728,7 +8724,7 @@
         if(usingDefaultProgramObject3D){
           uniformMatrix("uModel3d", programObject3D, "uModel", false, model.array());
           uniformMatrix("uView3d", programObject3D, "uView", false, view.array());
-          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 4, rectFillBuffer);
+          vertexAttribPointer("aVertex3d", programObject3D, "aVertex", 4, rectBuffer);
         }
         else{
           var m = new PMatrix3D(width,0,0,x,   0,height,0,y,  0,0,1,0,  0,0,0,1);
@@ -8741,7 +8737,7 @@
           shaderTransform.apply(MV);
           shaderTransform.transpose();
 
-          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 4, rectFillBuffer);
+          vertexAttribPointer("vertex" + programObject3D.name, programObject3D, "vertex", 4, rectBuffer);
           uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
         }
 
@@ -8764,7 +8760,7 @@
           disableVertexAttribPointer("normal3d", programObject3D, "aNormal");
         }
 
-        curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 3);
+        curContext.drawArrays(curContext.TRIANGLE_FAN, 0, rectVerts.length / 4);
         curContext.disable(curContext.POLYGON_OFFSET_FILL);
       }
     };
