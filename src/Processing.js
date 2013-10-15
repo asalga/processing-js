@@ -1659,9 +1659,7 @@
        * @return {PMatrix3D} a copy of this PMatrix3D
        */
       get: function() {
-        var outgoing = new PMatrix3D();
-        outgoing.set(this.elements);
-        return outgoing;
+        return new PMatrix3D(this.elements);;
       },
       /**
        * @member PMatrix3D
@@ -5636,13 +5634,11 @@
 
     Drawing3D.prototype.frustum = function(left, right, bottom, top, near, far) {
       frustumMode = true;
-      projection = new PMatrix3D();
-      projection.set((2 * near) / (right - left), 0, (right + left) / (right - left),
-                     0, 0, (2 * near) / (top - bottom), (top + bottom) / (top - bottom),
-                     0, 0, 0, -(far + near) / (far - near), -(2 * far * near) / (far - near),
-                     0, 0, -1, 0);
-      var proj = new PMatrix3D();
-      proj.set(projection);
+      projection = new PMatrix3D((2 * near) / (right - left), 0, (right + left) / (right - left),
+                                 0, 0, (2 * near) / (top - bottom), (top + bottom) / (top - bottom),
+                                 0, 0, 0, -(far + near) / (far - near), -(2 * far * near) / (far - near),
+                                 0, 0, -1, 0);
+      var proj = new PMatrix3D(projection);
       proj.transpose();
       curContext.useProgram(programObject2D);
       uniformMatrix("projection2d", programObject2D, "uProjection", false, proj.array());
@@ -5651,8 +5647,7 @@
       curContext.useProgram(programObjectUnlitShape);
       uniformMatrix("uProjectionUS", programObjectUnlitShape, "uProjection", false, proj.array());
 
-      lastProjection = new PMatrix3D();
-      lastProjection.set(projection); 
+      lastProjection = new PMatrix3D(projection);
     };
 
     /**
@@ -5687,11 +5682,9 @@
       var ty = -(top + bottom) / (top - bottom);
       var tz = -(far + near) / (far - near);
 
-      projection = new PMatrix3D();
-      projection.set(x, 0, 0, tx, 0, y, 0, ty, 0, 0, z, tz, 0, 0, 0, 1);
+      projection = new PMatrix3D(x, 0, 0, tx, 0, y, 0, ty, 0, 0, z, tz, 0, 0, 0, 1);
 
-      var proj = new PMatrix3D();
-      proj.set(projection);
+      var proj = new PMatrix3D(projection);
       proj.transpose();
       curContext.useProgram(programObject2D);
       uniformMatrix("projection2d", programObject2D, "uProjection", false, proj.array());
@@ -6712,8 +6705,7 @@
       model.translate(x, y, z || 0);
       model.transpose();
 
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);      
       view.apply(modelView.array());
       view.transpose();
 
@@ -6857,9 +6849,8 @@
      * @see endShape
      * @see vertex
      */
-    var point3D = function(vArray, cArray){
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+    var point3D = function(vArray, cArray){      
+      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
       view.apply(modelView.array());
       view.transpose();
 
@@ -6901,8 +6892,7 @@
         ctxMode = curContext.LINE_STRIP;
       }
 
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
       view.apply(modelView.array());
       view.transpose();
 
@@ -6978,12 +6968,10 @@
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
       else{
-        var v = new PMatrix3D();
-        v.scale(1, -1, 1);
+        var v = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
         v.apply(modelView.array());
 
-        var shaderTransform = new PMatrix3D();
-        shaderTransform.set(lastProjection);
+        var shaderTransform = new PMatrix3D(lastProjection);
         shaderTransform.apply(v);
         shaderTransform.transpose();
 
@@ -8375,8 +8363,7 @@
 
       var lineVerts = [x1, y1, z1, x2, y2, z2];
 
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
       view.apply(modelView.array());
       view.transpose();
 
@@ -11449,8 +11436,7 @@
       model.translate(-1, -1, -1);
       model.transpose();
 
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
       view.apply(modelView.array());
       view.transpose();
 
