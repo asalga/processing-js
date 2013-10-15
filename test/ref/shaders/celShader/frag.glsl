@@ -7,7 +7,7 @@ varying vec3 vNormal;
 void main(){
 
   float col = 0.1;
-  float intensity = max(0.0, dot(normalize(vec3(1,1,1)), vNormal));
+  float intensity = max(0.0, dot(normalize(vec3(0,0,1)), vNormal));
 
   if( intensity > 0.9){
     col = 0.9;

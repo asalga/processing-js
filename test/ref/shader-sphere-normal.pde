@@ -3,8 +3,8 @@ PShader myShader;
 
 void setup(){
   size(100, 100, P3D);
-  myShader = loadShader( "../ref/shaders/sphereNormal/frag.glsl", 
-                         "../ref/shaders/sphereNormal/vert.glsl");
+  myShader = loadShader( "../ref/shaders/celShader/frag.glsl", 
+                         "../ref/shaders/celShader/vert.glsl");
   shader(myShader);
   noStroke();
 }
