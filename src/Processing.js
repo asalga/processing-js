@@ -708,7 +708,7 @@
       // we could consider placing this in a conditional later on.
       "  vec3 norm = normalize(uNormalTransform * aNormal);" +
 
-      "  vec4 ecPos4 = uView * uModel * vec4(aVertex);" +
+      "  vec4 ecPos4 = uView * uModel * aVertex;" +
       "  vec3 ecPos = (vec3(ecPos4))/ecPos4.w;" +
 
       // If there were no lights this draw call, just use the
@@ -5136,8 +5136,7 @@
       }
 
       var pos = new PVector(x, y, z);
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
       view.apply(modelView.array());
       view.mult(pos, pos);
 
@@ -5192,8 +5191,7 @@
 
       curContext.useProgram(programObject3D);
 
-      var mvm = new PMatrix3D();
-      mvm.scale(1, -1, 1);
+      var mvm = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
       mvm.apply(modelView.array());
       mvm = mvm.array();
 
@@ -5344,8 +5342,7 @@
       // Place the point in view space once instead of once per vertex
       // in the shader.
       var pos = new PVector(x, y, z);
-      var view = new PMatrix3D();
-      view.scale(1, -1, 1);
+      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
       view.apply(modelView.array());
       view.mult(pos, pos);
 
@@ -5422,8 +5419,7 @@
       // multiply the position and direction by the model view matrix
       // once per object rather than once per vertex.
       var pos = new PVector(x, y, z);
-      var mvm = new PMatrix3D();
-      mvm.scale(1, -1, 1);
+      var mvm = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
       mvm.apply(modelView.array());
       mvm.mult(pos, pos);
 
