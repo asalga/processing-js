@@ -391,13 +391,6 @@
     // side of the cube must have its own set of normals.
     // Vertices are specified in a counter-clockwise order.
     // Triangles are in this order: back, front, right, bottom, left, top.
-    var boxVerts = new Float32Array([
-       0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,
-       0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5,
-       0.5,  0.5, -0.5,  0.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5,
-       0.5, -0.5, -0.5,  0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5, -0.5,  0.5, -0.5, -0.5,
-      -0.5, -0.5, -0.5, -0.5, -0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5,  0.5, -0.5, -0.5, -0.5, -0.5,
-       0.5,  0.5,  0.5,  0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5, -0.5, -0.5,  0.5,  0.5,  0.5,  0.5,  0.5]);
 
     var boxVertsPShader = new Float32Array([
        0.5,  0.5, -0.5,1,  0.5, -0.5, -0.5,1, -0.5, -0.5, -0.5,1, -0.5, -0.5, -0.5,1, -0.5,  0.5, -0.5,1,  0.5,  0.5, -0.5,1,
@@ -5189,8 +5182,7 @@
 
       curContext.useProgram(programObject3D);
 
-      var mvm = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
-      mvm.apply(modelView.array());
+      var mvm = new PMatrix3D(modelView);
       mvm = mvm.array();
 
       // We need to multiply the direction by the model view matrix, but
@@ -5198,7 +5190,7 @@
       // present, it uses 1, so we manually multiply.
       var dir = [
         mvm[0] * nx + mvm[4] * ny + mvm[8] * nz,
-        mvm[1] * nx + mvm[5] * ny + mvm[9] * nz,
+        mvm[1] * nx + mvm[5] * -ny + mvm[9] * nz,
         mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
@@ -5340,9 +5332,9 @@
       // Place the point in view space once instead of once per vertex
       // in the shader.
       var pos = new PVector(x, y, z);
-      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
-      view.apply(modelView.array());
+      var view = new PMatrix3D(modelView);
       view.mult(pos, pos);
+      pos.y *= -1;
 
       // Instead of calling p.color, we do the calculations ourselves to
       // reduce property lookups.
@@ -5417,9 +5409,9 @@
       // multiply the position and direction by the model view matrix
       // once per object rather than once per vertex.
       var pos = new PVector(x, y, z);
-      var mvm = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
-      mvm.apply(modelView.array());
+      var mvm = new PMatrix3D(modelView);
       mvm.mult(pos, pos);
+      pos.y *= -1;
 
       // Convert to array since we need to directly access the elements.
       mvm = mvm.array();
@@ -5429,7 +5421,7 @@
       // present, it uses 1, so we use a very small value as a work around.
       var dir = [
           mvm[0] * nx + mvm[4] * ny + mvm[8] * nz,
-          mvm[1] * nx + mvm[5] * ny + mvm[9] * nz,
+          mvm[1] * nx + mvm[5] * -ny + mvm[9] * nz,
           mvm[2] * nx + mvm[6] * ny + mvm[10] * nz
       ];
 
