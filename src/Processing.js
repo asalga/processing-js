@@ -910,12 +910,11 @@
 
     /**
         Createa a 3x3 normal matrix from a model view transformation matrix.
+
+        @returns {Array} 3x3 matrix
     */
     function createNormal3x3Matrix(matrix, usingCustomShader){
       var mat = new PMatrix3D(matrix);
-      if(usingCustomShader){
-        mat.apply(1,0,0,0,  0,-1,0,0,   0,0,1,0,   0,0,0,1);
-      }
       var normalMatrix = new PMatrix3D(mat);
       normalMatrix.invert();
       var n4x4 = normalMatrix.array();
@@ -3477,13 +3476,19 @@
      
 
     /**
-      shader
-      kind: type of shader, either POINTS, LINES, or TRIANGLES
+      Set the active program object
+
+      @param {PShader}  shader
+      @param {int}      kind: type of shader, either POINTS, LINES, or TRIANGLES
     */
     Drawing3D.prototype.shader = function(shader, kind){
-      // TODO: Only change shader if we really need to
+      // !!!!
+      // TODO: Only change shader if we really need to.
       programObject3D = shader.programObject;
       curContext.useProgram(programObject3D);
+
+      // rebind all texture units
+
       usingDefaultProgramObject3D = false;
       p.perspective();
     };
@@ -5726,12 +5731,13 @@
 
       // Viewing transformation needs to have Y flipped becuase that's what Processing does.
       view = new PMatrix3D(1,0,0,0,   0,-1,0,0,   0,0,1,0,   0,0,0,1);
-      view.apply(modelView.array());
+      view.apply(modelView);
       
       // Save doing a matrix mult if we are using the default shader 
       modelViewMat = new PMatrix3D(view);
       if(usingDefaultProgramObject3D == false){
-        modelViewMat.apply(model);  
+        modelViewMat.apply(model);
+        modelViewMat2 =  new PMatrix3D(model);
       }
 
       view.transpose();
@@ -5776,16 +5782,20 @@
           shaderMVP = new PMatrix3D(lastProjection);
           shaderMVP.apply(modelViewMat);
           shaderMVP.transpose();
-
+          
+          modelViewMat2.apply(modelViewMat);
+          
           progID = programObject3D.name;
 
           vertexAttribPointer("vertex" + progID, programObject3D, "vertex", 4, boxBufferPShader);
           uniformMatrix("transform" + progID, programObject3D, "transform", false, shaderMVP.array());
           
+          // !!! check +progID
           // Only calculate normal matrix if shader actually has it defined
+          // check if w = h = d === 1
           normalMatlocation = curContext.getUniformLocation(programObject3D, "normalMatrix" + progID);
           if(normalMatlocation !== -1){
-            normalMat3x3 = createNormal3x3Matrix(modelViewMat, true);
+            normalMat3x3 = createNormal3x3Matrix( modelViewMat2, true);
 
             vertexAttribPointer("normal" + progID, programObject3D, "normal", 3, boxNormBuffer);
             uniformMatrix("normalMatrix" + progID, programObject3D, "normalMatrix", false, normalMat3x3);
@@ -6913,6 +6923,10 @@
      */
     var fill3D = function(vArray, mode, cArray, tArray){
       var ctxMode;
+      var view;
+      var shaderTransform;
+      var progID =  programObject3D.name;
+
       if (mode === "TRIANGLES") {
         ctxMode = curContext.TRIANGLES;
       } else if(mode === "TRIANGLE_FAN") {
@@ -6921,7 +6935,7 @@
         ctxMode = curContext.TRIANGLE_STRIP;
       }
 
-      var view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,   0,0,0,1);
+      view = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,   0,0,0,1);
       view.apply( modelView.array() );
       view.transpose();
 
@@ -6959,11 +6973,12 @@
         curContext.drawArrays( ctxMode, 0, vArray.length/3 );
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
       }
+      // Using user defined shader.
       else{
         var v = new PMatrix3D(1,0,0,0,  0,-1,0,0,  0,0,1,0,  0,0,0,1);
         v.apply(modelView.array());
 
-        var shaderTransform = new PMatrix3D(lastProjection);
+        shaderTransform = new PMatrix3D(lastProjection);
         shaderTransform.apply(v);
         shaderTransform.transpose();
 
@@ -6987,15 +7002,20 @@
           }
         }
 
-        vertexAttribPointer( "vertex" + programObject3D.name, programObject3D, "vertex", 4, fillBuffer );
+        vertexAttribPointer( "vertex" + progID, programObject3D, "vertex", 4, fillBuffer );
         curContext.bufferData( curContext.ARRAY_BUFFER, fillBuff4, curContext.STREAM_DRAW );
+        uniformMatrix("transform" + progID, programObject3D, "transform", false, shaderTransform.array());
 
+        // If the user specified texCoords when they were defining the shape, set those attributes.
         if(tArray != null){
-          vertexAttribPointer( "vertTexCoord" + programObject3D.name, programObject3D, "vertTexCoord", 2, shapeTexVBO );
+          vertexAttribPointer( "texCoord" + progID, programObject3D, "texCoord", 2, shapeTexVBO );
           curContext.bufferData( curContext.ARRAY_BUFFER, new Float32Array(tArray), curContext.STREAM_DRAW );
+
+          uniformMatrix("texMatrix" + progID, programObject3D , "texMatrix", false, [1,0,0,0,   0,1,0,0,  0,0,1,0,   0,0,0,1]);
         }
 
-        uniformMatrix("transform" + programObject3D.name, programObject3D, "transform", false, shaderTransform.array());
+        // !!!!!!!
+        // 
 
         curContext.drawArrays( ctxMode, 0, fillBuff4.length/4);
         curContext.disable( curContext.POLYGON_OFFSET_FILL );
@@ -7847,9 +7867,20 @@
     p.texture = function(pimage) {
       var curContext = drawing.$ensureContext();
 
+      // If we already created a texture object from this pimage, just need to bind to it,
+      // don't re-do pixel transfer.
       if (pimage.__texture) {
         curContext.bindTexture(curContext.TEXTURE_2D, pimage.__texture);
       } else if (pimage.localName === "canvas") {
+        // get the current program object and texture image unit counter
+        // activeTexture(TEXTURE0 + counter)
+        // 
+        // if( not using default program object)
+        // get the 
+        // curContext.uniform1i("")
+
+
+
         curContext.bindTexture(curContext.TEXTURE_2D, canTex);
         curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, pimage);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
@@ -7889,8 +7920,8 @@
         curContext.bindTexture(curContext.TEXTURE_2D, texture);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR_MIPMAP_LINEAR);
         curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
-        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP);
-        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
+        curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
         curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, cvs);
         curContext.generateMipmap(curContext.TEXTURE_2D);
 
@@ -7899,9 +7930,16 @@
         curTexture.height = pimage.height;
       }
 
+
       usingTexture = true;
       curContext.useProgram(programObject3D);
-      uniformi("usingTexture3d", programObject3D, "uUsingTexture", usingTexture);
+
+      if(usingDefaultProgramObject3D){
+        uniformi("usingTexture3d", programObject3D, "uUsingTexture", usingTexture);
+      }
+      else{
+          //!!!!!
+      }
     };
 
     /**
@@ -9079,11 +9117,19 @@
     }
 
     /**
+        Note the order of the parameters are not the same as in loadShader()
+
+        @param {String} path to vertex shader
+        @param {String} path to fragment shader
     */
     var PShader = function(vertexShader, fragmentShader) {
       this.programObject = createProgramObject(curContext, vertexShader, fragmentShader);
       
       this.programObject.name = this.__nextID();
+      this.programObject.currTextureUnit = 1;
+
+      //
+      this.programObject.textureUnitMap = {};
     };
   
     PShader.prototype = {
@@ -9091,10 +9137,13 @@
       // total hack to keep all shader uniform locations unique
       __nextID: (function(){
         var i = -1;
-        return function(){return i++;};
+        return function(){
+          return i++;
+        };
       })(),
 
       /**
+          !!!!!!
           If the user passes in 1.0 or 1 we can't distinguish between either,
           so just call both, which seems to work.
       */
@@ -9115,6 +9164,22 @@
             uniformMatrix(name, this.programObject, name, arg[1]);
           }
           else if(p1 instanceof PImage ){
+
+            var currTexUnit = this.programObject.currTextureUnit;
+            // !!!
+            // We need to find a texture unit for this texture
+            if(this.programObject.textureUnitMap[p1.__id + name] === undef){
+              this.programObject.textureUnitMap[p1.__id + name] = currTexUnit;
+
+              curContext.activeTexture(curContext.TEXTURE0 + currTexUnit);
+
+              var varloc = curContext.getUniformLocation(this.programObject, name);
+              curContext.uniform1i(varloc, currTexUnit);
+
+              this.programObject.currTextureUnit++;
+            }else{
+              curContext.activeTexture(curContext.TEXTURE0 + currTexUnit);
+            }
             p.texture(p1);
           }
 
@@ -9184,6 +9249,7 @@
 
       // Keep track of whether or not the cached imageData has been touched.
       this.__isDirty = false;
+      this.__id = this.__nextID();
 
       if (aWidth instanceof HTMLImageElement) {
         // convert an <img> to a PImage
@@ -9224,6 +9290,16 @@
        * tickets #1623 and #1644.
        */
       __isPImage: true,
+
+      /**
+          A hack to uniquely identify PImages across a sketch to easily use them with texture units.
+      */
+      __nextID: (function(){
+        var i = 0;
+        return function(){
+          return i++;
+        };
+      })(),
 
       /**
       * @member PImage
@@ -11409,8 +11485,8 @@
       curContext.texImage2D(curContext.TEXTURE_2D, 0, curContext.RGBA, curContext.RGBA, curContext.UNSIGNED_BYTE, textcanvas);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MAG_FILTER, curContext.LINEAR);
       curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_MIN_FILTER, curContext.LINEAR);
-      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP);
-      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_T, curContext.CLAMP_TO_EDGE);
+      curContext.texParameteri(curContext.TEXTURE_2D, curContext.TEXTURE_WRAP_S, curContext.CLAMP_TO_EDGE);
       // If we don't have a power of two texture, we can't mipmap it.
       // curContext.generateMipmap(curContext.TEXTURE_2D);
 
