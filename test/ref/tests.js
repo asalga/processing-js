@@ -442,4 +442,5 @@ var tests = [
   { path: "shader-sphere-normal.pde", tags: ["Shaders"] },
   { path: "shader-box-normal.pde", tags: ["Shaders"] },
   { path: "shader-multitexture.pde", tags: ["Shaders"] },
+  { path: "shader-setMat4x4.pde", tags: ["Shaders"] },
 ];
