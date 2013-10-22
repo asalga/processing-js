@@ -9161,7 +9161,7 @@
             uniformf(name, this.programObject, name, arg[1].array());
           }
           else if(arg[1] instanceof PMatrix3D){
-            uniformMatrix(name, this.programObject, name, arg[1]);
+            uniformMatrix(cacheID, this.programObject, name, false, arg[1].array());
           }
           else if(p1 instanceof PImage ){
 
