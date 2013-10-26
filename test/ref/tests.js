@@ -435,6 +435,7 @@ var tests = [
   { path: "shader-simple-box.pde", tags: ["Shaders"] },
   { path: "shader-SetInt.pde", tags: ["Shaders"] },
   { path: "shader-SetFloat.pde", tags: ["Shaders"] },
+  
   { path: "shader-SetInt1fv.pde", tags: ["Shaders"] },
   { path: "shader-SetInt4fv.pde", tags: ["Shaders"] },
   { path: "shader-sameVarLoc.pde", tags: ["Shaders"] },
@@ -442,5 +443,10 @@ var tests = [
   { path: "shader-sphere-normal.pde", tags: ["Shaders"] },
   { path: "shader-box-normal.pde", tags: ["Shaders"] },
   { path: "shader-multitexture.pde", tags: ["Shaders"] },
+  
   { path: "shader-setMat4x4.pde", tags: ["Shaders"] },
+  { path: "shader-setMat3x3-true.pde", tags: ["Shaders"] },
+  { path: "shader-setMat3x3-false.pde", tags: ["Shaders"] },
+  
+  // cel shader with texture
 ];
