@@ -16,7 +16,7 @@ void main() {
 		int col = int(dist/4.0);
 		int row = int(mod(dist, 4.0));
 
-		vec4 column = myMatrix[3];
+		vec4 column;
 		float c;
 
 		// Ugly code because we can't do dynamic array access
@@ -30,8 +30,9 @@ void main() {
 		else if(col == 2){
 			column = myMatrix[2];
 		}
-
-		c = column.w;
+		else if(col == 3){
+			column = myMatrix[3];
+		}
 
 		if(row == 0){
 			c = column.x;
@@ -42,7 +43,10 @@ void main() {
 		else if(row == 2){
 			c = column.z;
 		}
-		
+		else if(row == 3){
+			c = column.w;
+		}
+
 		gl_FragColor = vec4(vec3(c), 1.0);
 	}
 }
