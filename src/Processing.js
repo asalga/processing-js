@@ -5806,7 +5806,7 @@
       }
 
       // Draw the box outline.
-      if (lineWidth > 0 && doStroke && usingDefaultProgramObject3D) {
+      if (lineWidth > 0 && doStroke /*&& usingDefaultProgramObject3D*/) {
         curContext.useProgram(programObject2D);
         uniformMatrix("uModel2d", programObject2D, "uModel", false, model.array());
         uniformMatrix("uView2d", programObject2D, "uView", false, view.array());
@@ -9154,11 +9154,12 @@
         curContext.useProgram(this.programObject);
         var arg = arguments;
         var cacheID = name + this.programObject.name;
+        var mat;
 
         //
         if(arg.length === 2){
           if(arg[1] instanceof PVector){
-            uniformf(name, this.programObject, name, arg[1].array());
+            uniformf(cacheID, this.programObject, name, arg[1].array());
           }
           else if(arg[1] instanceof PMatrix3D){
             uniformMatrix(cacheID, this.programObject, name, false, arg[1].array());
@@ -9182,21 +9183,31 @@
             }
             p.texture(p1);
           }
-
           else{
-            uniformf(name, this.programObject, name, arg[1]);
-            uniformi(name, this.programObject, name, arg[1]);
+            uniformf(cacheID, this.programObject, name, arg[1]);
+            uniformi(cacheID, this.programObject, name, arg[1]);
           }
         }
         // .set(name, x, y);
         // .set(name, vec, ncoords);
         // .set(name, mat, use3x3);
         else if(arg.length === 3){
-
-          if( arg[1].length !== null ){
+          // Passing in a Matrix
+          if(arg[1] instanceof PMatrix3D){
+            mat = arg[1].array();
+            if(arg[2] === true){
+              uniformMatrix(cacheID, this.programObject, name, false,  [mat[0], mat[1], mat[2], mat[4], mat[5], mat[6], mat[8], mat[9], mat[10]]);
+            }
+            else{
+              uniformMatrix(cacheID, this.programObject, name, false, mat);
+            }
+          }
+          // Passing in ......
+          else if( arg[1].length !== null ){
             uniformf(cacheID, this.programObject, name, arg[1], arg[2]);
             uniformi(cacheID, this.programObject, name, arg[1], arg[2]);
           }
+          // Passing in a Vector
           else if(arg[1] instanceof PVector){
             if(arg[2] === 1){
               uniformf(cacheID, this.programObject, name, arg[1]);
@@ -9206,9 +9217,6 @@
               curContext.uniform2fv(varLocation, varValue);
               curContext.uniform2iv(varLocation, varValue);
             }
-          }
-          else if(arg[1] instanceof PMatrix3D){
-            //uniformMatrix(name, this.programObject, name, arg[1]);
           }
           else{
             uniformf(cacheID, this.programObject, name, [arg[1], arg[2]]);
