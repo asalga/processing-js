@@ -442,8 +442,10 @@ var tests = [
   { path: "shader-resetShader.pde", tags: ["Shaders"] },
   { path: "shader-sphere-normal.pde", tags: ["Shaders"] },
   { path: "shader-box-normal.pde", tags: ["Shaders"] },
-  { path: "shader-multitexture.pde", tags: ["Shaders"] },
   
+  { path: "shader-multitexture.pde", tags: ["Shaders"] },
+  { path: "shader-texture-texMatrix.pde", tags: ["Shaders"] },
+
   { path: "shader-setMat4x4.pde", tags: ["Shaders"] },
   { path: "shader-setMat3x3-true.pde", tags: ["Shaders"] },
   { path: "shader-setMat3x3-false.pde", tags: ["Shaders"] },
